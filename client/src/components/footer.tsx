@@ -95,10 +95,8 @@ export function Footer() {
             <ul className="space-y-2">
               {footerLinks.explore.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href}>
-                    <a className="text-sm opacity-70 hover:text-[hsl(158,76%,36%)] hover:opacity-100 transition-all duration-300">
-                      {link.label}
-                    </a>
+                  <Link href={link.href} className="text-sm opacity-70 hover:text-[hsl(158,76%,36%)] hover:opacity-100 transition-all duration-300">
+                    {link.label}
                   </Link>
                 </li>
               ))}
@@ -111,10 +109,8 @@ export function Footer() {
             <ul className="space-y-2">
               {footerLinks.discover.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href}>
-                    <a className="text-sm opacity-70 hover:text-[hsl(330,81%,60%)] hover:opacity-100 transition-all duration-300">
-                      {link.label}
-                    </a>
+                  <Link href={link.href} className="text-sm opacity-70 hover:text-[hsl(330,81%,60%)] hover:opacity-100 transition-all duration-300">
+                    {link.label}
                   </Link>
                 </li>
               ))}
