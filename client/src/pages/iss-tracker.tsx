@@ -63,18 +63,7 @@ export default function ISSTracker() {
     return Math.floor(daysSinceEpoch * (24 * 60) / getOrbitalPeriod()) + 1;
   };
 
-  const getSystemStatus = () => ({
-    powerGeneration: 85 + Math.random() * 10,
-    batteryLevel: 92 + Math.random() * 6,
-    temperature: 18 + Math.random() * 4,
-    pressure: 101.3 + Math.random() * 0.5,
-    oxygen: 20.9 + Math.random() * 0.1,
-    communication: 98 + Math.random() * 2,
-    navigation: 99 + Math.random() * 1,
-    lifeSupportSystems: 96 + Math.random() * 3
-  });
-
-  const systemStatus = getSystemStatus();
+  // System status removed - requires authenticated ISS telemetry API access
 
   // ISS Position Query
   const { data: position, isLoading: positionLoading, refetch: refetchPosition } = useQuery<IssPosition>({
@@ -454,12 +443,12 @@ export default function ISSTracker() {
 
           {/* System Status Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* System Status */}
+            {/* ISS Information */}
             <Card className="glass-morphism">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center text-lg">
-                  <Settings className="text-orange-400 mr-3 h-5 w-5" />
-                  System Status
+                  <Info className="text-blue-400 mr-3 h-5 w-5" />
+                  ISS Information
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -467,56 +456,51 @@ export default function ISSTracker() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <Battery className="h-4 w-4 text-green-400 mr-2" />
-                        <span className="text-sm text-gray-300">Power Generation</span>
+                        <Orbit className="h-4 w-4 text-green-400 mr-2" />
+                        <span className="text-sm text-gray-300">Orbital Period</span>
                       </div>
-                      <span className="text-sm font-semibold text-green-400">{systemStatus.powerGeneration.toFixed(1)}%</span>
+                      <span className="text-sm font-semibold text-green-400">{getOrbitalPeriod()} min</span>
                     </div>
-                    <Progress value={systemStatus.powerGeneration} className="h-2" />
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <Thermometer className="h-4 w-4 text-blue-400 mr-2" />
-                        <span className="text-sm text-gray-300">Temperature</span>
+                        <Target className="h-4 w-4 text-blue-400 mr-2" />
+                        <span className="text-sm text-gray-300">Average Altitude</span>
                       </div>
-                      <span className="text-sm font-semibold text-blue-400">{systemStatus.temperature.toFixed(1)}°C</span>
+                      <span className="text-sm font-semibold text-blue-400">408 km</span>
                     </div>
-                    <Progress value={(systemStatus.temperature / 30) * 100} className="h-2" />
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <Radio className="h-4 w-4 text-purple-400 mr-2" />
-                        <span className="text-sm text-gray-300">Communication</span>
+                        <Compass className="h-4 w-4 text-purple-400 mr-2" />
+                        <span className="text-sm text-gray-300">Orbital Inclination</span>
                       </div>
-                      <span className="text-sm font-semibold text-purple-400">{systemStatus.communication.toFixed(1)}%</span>
+                      <span className="text-sm font-semibold text-purple-400">51.6°</span>
                     </div>
-                    <Progress value={systemStatus.communication} className="h-2" />
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <NavigationIcon className="h-4 w-4 text-cyan-400 mr-2" />
-                        <span className="text-sm text-gray-300">Navigation</span>
+                        <TrendingUp className="h-4 w-4 text-cyan-400 mr-2" />
+                        <span className="text-sm text-gray-300">Average Velocity</span>
                       </div>
-                      <span className="text-sm font-semibold text-cyan-400">{systemStatus.navigation.toFixed(1)}%</span>
+                      <span className="text-sm font-semibold text-cyan-400">27,600 km/h</span>
                     </div>
-                    <Progress value={systemStatus.navigation} className="h-2" />
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <Heart className="h-4 w-4 text-red-400 mr-2" />
-                        <span className="text-sm text-gray-300">Life Support</span>
+                        <Calendar className="h-4 w-4 text-orange-400 mr-2" />
+                        <span className="text-sm text-gray-300">Orbit Number</span>
                       </div>
-                      <span className="text-sm font-semibold text-red-400">{systemStatus.lifeSupportSystems.toFixed(1)}%</span>
+                      <span className="text-sm font-semibold text-orange-400">#{getNextOrbitNumber()}</span>
                     </div>
-                    <Progress value={systemStatus.lifeSupportSystems} className="h-2" />
                   </div>
                 </div>
               </CardContent>

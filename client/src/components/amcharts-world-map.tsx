@@ -137,17 +137,8 @@ export function AmChartsWorldMap({ position, userLocation, orbitData, className 
         type: "iss"
       });
 
-      // Use authentic ISS orbital path from NASA API if available
-      if (orbitData?.orbitPath) {
-        const orbitPoints = orbitData.orbitPath.map(point => [point.longitude, point.latitude]);
-        
-        lineSeries.data.pushAll([{
-          geometry: {
-            type: "LineString",
-            coordinates: orbitPoints
-          }
-        }]);
-      }
+      // Orbital path temporarily hidden to avoid confusion with positioning
+      // Will be re-enabled when TLE data integration is complete
     }
 
     // Add user location
