@@ -1,27 +1,8 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "wouter";
-import {
-  Menu,
-  X,
-  Home,
-  Camera,
-  Satellite,
-  Zap,
-  Circle,
-  Rocket,
-  Globe,
-  Newspaper,
-  Volume2,
-  Telescope,
-  Calendar,
-  Star,
-  MapPin,
-  CloudRain,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-// Use inline SVG logo for now
-const logoImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23667eea'/%3E%3Ctext x='50' y='57' text-anchor='middle' fill='white' font-family='Arial' font-size='24' font-weight='bold'%3EC%3C/text%3E%3C/svg%3E";
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'wouter';
+import { Menu, X, Home, Camera, Satellite, Zap, Circle, Rocket, Globe, Newspaper, Volume2, Telescope, Calendar, Star, MapPin, CloudRain } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import logoImage from '@assets/Cosmo - 1_1750298158776.png';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,20 +10,22 @@ export function Navigation() {
   const [location] = useLocation();
 
   const navItems = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/gallery", label: "Gallery", icon: Camera },
-    { href: "/iss-tracker", label: "ISS Tracker", icon: Satellite },
-    { href: "/solar-system", label: "Solar System", icon: Globe },
-    { href: "/aurora", label: "Aurora", icon: Zap },
-    { href: "/asteroids", label: "Asteroids", icon: Circle },
-    { href: "/missions", label: "Missions", icon: Rocket },
-    { href: "/news", label: "Space News", icon: Newspaper },
-    { href: "/sounds", label: "Space Sounds", icon: Volume2 },
-    { href: "/space-weather", label: "Space Weather", icon: CloudRain },
-    { href: "/events", label: "Cosmic Events", icon: Calendar },
-    { href: "/constellations", label: "Constellations", icon: Star },
-    { href: "/satellites", label: "Satellite Tracker", icon: Satellite },
-    { href: "/panchang", label: "Hindu Panchang", icon: Calendar },
+    { href: '/', label: 'Home', icon: Home },
+    { href: '/gallery', label: 'Gallery', icon: Camera },
+    { href: '/iss-tracker', label: 'ISS Tracker', icon: Satellite },
+    { href: '/solar-system', label: 'Solar System', icon: Globe },
+    { href: '/aurora', label: 'Aurora', icon: Zap },
+    { href: '/asteroids', label: 'Asteroids', icon: Circle },
+    { href: '/missions', label: 'Missions', icon: Rocket },
+    { href: '/news', label: 'Space News', icon: Newspaper },
+    { href: '/sounds', label: 'Space Sounds', icon: Volume2 },
+    { href: '/space-weather', label: 'Space Weather', icon: CloudRain },
+    { href: '/telescope', label: 'Virtual Telescope', icon: Telescope },
+    { href: '/events', label: 'Cosmic Events', icon: Calendar },
+    { href: '/mars-rover', label: 'Mars Rovers', icon: MapPin },
+    { href: '/constellations', label: 'Constellations', icon: Star },
+    { href: '/satellites', label: 'Satellite Tracker', icon: Satellite },
+    { href: '/panchang', label: 'Hindu Panchang', icon: Calendar },
   ];
 
   useEffect(() => {
@@ -50,32 +33,30 @@ export function Navigation() {
       setIsScrolled(window.scrollY > 20);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-700/50"
-          : "bg-transparent"
-      }`}
-    >
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-700/50' 
+        : 'bg-transparent'
+    }`}>
       <div className="container mx-auto px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <img
+            <img 
               src={logoImage}
-              alt="Space Explorer Logo"
-              className="h-15 w-auto"
+              alt="Space Explorer Logo" 
+              className="h-8 w-auto"
             />
           </Link>
 
           {/* Hamburger Menu Button (Both Desktop and Mobile) */}
-          <Button
-            variant="ghost"
-            size="icon"
+          <Button 
+            variant="ghost" 
+            size="icon" 
             className="text-neutral-300 hover:text-white"
             onClick={() => setIsOpen(!isOpen)}
           >
@@ -96,9 +77,9 @@ export function Navigation() {
                       <Button
                         variant="ghost"
                         className={`w-full justify-start px-4 py-3 text-sm font-medium rounded-md transition-all duration-200 ${
-                          isActive
-                            ? "text-blue-400 bg-blue-500/10 border border-blue-500/20"
-                            : "text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800"
+                          isActive 
+                            ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' 
+                            : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
                         }`}
                         onClick={() => setIsOpen(false)}
                       >

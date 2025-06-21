@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface StarParticle {
   x: number;
   y: number;
   size: number;
   opacity: number;
+  decay: number;
   color: string;
   angle: number;
   speed: number;
@@ -17,6 +18,7 @@ export function CosmicCursor() {
   const animationRef = useRef<number>();
   const particlesRef = useRef<StarParticle[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
+  const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -49,6 +51,7 @@ export function CosmicCursor() {
         y: y + (Math.random() - 0.5) * 20,
         size: Math.random() * 3 + 1,
         opacity: 1,
+        decay: Math.random() * 0.02 + 0.01,
         color: colors[Math.floor(Math.random() * colors.length)],
         angle: Math.random() * Math.PI * 2,
         speed: Math.random() * 0.5 + 0.2,
@@ -60,12 +63,16 @@ export function CosmicCursor() {
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
+      setIsActive(true);
       
       // Create particles on mouse movement
       if (Math.random() < 0.7) {
         createParticle(e.clientX, e.clientY);
       }
     };
+
+    const handleMouseEnter = () => setIsActive(true);
+    const handleMouseLeave = () => setIsActive(false);
 
     const drawParticle = (particle: StarParticle) => {
       ctx.save();
@@ -143,36 +150,43 @@ export function CosmicCursor() {
         }
       });
       
-      // Draw cursor glow
-      const glowSize = 20;
-      const gradient = ctx.createRadialGradient(
-        mouseRef.current.x, mouseRef.current.y, 0,
-        mouseRef.current.x, mouseRef.current.y, glowSize
-      );
-      gradient.addColorStop(0, 'rgba(147, 197, 253, 0.3)');
-      gradient.addColorStop(0.5, 'rgba(147, 197, 253, 0.1)');
-      gradient.addColorStop(1, 'rgba(147, 197, 253, 0)');
-      
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(mouseRef.current.x, mouseRef.current.y, glowSize, 0, Math.PI * 2);
-      ctx.fill();
+      // Draw cursor glow when active
+      if (isActive) {
+        const glowSize = 20;
+        const gradient = ctx.createRadialGradient(
+          mouseRef.current.x, mouseRef.current.y, 0,
+          mouseRef.current.x, mouseRef.current.y, glowSize
+        );
+        gradient.addColorStop(0, 'rgba(147, 197, 253, 0.3)');
+        gradient.addColorStop(0.5, 'rgba(147, 197, 253, 0.1)');
+        gradient.addColorStop(1, 'rgba(147, 197, 253, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(mouseRef.current.x, mouseRef.current.y, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
       
       animationRef.current = requestAnimationFrame(animate);
     };
 
     // Event listeners
     document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseenter', handleMouseEnter);
+    document.addEventListener('mouseleave', handleMouseLeave);
+
     animate();
 
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
       document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseenter', handleMouseEnter);
+      document.removeEventListener('mouseleave', handleMouseLeave);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [isActive]);
 
   return (
     <>
