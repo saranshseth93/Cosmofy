@@ -82,20 +82,22 @@
   body {
     @apply text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
-    background: var(--neutral-900);
+    background: #0a0a0a;
     background-image: 
-      radial-gradient(at 20% 50%, hsla(262, 52%, 47%, 0.03) 0px, transparent 50%),
-      radial-gradient(at 80% 20%, hsla(193, 76%, 56%, 0.03) 0px, transparent 50%),
-      radial-gradient(at 40% 80%, hsla(142, 71%, 45%, 0.03) 0px, transparent 50%);
+      radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3), transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.3), transparent 50%),
+      linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
     min-height: 100vh;
     min-height: 100dvh;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
     position: relative;
+    cursor: none;
   }
 
-  /* Clean background for mobile */
+  /* Enhanced cosmic background */
   body::before {
     content: '';
     position: fixed;
@@ -104,13 +106,23 @@
     width: 100%;
     height: 100%;
     height: 100dvh;
-    background: var(--neutral-900);
-    background-image: 
-      radial-gradient(at 20% 50%, hsla(262, 52%, 47%, 0.03) 0px, transparent 50%),
-      radial-gradient(at 80% 20%, hsla(193, 76%, 56%, 0.03) 0px, transparent 50%),
-      radial-gradient(at 40% 80%, hsla(142, 71%, 45%, 0.03) 0px, transparent 50%);
+    background: 
+      radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.4), transparent),
+      radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,0.6), transparent);
+    background-repeat: repeat;
+    background-size: 200px 100px;
+    animation: sparkle 10s linear infinite;
     z-index: -1;
     pointer-events: none;
+    opacity: 0.4;
+  }
+
+  @keyframes sparkle {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-100px); }
   }
 
   #root {
@@ -174,6 +186,38 @@
     100% {
       background-position: 0% 50%;
     }
+  }
+
+  /* Cosmic button effects */
+  .cosmic-button {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(120, 119, 198, 0.2), rgba(255, 119, 198, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+  }
+
+  .cosmic-button:hover {
+    background: linear-gradient(135deg, rgba(120, 119, 198, 0.3), rgba(255, 119, 198, 0.3));
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(120, 119, 198, 0.5);
+    transform: translateY(-2px);
+  }
+
+  .cosmic-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .cosmic-button:hover::before {
+    left: 100%;
   }
   
   .accent-gradient {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface StarParticle {
   x: number;
@@ -18,7 +18,7 @@ export function CosmicCursor() {
   const animationRef = useRef<number>();
   const particlesRef = useRef<StarParticle[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
-  const [isActive, setIsActive] = useState(false);
+  const isActiveRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -63,7 +63,7 @@ export function CosmicCursor() {
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
-      setIsActive(true);
+      isActiveRef.current = true;
       
       // Create particles on mouse movement
       if (Math.random() < 0.7) {
@@ -71,8 +71,12 @@ export function CosmicCursor() {
       }
     };
 
-    const handleMouseEnter = () => setIsActive(true);
-    const handleMouseLeave = () => setIsActive(false);
+    const handleMouseEnter = () => {
+      isActiveRef.current = true;
+    };
+    const handleMouseLeave = () => {
+      isActiveRef.current = false;
+    };
 
     const drawParticle = (particle: StarParticle) => {
       ctx.save();
@@ -151,7 +155,7 @@ export function CosmicCursor() {
       });
       
       // Draw cursor glow when active
-      if (isActive) {
+      if (isActiveRef.current) {
         const glowSize = 20;
         const gradient = ctx.createRadialGradient(
           mouseRef.current.x, mouseRef.current.y, 0,
@@ -186,7 +190,7 @@ export function CosmicCursor() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isActive]);
+  }, []);
 
   return (
     <>

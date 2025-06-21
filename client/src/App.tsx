@@ -44,7 +44,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-800 to-black">
+      <div className="min-h-screen relative overflow-hidden">
         <CosmicCursor />
         <Toaster />
         <Router />
