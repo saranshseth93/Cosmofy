@@ -91,14 +91,9 @@ export class GeolocationService {
 
   async getCityFromCoordinates(lat: number, lon: number): Promise<string> {
     try {
-      // Using OpenStreetMap Nominatim for reverse geocoding
+      // Using BigDataCloud for accurate suburb-level geocoding
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'Space-Explorer-App/1.0'
-          }
-        }
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
       );
       
       if (!response.ok) {
@@ -107,23 +102,20 @@ export class GeolocationService {
       
       const data = await response.json();
       
-      // Extract suburb/locality information with priority order
-      const address = data.address || {};
-      const suburb = address.suburb || 
-                     address.neighbourhood || 
-                     address.quarter ||
-                     address.district ||
-                     address.city || 
-                     address.town || 
-                     address.village ||
-                     address.county ||
-                     address.state ||
-                     'Unknown Location';
+      // Extract suburb/locality from BigDataCloud API format
+      const suburb = data.locality || data.city || data.principalSubdivision;
+      const country = data.countryName;
       
-      const country = address.country || '';
-      
-      // Return suburb with country if available, prefixed with "Over"
-      return country ? `Over ${suburb}, ${country}` : `Over ${suburb}`;
+      // Handle different location types appropriately
+      if (suburb && country) {
+        return `Over ${suburb}, ${country}`;
+      } else if (suburb) {
+        return `Over ${suburb}`;
+      } else if (country) {
+        return `Over ${country}`;
+      } else {
+        return 'Over Ocean';
+      }
     } catch (error) {
       console.error("Error fetching city from coordinates:", error);
       // Return ocean/coordinate info as fallback
