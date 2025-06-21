@@ -150,8 +150,8 @@ export function CosmicCursor() {
         }
       });
       
-      // Draw cursor glow when active
-      if (isActive) {
+      // Draw cursor glow when particles are present
+      if (particlesRef.current.length > 0) {
         const glowSize = 20;
         const gradient = ctx.createRadialGradient(
           mouseRef.current.x, mouseRef.current.y, 0,

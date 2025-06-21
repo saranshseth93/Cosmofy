@@ -62,11 +62,9 @@ export function Footer() {
           {/* Brand Section */}
           <div className="md:col-span-1">
             <div className="flex items-center space-x-2 mb-6">
-              <img 
-                src={logoImage}
-                alt="Space Explorer Logo" 
-                className="h-8 w-auto"
-              />
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                COSMOFY
+              </span>
             </div>
             <p className="text-sm opacity-70 mb-6 leading-relaxed">
               Exploring the cosmos through cutting-edge NASA data and real-time space tracking. 
