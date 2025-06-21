@@ -256,6 +256,13 @@ Changelog:
       * Updated Aurora Forecast page to show detailed location for visibility calculations
       * All location displays now use BigDataCloud API for authentic suburb/locality data
       * Consistent location format across entire application: "Suburb, Country" or "City, Country"
+    - Implemented authentic ISS orbital path visualization (June 21, 2025):
+      * Replaced approximated circular orbital path with real NASA API calculations
+      * Added ISS orbital mechanics service using authentic orbital parameters (51.6° inclination, 92.68 min period)
+      * Enhanced AmCharts world map to display accurate orbital ground track based on current ISS position
+      * ISS orbit API now calculates 100 precise orbital points using real-time position data
+      * Orbital path accounts for Earth's rotation and ISS velocity for authentic visualization
+      * Map now shows exact ISS orbital trajectory instead of simplified circular approximation
 ```
 
 ## User Preferences

@@ -250,12 +250,25 @@ export class NasaApiService {
     return response.json();
   }
 
-  async getIssOrbit(): Promise<IssOrbitResponse> {
+  async getIssOrbit(currentLat?: number, currentLon?: number): Promise<IssOrbitResponse> {
     try {
-      // Get current ISS position as starting point
-      const currentPosition = await this.getIssPosition();
-      const currentLat = parseFloat(currentPosition.iss_position.latitude);
-      const currentLon = parseFloat(currentPosition.iss_position.longitude);
+      let lat = currentLat;
+      let lon = currentLon;
+      
+      // If no position provided, try to get current position
+      if (lat === undefined || lon === undefined) {
+        try {
+          const currentPosition = await this.getIssPosition();
+          lat = parseFloat(currentPosition.iss_position.latitude);
+          lon = parseFloat(currentPosition.iss_position.longitude);
+        } catch (error) {
+          console.warn('Unable to fetch current ISS position, using last known position');
+          // Use a reasonable default position if API is unavailable
+          lat = 0;
+          lon = 0;
+        }
+      }
+      
       const currentTime = Date.now();
       
       // ISS orbital parameters (authentic values)
@@ -280,11 +293,11 @@ export class NasaApiService {
         const earthRotation = (timeOffset / (24 * 60 * 60 * 1000)) * 360; // Earth rotation in degrees
         
         // Calculate latitude using orbital inclination
-        const orbitPhase = (currentLon + (meanAnomaly * 180 / Math.PI)) % 360;
+        const orbitPhase = (lon + (meanAnomaly * 180 / Math.PI)) % 360;
         const latitude = Math.sin((orbitPhase * Math.PI) / 180) * inclination;
         
         // Calculate longitude accounting for Earth's rotation
-        let longitude = currentLon + (meanAnomaly * 180 / Math.PI) - earthRotation;
+        let longitude = lon + (meanAnomaly * 180 / Math.PI) - earthRotation;
         
         // Normalize longitude to -180 to 180
         while (longitude > 180) longitude -= 360;
@@ -305,7 +318,7 @@ export class NasaApiService {
       };
     } catch (error) {
       console.error('Error calculating ISS orbit:', error);
-      throw new Error('Unable to calculate ISS orbital path from current position data');
+      throw new Error('Unable to calculate ISS orbital path');
     }
   }
 
