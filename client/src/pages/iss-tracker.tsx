@@ -132,7 +132,7 @@ export default function ISSTracker() {
       const response = await fetch(`/api/location?lat=${activeCoordinates.latitude}&lon=${activeCoordinates.longitude}`);
       if (!response.ok) return 'Unknown Location';
       const data = await response.json();
-      return data.location || 'Unknown Location';
+      return data.display || 'Unknown Location';
     },
     enabled: !!activeCoordinates,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
