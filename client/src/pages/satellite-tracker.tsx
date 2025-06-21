@@ -550,7 +550,7 @@ export default function SatelliteTrackerPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+        </div>
       </div>
       <Footer />
     </>
