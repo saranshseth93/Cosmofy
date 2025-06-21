@@ -240,31 +240,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ISS Crew Route
   app.get("/api/iss/crew", async (req, res) => {
     try {
-      res.status(503).json({ 
-        error: "ISS crew API unavailable", 
-        message: "Unable to fetch authentic ISS crew data from NASA API. Please check API configuration." 
-      });
+      // Use Open Notify API for authentic astronaut data
+      const response = await fetch('http://api.open-notify.org/astros.json');
+      
+      if (!response.ok) {
+        throw new Error('Astronaut API unavailable');
+      }
+      
+      const astroData = await response.json();
+      
+      // Filter for ISS crew only and format for consistency
+      const issCrew = astroData.people
+        .filter((person: any) => person.craft === 'ISS')
+        .map((person: any, index: number) => ({
+          id: index + 1,
+          name: person.name,
+          craft: person.craft,
+          country: 'International', // Default since API doesn't provide country
+          role: 'Crew Member',
+          launchDate: null, // Not provided by Open Notify API
+          daysInSpace: null // Not provided by Open Notify API
+        }));
+      
+      res.json(issCrew);
     } catch (error) {
       console.error("Error fetching ISS crew:", error);
       res.status(503).json({ 
         error: "ISS crew API unavailable", 
-        message: "Unable to fetch authentic ISS crew data from NASA API." 
+        message: "Unable to fetch authentic ISS crew data from NASA Open Notify API." 
       });
     }
   });
 
-  // Asteroids Route - Return proper error for authentic data requirement
+  // Asteroids Route
   app.get("/api/asteroids", async (req, res) => {
     try {
-      res.status(503).json({ 
-        error: "NASA Near-Earth Object API unavailable", 
-        message: "Unable to fetch authentic asteroid data from NASA NEO Web Service. Please check API configuration." 
+      const NASA_API_KEY = process.env.NASA_API_KEY || process.env.VITE_NASA_API_KEY;
+      
+      if (!NASA_API_KEY) {
+        return res.status(503).json({ 
+          error: "NASA API key required for authentic asteroid data",
+          message: "Please configure NASA_API_KEY environment variable to access live NASA Near-Earth Object data" 
+        });
+      }
+      
+      const today = new Date().toISOString().split('T')[0];
+      const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      const response = await fetch(
+        `https://api.nasa.gov/neo/rest/v1/feed?start_date=${today}&end_date=${nextWeek}&api_key=${NASA_API_KEY}`
+      );
+      
+      if (!response.ok) {
+        return res.status(503).json({ 
+          error: "NASA NEO API unavailable",
+          message: `NASA API returned status ${response.status}. Please try again later.`
+        });
+      }
+      
+      const neoData = await response.json();
+      
+      // Extract and sort asteroids by close approach date
+      const asteroids: any[] = [];
+      Object.values(neoData.near_earth_objects).forEach((dateAsteroids: any) => {
+        asteroids.push(...dateAsteroids);
       });
+      
+      const sortedAsteroids = asteroids.sort((a, b) => {
+        const dateA = new Date(a.close_approach_data[0].close_approach_date_full).getTime();
+        const dateB = new Date(b.close_approach_data[0].close_approach_date_full).getTime();
+        if (dateA !== dateB) return dateA - dateB;
+        
+        const distA = parseFloat(a.close_approach_data[0].miss_distance.kilometers);
+        const distB = parseFloat(b.close_approach_data[0].miss_distance.kilometers);
+        return distA - distB;
+      });
+      
+      res.json(sortedAsteroids);
     } catch (error) {
       console.error("Error fetching asteroids:", error);
       res.status(503).json({ 
-        error: "NASA Near-Earth Object API unavailable", 
-        message: "Unable to fetch authentic asteroid data from NASA NEO Web Service." 
+        error: "Failed to fetch authentic NASA asteroid data",
+        message: error instanceof Error ? error.message : "NASA NEO API service unavailable" 
       });
     }
   });
@@ -279,13 +336,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid coordinates" });
       }
       
-      const city = await geolocationService.getCityFromCoordinates(lat, lon);
-      const timezone = await geolocationService.getTimezone(lat, lon);
+      // Use BigDataCloud reverse geocoding for suburb-level accuracy
+      const geocodeResponse = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+      );
       
-      res.json({ city, timezone });
+      if (!geocodeResponse.ok) {
+        throw new Error('Geocoding service unavailable');
+      }
+      
+      const locationData = await geocodeResponse.json();
+      
+      const suburb = locationData.locality || locationData.city || locationData.principalSubdivision;
+      const city = locationData.city || locationData.principalSubdivision;
+      const country = locationData.countryName;
+      
+      const response = {
+        latitude: lat,
+        longitude: lon,
+        suburb: suburb || 'Unknown area',
+        city: city || 'Unknown city', 
+        country: country || 'Unknown country',
+        display: suburb ? `${suburb}, ${country}` : (city ? `${city}, ${country}` : country || 'Unknown location'),
+        timezone: locationData.timezone || 'UTC'
+      };
+      
+      res.json(response);
     } catch (error) {
       console.error("Location error:", error);
-      res.status(500).json({ error: "Failed to fetch location data" });
+      res.status(503).json({ 
+        error: "Geolocation service unavailable",
+        message: "Unable to fetch location data from reverse geocoding service" 
+      });
     }
   });
 

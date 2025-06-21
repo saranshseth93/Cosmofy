@@ -18,88 +18,63 @@ export const handler: Handler = async (event, context): Promise<any> => {
     const path = event.path;
     
     if (path.includes('/rovers')) {
-      // Mars rovers status endpoint
-      const rovers = [
-        {
-          id: 1,
-          name: 'Perseverance',
-          status: 'Active',
-          landingDate: '2021-02-18',
-          location: 'Jezero Crater',
-          sol: 1000 + Math.floor((Date.now() - new Date('2021-02-18').getTime()) / (24 * 60 * 60 * 1000)),
-          totalPhotos: 250000,
-          missionObjective: 'Search for signs of ancient microbial life and collect samples',
-          instruments: ['MOXIE', 'RIMFAX', 'PIXL', 'SHERLOC', 'SUPERCAM', 'Mastcam-Z'],
-          currentActivity: 'Sample collection and analysis',
-          lastCommunication: new Date(Date.now() - 2 * 60 * 60 * 1000)
-        },
-        {
-          id: 2,
-          name: 'Curiosity',
-          status: 'Active',
-          landingDate: '2012-08-05',
-          location: 'Gale Crater',
-          sol: 4000 + Math.floor((Date.now() - new Date('2012-08-05').getTime()) / (24 * 60 * 60 * 1000)),
-          totalPhotos: 500000,
-          missionObjective: 'Assess past and present habitability conditions',
-          instruments: ['ChemCam', 'MAHLI', 'APXS', 'SAM', 'CheMin', 'MARDI'],
-          currentActivity: 'Geological survey and rock analysis',
-          lastCommunication: new Date(Date.now() - 1 * 60 * 60 * 1000)
-        }
-      ];
-      
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(rovers),
-      };
-    } else {
-      // Mars photos endpoint - requires NASA API key for authentic data
-      if (NASA_API_KEY) {
-        try {
-          const sol = 3900; // Default sol number
-          const rover = 'perseverance';
-          const response = await fetch(
-            `https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos?sol=${sol}&api_key=${NASA_API_KEY}`
-          );
-          
-          if (response.ok) {
-            const data = await response.json();
-            const photos = data.photos.slice(0, 20).map((photo: any, index: number) => ({
-              id: index + 1,
-              sol: photo.sol,
-              img_src: photo.img_src,
-              earth_date: photo.earth_date,
-              camera: {
-                name: photo.camera.name,
-                full_name: photo.camera.full_name
-              },
-              rover: {
-                name: photo.rover.name,
-                status: photo.rover.status,
-                landing_date: photo.rover.landing_date
-              }
-            }));
-            
-            return {
-              statusCode: 200,
-              headers,
-              body: JSON.stringify(photos),
-            };
-          }
-        } catch (apiError) {
-          console.error('NASA Mars API error:', apiError);
-        }
-      }
-      
-      // Return error when no API key is available for authentic data
+      // Mars rovers status - requires authentic NASA mission data
       return {
         statusCode: 503,
         headers,
         body: JSON.stringify({ 
-          error: 'NASA API key required for authentic Mars rover photos',
-          message: 'Please provide NASA_API_KEY environment variable'
+          error: 'NASA Mars rover API unavailable',
+          message: 'Unable to fetch authentic Mars rover status from NASA APIs. Please check API configuration.'
         }),
+      };
+    } else {
+      // Mars photos endpoint - requires NASA API key for authentic data
+      if (!NASA_API_KEY) {
+        return {
+          statusCode: 503,
+          headers,
+          body: JSON.stringify({ 
+            error: 'NASA API key required for authentic Mars rover photos',
+            message: 'Please configure NASA_API_KEY environment variable to access live Mars rover images'
+          }),
+        };
+      }
+
+      // Parse query parameters for exact API replication
+      const sol = event.queryStringParameters?.sol || '3900';
+      const rover = event.queryStringParameters?.rover || 'perseverance';
+      const camera = event.queryStringParameters?.camera || '';
+      const page = event.queryStringParameters?.page || '1';
+      
+      // Build exact NASA Mars Photo API URL
+      let apiUrl = `https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos?sol=${sol}&api_key=${NASA_API_KEY}`;
+      if (camera) {
+        apiUrl += `&camera=${camera}`;
+      }
+      if (page !== '1') {
+        apiUrl += `&page=${page}`;
+      }
+      
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        return {
+          statusCode: 503,
+          headers,
+          body: JSON.stringify({ 
+            error: 'NASA Mars Photo API unavailable',
+            message: `NASA API returned status ${response.status}. Please try again later.`
+          }),
+        };
+      }
+      
+      const data = await response.json();
+      
+      // Return exact NASA API format
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data),
       };
     }
   } catch (error) {
