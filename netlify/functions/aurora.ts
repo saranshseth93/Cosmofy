@@ -13,40 +13,13 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
-    const now = new Date();
-    const forecasts: any[] = [];
-    
-    for (let i = 0; i < 8; i++) {
-      const forecastTime = new Date(now.getTime() + (i * 3 * 60 * 60 * 1000)); // 3-hour intervals
-      const kpIndex = Math.floor(Math.random() * 9);
-      
-      forecasts.push({
-        id: i + 1,
-        timestamp: forecastTime,
-        kpIndex,
-        geomagneticActivity: kpIndex < 3 ? 'Quiet' : kpIndex < 5 ? 'Unsettled' : kpIndex < 7 ? 'Active' : 'Storm',
-        auroraVisibility: {
-          high: kpIndex >= 6,
-          moderate: kpIndex >= 4,
-          low: kpIndex >= 2
-        },
-        regions: kpIndex >= 6 ? ['Northern Canada', 'Alaska', 'Northern Scandinavia', 'Northern Russia'] :
-                kpIndex >= 4 ? ['Southern Canada', 'Northern US States', 'Scotland', 'Northern Germany'] :
-                ['Arctic Circle regions only'],
-        probability: Math.min(95, kpIndex * 12),
-        conditions: {
-          cloudCover: Math.floor(Math.random() * 100),
-          moonPhase: 'Waning Crescent',
-          moonIllumination: 23,
-          optimalViewing: kpIndex >= 4 && Math.random() > 0.5
-        }
-      });
-    }
-    
     return {
-      statusCode: 200,
+      statusCode: 503,
       headers,
-      body: JSON.stringify(forecasts),
+      body: JSON.stringify({ 
+        error: 'NOAA Aurora Forecast API unavailable',
+        message: 'Unable to fetch authentic aurora forecast data from NOAA Space Weather Prediction Center. Please check API configuration.'
+      }),
     };
   } catch (error) {
     console.error('Aurora API Error:', error);

@@ -21,20 +21,14 @@ export const handler: Handler = async (event, context) => {
         message: 'Unable to fetch authentic mission data from space agencies. Please check API configuration.'
       }),
     };
-    
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(missions),
-    };
   } catch (error) {
     console.error('Missions API Error:', error);
     return {
-      statusCode: 500,
+      statusCode: 503,
       headers,
       body: JSON.stringify({ 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Space missions API unavailable',
+        message: 'Unable to fetch authentic mission data from space agencies.'
       }),
     };
   }
