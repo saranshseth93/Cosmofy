@@ -404,7 +404,7 @@ export default function SolarSystem() {
 
       <Footer />
 
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in-up {
           from {
             opacity: 0;
