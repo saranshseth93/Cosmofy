@@ -14,7 +14,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     const now = new Date();
-    const forecasts = [];
+    const forecasts: any[] = [];
     
     for (let i = 0; i < 8; i++) {
       const forecastTime = new Date(now.getTime() + (i * 3 * 60 * 60 * 1000)); // 3-hour intervals
