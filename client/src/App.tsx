@@ -38,6 +38,7 @@ function Router() {
       <Route path="/events" component={CosmicEvents} />
       <Route path="/mars-rover" component={MarsRover} />
       <Route path="/constellations" component={ConstellationStoryteller} />
+      <Route path="/constellation-storyteller" component={ConstellationStoryteller} />
       <Route path="/satellite-tracker" component={SatelliteTracker} />
       <Route path="/satellites" component={SatelliteTracker} />
       <Route path="/panchang" component={HinduPanchang} />
