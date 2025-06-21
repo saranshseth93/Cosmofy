@@ -9,8 +9,8 @@ The project now uses individual Netlify Functions for reliable deployment:
 - **Publish directory**: `dist/public`
 - **Functions directory**: `netlify/functions`
 
-### Working API Functions
-Each endpoint has its own dedicated function:
+### Complete API Functions
+Each endpoint has its own dedicated function for full application support:
 
 1. **`/api/constellations`** → `netlify/functions/constellations.ts`
    - Scrapes authentic data from go-astronomy.com
@@ -25,6 +25,26 @@ Each endpoint has its own dedicated function:
 3. **`/api/location`** → `netlify/functions/location.ts`
    - Default location data for deployment
    - Melbourne, Australia coordinates
+
+4. **`/api/apod`** → `netlify/functions/apod.ts`
+   - NASA Astronomy Picture of the Day data
+   - Sample authentic images for gallery
+
+5. **`/api/iss/position`** → `netlify/functions/iss-position.ts`
+   - Real-time ISS position simulation
+   - Orbital mechanics calculations
+
+6. **`/api/space-weather`** → `netlify/functions/space-weather.ts`
+   - Solar activity and magnetic field data
+   - Aurora forecasting information
+
+7. **`/api/news`** → `netlify/functions/news.ts`
+   - Authentic space news from Spaceflight News API
+   - Real-time articles from space agencies
+
+8. **`/api/missions`** → `netlify/functions/missions.ts`
+   - Active space missions data
+   - Current status and descriptions
 
 ### Redirect Configuration
 The `client/public/_redirects` file handles routing:
