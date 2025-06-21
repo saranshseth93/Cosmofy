@@ -13,41 +13,14 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
-    const missions = [
-      {
-        id: 1,
-        name: 'James Webb Space Telescope',
-        agency: 'NASA/ESA/CSA',
-        type: 'Observatory',
-        status: 'Active',
-        launchDate: '2021-12-25',
-        description: 'The most powerful space telescope ever built, observing the universe in infrared light.',
-        location: 'L2 Lagrange Point',
-        crew: []
-      },
-      {
-        id: 2,
-        name: 'Perseverance Mars Mission',
-        agency: 'NASA',
-        type: 'Rover',
-        status: 'Active',
-        launchDate: '2020-07-30',
-        description: 'Searching for signs of ancient life on Mars and collecting samples for future return.',
-        location: 'Jezero Crater, Mars',
-        crew: []
-      },
-      {
-        id: 3,
-        name: 'International Space Station',
-        agency: 'NASA/Roscosmos/ESA/JAXA/CSA',
-        type: 'Space Station',
-        status: 'Active',
-        launchDate: '1998-11-20',
-        description: 'A multinational collaborative project serving as a microgravity research laboratory.',
-        location: 'Low Earth Orbit',
-        crew: ['Expedition 70 Crew']
-      }
-    ];
+    return {
+      statusCode: 503,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Space missions API unavailable',
+        message: 'Unable to fetch authentic mission data from space agencies. Please check API configuration.'
+      }),
+    };
     
     return {
       statusCode: 200,
