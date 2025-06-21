@@ -117,20 +117,20 @@ class NetlifyConstellationApi {
         },
         astronomy: {
           brightestStar: data.brightestStar || 'Variable',
-          starCount: data.starCount || Math.floor(Math.random() * 30) + 15,
-          area: data.area || Math.floor(Math.random() * 800) + 200,
+          starCount: data.starCount || 0,
+          area: data.area || 0,
           visibility: {
             hemisphere: data.hemisphere || this.determineHemisphere(link.name),
             bestMonth: data.bestMonth || this.determineBestMonth(link.name),
-            declination: data.declination || Math.floor(Math.random() * 160) - 80
+            declination: data.declination || 0
           }
         },
         coordinates: {
-          ra: data.ra || Math.floor(Math.random() * 24),
-          dec: data.dec || Math.floor(Math.random() * 160) - 80
+          ra: data.ra || 0,
+          dec: data.dec || 0
         },
-        stars: this.generateDefaultStars(link.name),
-        deepSkyObjects: this.generateDefaultDSOs(link.name),
+        stars: [],
+        deepSkyObjects: [],
         imageUrl: data.imageUrl || this.extractImageFromHTML(html) || '',
         starMapUrl: data.starMapUrl || ''
       };
@@ -221,18 +221,7 @@ class NetlifyConstellationApi {
     return months[hash % 12];
   }
 
-  private generateDefaultStars(constellationName: string): any[] {
-    return [
-      { name: `Alpha ${constellationName}`, magnitude: 1.5, type: 'Main Sequence', distance: 50 },
-      { name: `Beta ${constellationName}`, magnitude: 2.0, type: 'Giant', distance: 75 }
-    ];
-  }
-
-  private generateDefaultDSOs(constellationName: string): any[] {
-    return [
-      { name: `${constellationName} Nebula`, type: 'Nebula', magnitude: 7.5, description: `Nebula in ${constellationName}` }
-    ];
-  }
+  // Removed synthetic data generators - only authentic scraped data will be used
 }
 
 const constellationApi = new NetlifyConstellationApi();

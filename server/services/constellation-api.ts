@@ -286,8 +286,8 @@ export class ConstellationApiService {
           }
         },
         coordinates: {
-          ra: parsedData.ra || Math.floor(Math.random() * 24),
-          dec: parsedData.dec || Math.floor(Math.random() * 160) - 80
+          ra: parsedData.ra || 0,
+          dec: parsedData.dec || 0
         },
         stars: parsedData.stars || [],
         deepSkyObjects: parsedData.deepSkyObjects || [],
