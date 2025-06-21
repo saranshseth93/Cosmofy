@@ -127,15 +127,26 @@ export function AmChartsWorldMap({ position, userLocation, className = "" }: AmC
         type: "iss"
       });
 
-      // Create orbital path (simplified great circle)
+      // Create realistic ISS orbital path
       const orbitPoints = [];
-      for (let i = 0; i <= 360; i += 10) {
-        let longitude = (i - 180) % 360;
-        if (longitude > 180) longitude -= 360;
-        if (longitude < -180) longitude += 360;
+      const inclination = 51.6; // ISS orbital inclination in degrees
+      
+      // Generate orbital path using ground track calculation
+      for (let i = 0; i <= 100; i++) {
+        const progress = (i / 100) * 2 * Math.PI; // Complete orbit
         
-        // ISS orbital inclination is approximately 51.6 degrees
-        const latitude = Math.sin((i * Math.PI) / 180) * 51.6;
+        // Calculate latitude based on orbital inclination
+        const latitude = Math.asin(Math.sin(inclination * Math.PI / 180) * Math.sin(progress)) * 180 / Math.PI;
+        
+        // Calculate longitude with Earth's rotation compensation
+        // ISS completes ~15.5 orbits per day, Earth rotates 360° per day
+        const longitudeShift = progress * 180 / Math.PI * (360 / 15.5) / 360;
+        let longitude = position.longitude + (progress * 180 / Math.PI) - longitudeShift;
+        
+        // Normalize longitude to [-180, 180]
+        while (longitude > 180) longitude -= 360;
+        while (longitude < -180) longitude += 360;
+        
         orbitPoints.push([longitude, latitude]);
       }
 

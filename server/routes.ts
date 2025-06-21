@@ -166,12 +166,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Add location to cached position if missing
           let location = "Over Ocean";
           try {
-            console.log(`Getting location for cached position: ${recentPosition.latitude}, ${recentPosition.longitude}`);
             location = await geolocationService.getCityFromCoordinates(
               recentPosition.latitude,
               recentPosition.longitude
             );
-            console.log(`Got location for cached position: ${location}`);
           } catch (error) {
             console.error("Error getting cached ISS location:", error);
           }
