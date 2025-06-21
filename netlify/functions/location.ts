@@ -13,27 +13,22 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
-    // Return default location data for Netlify deployment
-    const locationData = {
-      latitude: -37.6123312438664,
-      longitude: 144.9918038934098,
-      city: 'Melbourne, Australia',
-      timezone: 'UTC'
-    };
-    
     return {
-      statusCode: 200,
+      statusCode: 503,
       headers,
-      body: JSON.stringify(locationData),
+      body: JSON.stringify({ 
+        error: 'Geolocation service unavailable',
+        message: 'Unable to fetch authentic location data from geolocation APIs. Please check API configuration.'
+      }),
     };
   } catch (error) {
     console.error('Location API Error:', error);
     return {
-      statusCode: 500,
+      statusCode: 503,
       headers,
       body: JSON.stringify({ 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Geolocation service unavailable',
+        message: 'Unable to fetch authentic location data from geolocation APIs.'
       }),
     };
   }
