@@ -248,6 +248,14 @@ Changelog:
     - Updated all server API routes to properly handle NASA API authentication and return authentic data when credentials available
     - Fixed asteroid, APOD, ISS crew, and location APIs to load data correctly without any synthetic fallbacks
     - Implemented proper error handling across all APIs to show meaningful messages when authentic sources unavailable
+    - Enhanced all pages to display suburb-level location names (e.g. "Sydney, Australia") instead of generic country names (June 21, 2025):
+      * Updated ISS Tracker page to show authentic location data for both ISS position and user location
+      * Enhanced Space Weather Dashboard to display suburb-level user location in header chip
+      * Updated Constellation Storyteller to show precise location for observation planning
+      * Enhanced Satellite Tracker to display suburb names for viewing location
+      * Updated Aurora Forecast page to show detailed location for visibility calculations
+      * All location displays now use BigDataCloud API for authentic suburb/locality data
+      * Consistent location format across entire application: "Suburb, Country" or "City, Country"
 ```
 
 ## User Preferences

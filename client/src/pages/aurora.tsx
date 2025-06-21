@@ -221,11 +221,11 @@ export default function Aurora() {
                   <div className="space-y-6">
                     <div className="p-4 bg-gray-800/30 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-400">Your Coordinates</span>
+                        <span className="text-sm text-gray-400">Your Location</span>
                         <Globe className="h-4 w-4 text-gray-400" />
                       </div>
                       <div className="text-lg text-white">
-                        {coordinates.latitude.toFixed(2)}°, {coordinates.longitude.toFixed(2)}°
+                        {userLocationName || `${coordinates.latitude.toFixed(2)}°, ${coordinates.longitude.toFixed(2)}°`}
                       </div>
                     </div>
 
