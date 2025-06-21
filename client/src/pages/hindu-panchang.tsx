@@ -45,62 +45,49 @@ interface LocationData {
 
 interface PanchangData {
   date: string;
+  location: {
+    city: string;
+    coordinates: { latitude: number; longitude: number };
+    timezone: string;
+  };
   tithi: {
     name: string;
+    sanskrit: string;
     deity: string;
-    type?: string;
-    number?: number;
-    start?: string;
-    end?: string;
-    nextTithi?: string;
-    meaning?: string;
-    special?: string;
     significance: string;
     endTime: string;
+    paksh: string;
+    number: number;
   };
   nakshatra: {
     name: string;
-    lord?: string;
+    sanskrit: string;
     deity: string;
-    number?: number;
-    start?: string;
-    end?: string;
-    nextNakshatra?: string;
-    meaning?: string;
-    special?: string;
-    summary?: string;
-    words?: string;
     qualities: string;
     endTime: string;
+    lord: string;
   };
   yoga: {
     name: string;
-    number?: number;
-    start?: string;
-    end?: string;
+    sanskrit: string;
     meaning: string;
-    special?: string;
-    nextYoga?: string;
     endTime: string;
+    type: string;
   };
   karana: {
     name: string;
-    lord?: string;
-    deity?: string;
-    type?: string;
-    number?: number;
-    start?: string;
-    end?: string;
-    special?: string;
-    nextKarana?: string;
+    sanskrit: string;
     meaning: string;
     endTime: string;
+    type: string;
   };
+  vara: string;
   rashi: {
     name: string;
     element: string;
     lord: string;
   };
+  masa: string;
   sunrise: string;
   sunset: string;
   moonrise: string;
@@ -111,34 +98,22 @@ interface PanchangData {
     gulikaKaal: string;
     yamaGandaKaal: string;
   };
-  advancedDetails?: {
-    solarNoon: string;
-    nextFullMoon: string;
-    nextNewMoon: string;
-    masa: {
-      amantaName: string;
-      purnimaName: string;
-      adhikMaasa: boolean;
-      ayana: string;
-      moonPhase: string;
-      paksha: string;
-      ritu: string;
-    };
-    vaara: string;
-    dishaShool: string;
-  };
-  auspiciousTimes?: Array<{
-    name: string;
-    time: string;
-    description: string;
-  }>;
-  inauspiciousTimes?: Array<{
-    name: string;
-    time: string;
-    description: string;
-  }>;
   festivals: string[];
   vratsAndOccasions: string[];
+  samvat: string[];
+  yug: string;
+  kaalIkai: string[];
+  verification: {
+    tithi: { library: string; scraped: string | null };
+    nakshatra: { library: string; scraped: string | null };
+    yoga: { library: string; scraped: string | null };
+    karana: { library: string; scraped: string | null };
+    verified: boolean;
+  };
+  source: string;
+  dataFreshness: string;
+  backupSource: string;
+  calculationMethod: string;
 }
 
 export default function HinduPanchangPage() {
