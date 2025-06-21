@@ -46,6 +46,35 @@ Each endpoint has its own dedicated function for full application support:
    - Active space missions data
    - Current status and descriptions
 
+9. **`/api/panchang`** → `netlify/functions/panchang.ts`
+   - Hindu Panchang calendar data
+   - Tithi, Nakshatra, Yoga, Karana with authentic calculations
+   - Auspicious and inauspicious timings
+
+10. **`/api/aurora/forecast`** → `netlify/functions/aurora.ts`
+    - Aurora forecast data with Kp index calculations
+    - Geomagnetic activity levels and visibility predictions
+
+11. **`/api/asteroids/upcoming`** → `netlify/functions/asteroids.ts`
+    - Near-Earth asteroid tracking data
+    - Close approach dates and hazard assessments
+
+12. **`/api/satellites`** → `netlify/functions/satellites.ts`
+    - Satellite tracking with real-time position data
+    - ISS, Hubble, and other major satellites
+
+13. **`/api/cosmic-events`** → `netlify/functions/cosmic-events.ts`
+    - Upcoming cosmic events and celestial phenomena
+    - Solar eclipses, meteor showers, planetary alignments
+
+14. **`/api/telescope/observations`** & `/status` → `netlify/functions/telescope.ts`
+    - Virtual telescope network status and observations
+    - Hubble, JWST, and Chandra telescope data
+
+15. **`/api/mars/photos`** & `/rovers` → `netlify/functions/mars.ts`
+    - Mars rover mission data and authentic NASA photos
+    - Perseverance, Curiosity, and Ingenuity status
+
 ### Redirect Configuration
 The `client/public/_redirects` file handles routing:
 ```
