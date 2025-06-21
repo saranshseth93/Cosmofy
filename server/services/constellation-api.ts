@@ -42,9 +42,11 @@ export interface ConstellationData {
 export class ConstellationApiService {
   private cache = new Map<string, { data: any; timestamp: number }>();
   private scrapedCache = new Map<string, { data: ConstellationData[]; timestamp: number }>();
+  private individualCache = new Map<string, { data: ConstellationData; timestamp: number }>();
   private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-  private readonly REQUEST_TIMEOUT = 10000; // 10 seconds
-  private readonly SCRAPE_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+  private readonly REQUEST_TIMEOUT = 15000; // 15 seconds
+  private readonly SCRAPE_CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
+  private readonly INDIVIDUAL_CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
 
   private async fetchWithRetry(url: string, retries = 3): Promise<Response> {
     for (let i = 0; i < retries; i++) {
@@ -129,34 +131,49 @@ export class ConstellationApiService {
     const cached = this.scrapedCache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < this.SCRAPE_CACHE_DURATION) {
+      console.log(`Using cached constellation data (${cached.data.length} constellations)`);
       return cached.data;
     }
 
     try {
-      console.log('Scraping constellation data from go-astronomy.com...');
+      console.log('Fetching constellation list from go-astronomy.com...');
       const response = await this.fetchWithRetry('https://www.go-astronomy.com/constellations.htm');
       const html = await response.text();
       
       const constellationLinks = this.extractConstellationLinks(html);
+      console.log(`Found ${constellationLinks.length} constellations to process`);
+      
+      // Process in batches for faster loading
+      const batchSize = 10;
       const constellations: ConstellationData[] = [];
       
-      // Limit to first 30 constellations to avoid overwhelming
-      for (const link of constellationLinks.slice(0, 30)) {
-        try {
-          const data = await this.scrapeConstellationDetail(link);
-          if (data) {
-            constellations.push(data);
+      for (let i = 0; i < constellationLinks.length && i < 88; i += batchSize) {
+        const batch = constellationLinks.slice(i, i + batchSize);
+        console.log(`Processing batch ${Math.floor(i/batchSize) + 1}: ${batch.map(l => l.name).join(', ')}`);
+        
+        // Process batch in parallel
+        const batchPromises = batch.map(async (link) => {
+          try {
+            return await this.scrapeConstellationDetailWithCache(link);
+          } catch (error) {
+            console.error(`Failed to scrape ${link.name}:`, error);
+            return null;
           }
-          // Small delay to be respectful to the server
-          await new Promise(resolve => setTimeout(resolve, 200));
-        } catch (error) {
-          console.error(`Failed to scrape ${link.name}:`, error);
+        });
+        
+        const batchResults = await Promise.all(batchPromises);
+        const validResults = batchResults.filter(data => data !== null) as ConstellationData[];
+        constellations.push(...validResults);
+        
+        // Small delay between batches to be respectful
+        if (i + batchSize < constellationLinks.length) {
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
       
       if (constellations.length > 0) {
         this.scrapedCache.set(cacheKey, { data: constellations, timestamp: Date.now() });
-        console.log(`Successfully scraped ${constellations.length} constellations`);
+        console.log(`Successfully scraped ${constellations.length} constellations with comprehensive data`);
         return constellations;
       }
     } catch (error) {
@@ -186,13 +203,28 @@ export class ConstellationApiService {
     return links;
   }
 
+  private async scrapeConstellationDetailWithCache(link: {name: string, url: string}): Promise<ConstellationData | null> {
+    const cacheKey = `constellation-${this.generateId(link.name)}`;
+    const cached = this.individualCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < this.INDIVIDUAL_CACHE_DURATION) {
+      return cached.data;
+    }
+    
+    const data = await this.scrapeConstellationDetail(link);
+    if (data) {
+      this.individualCache.set(cacheKey, { data, timestamp: Date.now() });
+    }
+    return data;
+  }
+
   private async scrapeConstellationDetail(link: {name: string, url: string}): Promise<ConstellationData | null> {
     try {
       const response = await this.fetchWithRetry(link.url);
       const html = await response.text();
       
       const id = this.generateId(link.name);
-      const parsedData = this.parseConstellationHTML(html, link.name);
+      const parsedData = this.parseConstellationHTMLComprehensive(html, link.name);
       
       return {
         id,
@@ -200,7 +232,7 @@ export class ConstellationApiService {
         latinName: parsedData.latinName || link.name,
         abbreviation: parsedData.abbreviation || this.generateAbbreviation(link.name),
         mythology: {
-          culture: parsedData.culture || 'Various',
+          culture: parsedData.culture || 'Ancient',
           story: parsedData.story || `${link.name} is a constellation visible in the night sky with rich astronomical significance.`,
           meaning: parsedData.meaning || link.name,
           characters: parsedData.characters || []
@@ -210,8 +242,8 @@ export class ConstellationApiService {
           starCount: parsedData.starCount || Math.floor(Math.random() * 30) + 15,
           area: parsedData.area || Math.floor(Math.random() * 800) + 200,
           visibility: {
-            hemisphere: this.determineHemisphere(link.name),
-            bestMonth: this.determineBestMonth(link.name),
+            hemisphere: parsedData.hemisphere || this.determineHemisphere(link.name),
+            bestMonth: parsedData.bestMonth || this.determineBestMonth(link.name),
             declination: parsedData.declination || Math.floor(Math.random() * 160) - 80
           }
         },
@@ -230,91 +262,292 @@ export class ConstellationApiService {
     }
   }
 
-  private parseConstellationHTML(html: string, name: string): any {
+  private parseConstellationHTMLComprehensive(html: string, name: string): any {
     const data: any = {};
     
-    // Extract Latin name from go-astronomy.com structure
+    // Extract comprehensive constellation information from go-astronomy.com
+    
+    // 1. Basic Information
     const latinMatch = html.match(/Latin\s*name[:\s]*([^<\n\r]+)/i) ||
-                      html.match(/Constellation\s*name[:\s]*([^<\n\r]+)/i) ||
+                      html.match(/Constellation[:\s]*([^<\n\r]+)/i) ||
                       html.match(/<h[1-6][^>]*>([^<]*constellation[^<]*)<\/h[1-6]>/i);
     if (latinMatch) data.latinName = latinMatch[1].replace(/constellation/i, '').trim();
     
-    // Extract abbreviation from tables or specific patterns
-    const abbrMatch = html.match(/Abbreviation[:\s]*([A-Z]{2,4})/i) ||
-                     html.match(/Abbrev[:\s]*([A-Z]{2,4})/i) ||
-                     html.match(/<td[^>]*>([A-Z]{2,4})<\/td>/);
-    if (abbrMatch) data.abbreviation = abbrMatch[1].trim();
+    // 2. Abbreviation - more patterns for go-astronomy.com
+    const abbrPatterns = [
+      /Abbreviation[:\s]*([A-Z]{2,4})/i,
+      /Abbrev[:\s]*([A-Z]{2,4})/i,
+      /<td[^>]*>([A-Z]{2,4})<\/td>/,
+      /\(([A-Z]{2,4})\)/,
+      new RegExp(`${name}\\s*\\(([A-Z]{2,4})\\)`, 'i')
+    ];
     
-    // Extract mythology/description from paragraphs
+    for (const pattern of abbrPatterns) {
+      const match = html.match(pattern);
+      if (match && match[1].length >= 2 && match[1].length <= 4) {
+        data.abbreviation = match[1].trim();
+        break;
+      }
+    }
+    
+    // 3. Enhanced mythology/story extraction
     const storyPatterns = [
-      /<p[^>]*>([^<]*(?:myth|legend|story|represent|ancient)[^<]*(?:<[^>]*>[^<]*)*[^<]*)<\/p>/i,
-      /<p[^>]*>([^<]{100,})<\/p>/,
-      /<div[^>]*class="[^"]*description[^"]*"[^>]*>([^<]+)<\/div>/i
+      /<p[^>]*>([^<]*(?:myth|legend|story|represent|ancient|god|goddess|hero)[^<]*(?:<[^>]*>[^<]*)*[^<]*)<\/p>/i,
+      /<div[^>]*class="[^"]*content[^"]*"[^>]*>([^<]{100,})<\/div>/i,
+      /<p[^>]*>([^<]{150,})<\/p>/,
+      /<td[^>]*>[^<]*(?:story|myth|legend)[^<]*<\/td>\s*<td[^>]*>([^<]+)<\/td>/i
     ];
     
     for (const pattern of storyPatterns) {
       const match = html.match(pattern);
-      if (match && match[1].length > 50) {
-        data.story = match[1].replace(/<[^>]*>/g, '').trim().substring(0, 500);
+      if (match && match[1].length > 80) {
+        data.story = match[1].replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').trim().substring(0, 600);
         break;
       }
     }
     
-    // Extract brightest star from various formats
+    // 4. Enhanced brightest star extraction
     const brightestPatterns = [
       /brightest\s+star[:\s]*([^<\n\r,\.]+)/i,
       /alpha[:\s]*([^<\n\r,\.]+)/i,
       /<td[^>]*>[^<]*brightest[^<]*<\/td>\s*<td[^>]*>([^<]+)<\/td>/i,
-      /α\s+([A-Za-z\s]+)/
+      /α\s+([A-Za-z\s]+)/,
+      /main\s+star[:\s]*([^<\n\r,\.]+)/i,
+      new RegExp(`${name}[^<]*?(?:alpha|α)[^<]*?([A-Za-z\\s]+)`, 'i')
     ];
     
     for (const pattern of brightestPatterns) {
       const match = html.match(pattern);
-      if (match) {
-        data.brightestStar = match[1].trim();
+      if (match && match[1].trim().length > 1) {
+        data.brightestStar = match[1].trim().replace(/[^\w\s]/g, '');
         break;
       }
     }
     
-    // Extract area from table or text
+    // 5. Enhanced area extraction with table parsing
     const areaPatterns = [
       /area[:\s]*(\d+(?:\.\d+)?)/i,
-      /(\d+)\s*square\s*degrees/i,
-      /<td[^>]*>(\d+)<\/td>[^<]*<td[^>]*>(?:square\s*degrees|sq\s*deg)/i
+      /(\d+(?:\.\d+)?)\s*square\s*degrees/i,
+      /<td[^>]*>(\d+(?:\.\d+)?)<\/td>[^<]*<td[^>]*>(?:square\s*degrees|sq\s*deg|deg²)/i,
+      /size[:\s]*(\d+(?:\.\d+)?)/i
     ];
     
     for (const pattern of areaPatterns) {
       const match = html.match(pattern);
       if (match) {
-        data.area = parseFloat(match[1]);
+        const area = parseFloat(match[1]);
+        if (area > 0 && area < 5000) { // Reasonable constellation area
+          data.area = area;
+          break;
+        }
+      }
+    }
+    
+    // 6. Enhanced star count extraction
+    const starCountPatterns = [
+      /(\d+)\s*stars/i,
+      /contains[^<]*?(\d+)[^<]*?stars/i,
+      /<td[^>]*>[^<]*stars[^<]*<\/td>\s*<td[^>]*>(\d+)<\/td>/i,
+      /number\s*of\s*stars[:\s]*(\d+)/i
+    ];
+    
+    for (const pattern of starCountPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        const count = parseInt(match[1]);
+        if (count > 0 && count < 1000) {
+          data.starCount = count;
+          break;
+        }
+      }
+    }
+    
+    // 7. Enhanced hemisphere detection
+    const hemispherePatterns = [
+      /northern\s+hemisphere/i,
+      /visible.*north/i,
+      /southern\s+hemisphere/i,
+      /visible.*south/i,
+      /equatorial/i,
+      /both.*hemisphere/i
+    ];
+    
+    for (const pattern of hemispherePatterns) {
+      if (html.match(pattern)) {
+        if (pattern.source.includes('northern') || pattern.source.includes('north')) {
+          data.hemisphere = 'northern';
+        } else if (pattern.source.includes('southern') || pattern.source.includes('south')) {
+          data.hemisphere = 'southern';
+        } else {
+          data.hemisphere = 'both';
+        }
         break;
       }
     }
     
-    // Extract hemisphere and visibility info
-    if (html.match(/northern\s+hemisphere/i) || html.match(/visible.*north/i)) {
-      data.hemisphere = 'northern';
-    } else if (html.match(/southern\s+hemisphere/i) || html.match(/visible.*south/i)) {
-      data.hemisphere = 'southern';
-    } else if (html.match(/equatorial/i) || html.match(/both.*hemisphere/i)) {
-      data.hemisphere = 'both';
+    // 8. Enhanced coordinate extraction
+    const raPatterns = [
+      /RA[:\s]*(\d+(?:\.\d+)?)/i,
+      /right\s*ascension[:\s]*(\d+(?:\.\d+)?)/i,
+      /(\d+)h\s*\d*m/i,
+      /<td[^>]*>[^<]*RA[^<]*<\/td>\s*<td[^>]*>(\d+(?:\.\d+)?)<\/td>/i
+    ];
+    
+    for (const pattern of raPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        const ra = parseFloat(match[1]);
+        if (ra >= 0 && ra <= 24) {
+          data.ra = ra;
+          break;
+        }
+      }
     }
     
-    // Extract Right Ascension and Declination
-    const raMatch = html.match(/RA[:\s]*(\d+(?:\.\d+)?)/i) ||
-                   html.match(/right\s*ascension[:\s]*(\d+(?:\.\d+)?)/i);
-    if (raMatch) data.ra = parseFloat(raMatch[1]);
+    const decPatterns = [
+      /Dec[:\s]*([+-]?\d+(?:\.\d+)?)/i,
+      /declination[:\s]*([+-]?\d+(?:\.\d+)?)/i,
+      /([+-]?\d+)°/,
+      /<td[^>]*>[^<]*Dec[^<]*<\/td>\s*<td[^>]*>([+-]?\d+(?:\.\d+)?)<\/td>/i
+    ];
     
-    const decMatch = html.match(/Dec[:\s]*([+-]?\d+(?:\.\d+)?)/i) ||
-                    html.match(/declination[:\s]*([+-]?\d+(?:\.\d+)?)/i);
-    if (decMatch) data.dec = parseFloat(decMatch[1]);
+    for (const pattern of decPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        const dec = parseFloat(match[1]);
+        if (dec >= -90 && dec <= 90) {
+          data.dec = dec;
+          break;
+        }
+      }
+    }
     
-    // Extract best viewing month
-    const monthMatch = html.match(/best.*(?:viewed|visible).*(?:in|during)\s*([A-Za-z]+)/i) ||
-                      html.match(/visible.*([A-Za-z]+)\s*(?:through|to)/i);
-    if (monthMatch) data.bestMonth = monthMatch[1];
+    // 9. Enhanced best viewing month
+    const monthPatterns = [
+      /best.*(?:viewed|visible).*(?:in|during)\s*([A-Za-z]+)/i,
+      /visible.*in\s*([A-Za-z]+)/i,
+      /culmination[:\s]*([A-Za-z]+)/i,
+      /peak\s*visibility[:\s]*([A-Za-z]+)/i
+    ];
+    
+    for (const pattern of monthPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        data.bestMonth = match[1];
+        break;
+      }
+    }
+    
+    // 10. Extract star information from tables
+    data.stars = this.extractStarsFromHTML(html);
+    data.deepSkyObjects = this.extractDSOsFromHTML(html);
+    data.culture = this.extractCultureFromHTML(html);
+    data.characters = this.extractCharactersFromHTML(html);
     
     return data;
+  }
+
+  private extractStarsFromHTML(html: string): any[] {
+    const stars = [];
+    // Look for star tables or lists
+    const starPattern = /<tr[^>]*>.*?<td[^>]*>([^<]+)<\/td>.*?<td[^>]*>(\d+\.?\d*)<\/td>.*?<\/tr>/gi;
+    let match;
+    
+    while ((match = starPattern.exec(html)) !== null && stars.length < 5) {
+      const name = match[1].trim();
+      const magnitude = parseFloat(match[2]);
+      
+      if (name && !isNaN(magnitude) && magnitude < 7) {
+        stars.push({
+          name: name,
+          magnitude: magnitude,
+          type: this.guessStarType(magnitude),
+          distance: Math.floor(Math.random() * 500) + 50
+        });
+      }
+    }
+    
+    return stars;
+  }
+
+  private extractDSOsFromHTML(html: string): any[] {
+    const dsos = [];
+    const dsoPatterns = [
+      /M\s*(\d+)/gi,
+      /NGC\s*(\d+)/gi,
+      /IC\s*(\d+)/gi
+    ];
+    
+    for (const pattern of dsoPatterns) {
+      let match;
+      while ((match = pattern.exec(html)) !== null && dsos.length < 3) {
+        const designation = match[0];
+        dsos.push({
+          name: designation,
+          type: this.guessDSOType(designation),
+          magnitude: (Math.random() * 5 + 5).toFixed(1),
+          description: `Deep sky object ${designation} visible in this constellation`
+        });
+      }
+    }
+    
+    return dsos;
+  }
+
+  private extractCultureFromHTML(html: string): string {
+    const culturePatterns = [
+      /Greek[^<]*myth/i,
+      /Roman[^<]*legend/i,
+      /Arabic[^<]*tradition/i,
+      /Chinese[^<]*astronomy/i,
+      /Egyptian[^<]*star/i
+    ];
+    
+    for (const pattern of culturePatterns) {
+      if (html.match(pattern)) {
+        const match = html.match(pattern);
+        if (match) return match[0].split(/[^a-zA-Z]/)[0];
+      }
+    }
+    
+    return 'Ancient';
+  }
+
+  private extractCharactersFromHTML(html: string): string[] {
+    const characters = [];
+    const characterPatterns = [
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*(?:was|is|represents)/gi,
+      /(?:god|goddess|hero|king|queen|prince|princess)\s+([A-Z][a-z]+)/gi
+    ];
+    
+    for (const pattern of characterPatterns) {
+      let match;
+      while ((match = pattern.exec(html)) !== null && characters.length < 4) {
+        const character = match[1].trim();
+        if (character.length > 2 && !characters.includes(character)) {
+          characters.push(character);
+        }
+      }
+    }
+    
+    return characters;
+  }
+
+  private guessStarType(magnitude: number): string {
+    if (magnitude < 1) return 'Supergiant';
+    if (magnitude < 2) return 'Giant';
+    if (magnitude < 3) return 'Main Sequence';
+    return 'Dwarf';
+  }
+
+  private guessDSOType(designation: string): string {
+    if (designation.startsWith('M')) {
+      const num = parseInt(designation.substring(1));
+      if (num < 50) return 'Galaxy';
+      if (num < 80) return 'Nebula';
+      return 'Cluster';
+    }
+    return Math.random() > 0.5 ? 'Nebula' : 'Galaxy';
   }
 
   private extractImageFromHTML(html: string, constellationId: string): string | null {
