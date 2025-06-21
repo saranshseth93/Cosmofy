@@ -48,19 +48,14 @@ export const handler: Handler = async (event, context) => {
     }
     
     const nasaData = await response.json();
-    const formattedData = Array.isArray(nasaData) ? nasaData : [nasaData];
     
-    const apodImages = formattedData.map((item: any, index: number) => ({
-      id: index + 1,
-      date: item.date,
-      title: item.title,
-      explanation: item.explanation,
-      url: item.url,
-      hdurl: item.hdurl || item.url,
-      mediaType: item.media_type,
-      copyright: item.copyright || 'NASA',
-      createdAt: new Date().toISOString()
-    }));
+    // Return exact NASA API format - sort by date descending (newest first)
+    const sortedData = Array.isArray(nasaData) 
+      ? nasaData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      : [nasaData];
+    
+    // Keep exact NASA API field names and structure
+    const apodImages = sortedData;
     
     return {
       statusCode: 200,

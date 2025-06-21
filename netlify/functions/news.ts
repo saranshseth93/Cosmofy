@@ -13,28 +13,47 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
-    // Fetch authentic space news from Spaceflight News API
-    const response = await fetch('https://api.spaceflightnewsapi.net/v4/articles?limit=20');
+    // Parse query parameters for exact API replication
+    const url = new URL(event.path || '/', 'https://example.com');
+    const limit = event.queryStringParameters?.limit || '20';
+    const offset = event.queryStringParameters?.offset || '0';
+    const search = event.queryStringParameters?.search || '';
+    
+    // Build exact Spaceflight News API v4 URL
+    let apiUrl = `https://api.spaceflightnewsapi.net/v4/articles?limit=${limit}&offset=${offset}`;
+    if (search) {
+      apiUrl += `&search=${encodeURIComponent(search)}`;
+    }
+    
+    const response = await fetch(apiUrl);
     
     if (!response.ok) {
-      throw new Error(`API responded with status: ${response.status}`);
+      return {
+        statusCode: 503,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Spaceflight News API unavailable',
+          message: `API returned status ${response.status}. Please try again later.`
+        }),
+      };
     }
     
     const data = await response.json();
     
+    // Return exact API format - already sorted by published_at descending
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(data.results || data),
+      body: JSON.stringify(data),
     };
   } catch (error) {
     console.error('Space News API Error:', error);
     return {
-      statusCode: 500,
+      statusCode: 503,
       headers,
       body: JSON.stringify({ 
-        error: 'Failed to fetch space news',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Failed to fetch authentic space news',
+        message: error instanceof Error ? error.message : 'Spaceflight News API service unavailable'
       }),
     };
   }

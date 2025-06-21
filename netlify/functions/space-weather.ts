@@ -2,29 +2,42 @@ import { Handler } from '@netlify/functions';
 
 async function fetchNOAASpaceWeather() {
   try {
-    // Try to fetch from NOAA Space Weather APIs
-    const [solarWindResponse, magneticFieldResponse] = await Promise.allSettled([
+    // Fetch multiple NOAA endpoints to match exact API structure
+    const [
+      solarWindResponse,
+      magneticFieldResponse,
+      kpIndexResponse,
+      solarFluxResponse
+    ] = await Promise.allSettled([
       fetch('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json'),
-      fetch('https://services.swpc.noaa.gov/products/solar-wind/mag-7-day.json')
+      fetch('https://services.swpc.noaa.gov/products/solar-wind/mag-7-day.json'),
+      fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'),
+      fetch('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json')
     ]);
 
     let solarWindData = null;
     let magneticFieldData = null;
+    let kpIndexData = null;
 
     if (solarWindResponse.status === 'fulfilled' && solarWindResponse.value.ok) {
       const data = await solarWindResponse.value.json();
-      solarWindData = data[data.length - 1]; // Get latest data
+      solarWindData = data.slice(-24); // Last 24 hours, sorted chronologically
     }
 
     if (magneticFieldResponse.status === 'fulfilled' && magneticFieldResponse.value.ok) {
       const data = await magneticFieldResponse.value.json();
-      magneticFieldData = data[data.length - 1]; // Get latest data
+      magneticFieldData = data.slice(-24); // Last 24 hours, sorted chronologically
     }
 
-    return { solarWindData, magneticFieldData };
+    if (kpIndexResponse.status === 'fulfilled' && kpIndexResponse.value.ok) {
+      const data = await kpIndexResponse.value.json();
+      kpIndexData = data.slice(-8); // Last 8 readings, sorted chronologically
+    }
+
+    return { solarWindData, magneticFieldData, kpIndexData };
   } catch (error) {
     console.error('NOAA API error:', error);
-    return { solarWindData: null, magneticFieldData: null };
+    return { solarWindData: null, magneticFieldData: null, kpIndexData: null };
   }
 }
 
@@ -41,9 +54,9 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
-    const { solarWindData, magneticFieldData } = await fetchNOAASpaceWeather();
+    const { solarWindData, magneticFieldData, kpIndexData } = await fetchNOAASpaceWeather();
     
-    if (!solarWindData && !magneticFieldData) {
+    if (!solarWindData && !magneticFieldData && !kpIndexData) {
       return {
         statusCode: 503,
         headers,
@@ -54,42 +67,18 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    const spaceWeatherData = {
-      id: 1,
-      timestamp: new Date(),
-      solarFlux: solarWindData ? parseFloat(solarWindData[4]) || 0 : 0,
-      kpIndex: 0,
-      magneticField: {
-        bx: magneticFieldData ? parseFloat(magneticFieldData[1]) : 0,
-        by: magneticFieldData ? parseFloat(magneticFieldData[2]) : 0,
-        bz: magneticFieldData ? parseFloat(magneticFieldData[3]) : 0,
-        total: magneticFieldData ? parseFloat(magneticFieldData[4]) : 0
-      },
-      solarWind: {
-        speed: solarWindData ? parseFloat(solarWindData[1]) : 0,
-        density: solarWindData ? parseFloat(solarWindData[2]) : 0,
-        temperature: solarWindData ? parseFloat(solarWindData[3]) * 1000 : 0
-      },
-      radiation: {
-        level: 0,
-        category: 'normal'
-      },
-      auroraForecast: {
-        probability: 0,
-        visibility: 'low',
-        location: 'High northern latitudes only'
-      },
-      conditions: {
-        solarActivity: 'Quiet',
-        geomagneticActivity: 'Quiet',
-        radiationLevel: 'Normal'
-      }
+    // Return exact NOAA API format - arrays sorted chronologically
+    const spaceWeatherResponse = {
+      solar_wind: solarWindData || [],
+      magnetic_field: magneticFieldData || [],
+      kp_index: kpIndexData || [],
+      timestamp: new Date().toISOString()
     };
     
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(spaceWeatherData),
+      body: JSON.stringify(spaceWeatherResponse),
     };
   } catch (error) {
     console.error('Space Weather API Error:', error);
