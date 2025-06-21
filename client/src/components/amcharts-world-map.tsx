@@ -8,10 +8,20 @@ import { IssPosition } from '@/types/space';
 interface AmChartsWorldMapProps {
   position: IssPosition | undefined;
   userLocation?: { latitude: number; longitude: number };
+  orbitData?: {
+    orbitPath: Array<{
+      latitude: number;
+      longitude: number;
+      timestamp: number;
+    }>;
+    period: number;
+    inclination: number;
+    altitude: number;
+  };
   className?: string;
 }
 
-export function AmChartsWorldMap({ position, userLocation, className = "" }: AmChartsWorldMapProps) {
+export function AmChartsWorldMap({ position, userLocation, orbitData, className = "" }: AmChartsWorldMapProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<am5.Root | null>(null);
   const mapSeriesRef = useRef<am5map.MapPolygonSeries | null>(null);
@@ -103,7 +113,7 @@ export function AmChartsWorldMap({ position, userLocation, className = "" }: AmC
     };
   }, []);
 
-  // Update ISS position
+  // Update ISS position and orbital path
   useEffect(() => {
     if (!pointSeriesRef.current || !lineSeriesRef.current) return;
 
@@ -127,35 +137,17 @@ export function AmChartsWorldMap({ position, userLocation, className = "" }: AmC
         type: "iss"
       });
 
-      // Create realistic ISS orbital path
-      const orbitPoints = [];
-      const inclination = 51.6; // ISS orbital inclination in degrees
-      
-      // Generate orbital path using ground track calculation
-      for (let i = 0; i <= 100; i++) {
-        const progress = (i / 100) * 2 * Math.PI; // Complete orbit
+      // Use authentic ISS orbital path from NASA API if available
+      if (orbitData?.orbitPath) {
+        const orbitPoints = orbitData.orbitPath.map(point => [point.longitude, point.latitude]);
         
-        // Calculate latitude based on orbital inclination
-        const latitude = Math.asin(Math.sin(inclination * Math.PI / 180) * Math.sin(progress)) * 180 / Math.PI;
-        
-        // Calculate longitude with Earth's rotation compensation
-        // ISS completes ~15.5 orbits per day, Earth rotates 360° per day
-        const longitudeShift = progress * 180 / Math.PI * (360 / 15.5) / 360;
-        let longitude = position.longitude + (progress * 180 / Math.PI) - longitudeShift;
-        
-        // Normalize longitude to [-180, 180]
-        while (longitude > 180) longitude -= 360;
-        while (longitude < -180) longitude += 360;
-        
-        orbitPoints.push([longitude, latitude]);
+        lineSeries.data.pushAll([{
+          geometry: {
+            type: "LineString",
+            coordinates: orbitPoints
+          }
+        }]);
       }
-
-      lineSeries.data.pushAll([{
-        geometry: {
-          type: "LineString",
-          coordinates: orbitPoints
-        }
-      }]);
     }
 
     // Add user location
@@ -202,7 +194,7 @@ export function AmChartsWorldMap({ position, userLocation, className = "" }: AmC
       });
     });
 
-  }, [position, userLocation]);
+  }, [position, userLocation, orbitData]);
 
   return (
     <div className={`w-full h-full ${className}`}>

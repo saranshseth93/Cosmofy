@@ -340,7 +340,8 @@ export default function ISSTracker() {
                   userLocation={activeCoordinates ? {
                     latitude: activeCoordinates.latitude,
                     longitude: activeCoordinates.longitude
-                  } : undefined} 
+                  } : undefined}
+                  orbitData={orbitData}
                   className="w-full h-full"
                 />
               </div>
