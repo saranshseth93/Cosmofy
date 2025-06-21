@@ -19,9 +19,7 @@ import {
   CloudRain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-// Use inline SVG logo for now
-const logoImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23667eea'/%3E%3Ctext x='50' y='57' text-anchor='middle' fill='white' font-family='Arial' font-size='24' font-weight='bold'%3EC%3C/text%3E%3C/svg%3E";
+import logoImage from "@assets/Cosmo - 1_1750298158776.png";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);

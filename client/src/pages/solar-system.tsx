@@ -1,10 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
-import { Navigation } from '@/components/navigation';
-import { Footer } from '@/components/footer';
-import { Info, Zap, Thermometer, Calendar, Users } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Navigation } from "@/components/navigation";
+import { Footer } from "@/components/footer";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { 
+  Sun, 
+  Moon, 
+  Thermometer, 
+  Timer, 
+  Orbit, 
+  Zap,
+  Info,
+  ChevronRight
+} from "lucide-react";
 
 interface Planet {
   id: string;
@@ -23,466 +33,392 @@ interface Planet {
 
 const planets: Planet[] = [
   {
-    id: 'sun',
-    name: 'Sun',
-    radius: 109,
-    distance: 0,
-    orbitalPeriod: 0,
-    rotationPeriod: 609.12,
-    mass: 333000,
-    temperature: 5778,
-    moons: 0,
-    color: '#FDB813',
-    description: 'Our star, the center of the solar system containing 99.86% of the system\'s mass.',
-    facts: [
-      'Contains 99.86% of the Solar System\'s mass',
-      'Core temperature reaches 15 million°C',
-      'Fuses 600 million tons of hydrogen per second',
-      'Light takes 8 minutes to reach Earth'
-    ]
-  },
-  {
-    id: 'mercury',
-    name: 'Mercury',
+    id: "mercury",
+    name: "Mercury",
     radius: 0.38,
     distance: 0.39,
     orbitalPeriod: 88,
-    rotationPeriod: 1407.6,
+    rotationPeriod: 1408,
     mass: 0.055,
     temperature: 167,
     moons: 0,
-    color: '#8C7853',
-    description: 'The smallest planet and closest to the Sun, with extreme temperature variations.',
+    color: "from-gray-400 to-gray-600",
+    description: "The smallest planet in our solar system and closest to the Sun.",
     facts: [
-      'Closest planet to the Sun',
-      'No atmosphere to retain heat',
-      'Day lasts longer than its year',
-      'Has water ice at its poles'
+      "Has extreme temperature variations from -173°C to 427°C",
+      "One day on Mercury lasts about 59 Earth days",
+      "Has a very thin atmosphere called an exosphere",
+      "Named after the Roman messenger god"
     ]
   },
   {
-    id: 'venus',
-    name: 'Venus',
+    id: "venus",
+    name: "Venus",
     radius: 0.95,
     distance: 0.72,
     orbitalPeriod: 225,
-    rotationPeriod: -5832.5,
+    rotationPeriod: 5832,
     mass: 0.815,
     temperature: 464,
     moons: 0,
-    color: '#FFC649',
-    description: 'The hottest planet due to its thick atmosphere and greenhouse effect.',
+    color: "from-yellow-400 to-orange-500",
+    description: "The hottest planet in our solar system with a thick, toxic atmosphere.",
     facts: [
-      'Hottest planet in the solar system',
-      'Rotates backwards (retrograde)',
-      'Dense CO2 atmosphere',
-      'Surface pressure 90x that of Earth'
+      "Rotates backwards compared to most planets",
+      "Surface pressure is 90 times that of Earth",
+      "Called Earth's twin due to similar size",
+      "Covered in thick clouds of sulfuric acid"
     ]
   },
   {
-    id: 'earth',
-    name: 'Earth',
-    radius: 1,
-    distance: 1,
-    orbitalPeriod: 365.25,
+    id: "earth",
+    name: "Earth",
+    radius: 1.0,
+    distance: 1.0,
+    orbitalPeriod: 365,
     rotationPeriod: 24,
-    mass: 1,
+    mass: 1.0,
     temperature: 15,
     moons: 1,
-    color: '#6B93D6',
-    description: 'Our home planet, the only known world with life and liquid water on its surface.',
+    color: "from-blue-400 to-green-500",
+    description: "Our home planet, the only known planet to harbor life.",
     facts: [
-      'Only known planet with life',
-      '71% of surface covered by water',
-      'Protective magnetic field',
-      'Atmosphere contains 21% oxygen'
+      "71% of surface is covered by water",
+      "Has a protective magnetic field",
+      "Only planet known to support life",
+      "Age is approximately 4.5 billion years"
     ]
   },
   {
-    id: 'mars',
-    name: 'Mars',
+    id: "mars",
+    name: "Mars",
     radius: 0.53,
     distance: 1.52,
     orbitalPeriod: 687,
-    rotationPeriod: 24.6,
+    rotationPeriod: 25,
     mass: 0.107,
     temperature: -65,
     moons: 2,
-    color: '#CD5C5C',
-    description: 'The Red Planet, with polar ice caps and the largest volcano in the solar system.',
+    color: "from-red-500 to-red-700",
+    description: "The Red Planet, named for its rusty color due to iron oxide on its surface.",
     facts: [
-      'Home to Olympus Mons, largest volcano',
-      'Has polar ice caps',
-      'Day length similar to Earth',
-      'Evidence of ancient water flows'
+      "Has the largest volcano in the solar system (Olympus Mons)",
+      "Evidence suggests it once had liquid water",
+      "Day length is similar to Earth (24.6 hours)",
+      "Has polar ice caps made of water and CO2"
     ]
   },
   {
-    id: 'jupiter',
-    name: 'Jupiter',
-    radius: 11.21,
-    distance: 5.20,
+    id: "jupiter",
+    name: "Jupiter",
+    radius: 11.2,
+    distance: 5.2,
     orbitalPeriod: 4333,
-    rotationPeriod: 9.9,
-    mass: 317.8,
+    rotationPeriod: 10,
+    mass: 318,
     temperature: -110,
     moons: 95,
-    color: '#D8CA9D',
-    description: 'The largest planet, a gas giant with a Great Red Spot storm and many moons.',
+    color: "from-orange-300 to-brown-500",
+    description: "The largest planet in our solar system, a gas giant with a Great Red Spot.",
     facts: [
-      'Largest planet in our solar system',
-      'Great Red Spot is a giant storm',
-      'Has at least 95 moons',
-      'Acts as a cosmic vacuum cleaner'
+      "More massive than all other planets combined",
+      "Great Red Spot is a storm larger than Earth",
+      "Has a faint ring system",
+      "Acts as a cosmic vacuum cleaner, protecting inner planets"
     ]
   },
   {
-    id: 'saturn',
-    name: 'Saturn',
-    radius: 9.45,
-    distance: 9.58,
-    orbitalPeriod: 10759,
-    rotationPeriod: 10.7,
-    mass: 95.2,
+    id: "saturn",
+    name: "Saturn",
+    radius: 9.4,
+    distance: 9.5,
+    orbitalPeriod: 10756,
+    rotationPeriod: 11,
+    mass: 95,
     temperature: -140,
     moons: 146,
-    color: '#FAD5A5',
-    description: 'Famous for its prominent ring system and low density.',
+    color: "from-yellow-200 to-yellow-400",
+    description: "Known for its spectacular ring system, Saturn is a gas giant less dense than water.",
     facts: [
-      'Prominent ring system',
-      'Less dense than water',
-      'Has at least 146 moons',
-      'Titan has thick atmosphere'
+      "Has the most extensive ring system",
+      "Less dense than water - it would float!",
+      "Winds can reach speeds of 1,800 km/h",
+      "Titan, its largest moon, has lakes of methane"
     ]
   },
   {
-    id: 'uranus',
-    name: 'Uranus',
-    radius: 4.01,
-    distance: 19.20,
+    id: "uranus",
+    name: "Uranus",
+    radius: 4.0,
+    distance: 19.2,
     orbitalPeriod: 30687,
-    rotationPeriod: -17.2,
+    rotationPeriod: 17,
     mass: 14.5,
     temperature: -195,
     moons: 28,
-    color: '#4FD0E7',
-    description: 'An ice giant that rotates on its side with faint rings.',
+    color: "from-cyan-300 to-blue-400",
+    description: "An ice giant that rotates on its side, with a unique sideways orientation.",
     facts: [
-      'Rotates on its side (98° tilt)',
-      'Made of water, methane, and ammonia',
-      'Has faint rings',
-      'Coldest planetary atmosphere'
+      "Rotates on its side at a 98-degree angle",
+      "Made mostly of water, methane, and ammonia ices",
+      "Has faint rings discovered in 1977",
+      "Coldest planetary atmosphere in solar system"
     ]
   },
   {
-    id: 'neptune',
-    name: 'Neptune',
-    radius: 3.88,
-    distance: 30.05,
+    id: "neptune",
+    name: "Neptune",
+    radius: 3.9,
+    distance: 30.1,
     orbitalPeriod: 60190,
-    rotationPeriod: 16.1,
+    rotationPeriod: 16,
     mass: 17.1,
     temperature: -200,
     moons: 16,
-    color: '#4B70DD',
-    description: 'The windiest planet with supersonic winds and a deep blue color.',
+    color: "from-blue-500 to-blue-700",
+    description: "The windiest planet in our solar system, an ice giant with supersonic winds.",
     facts: [
-      'Windiest planet (up to 2,100 km/h)',
-      'Deep blue color from methane',
-      'Takes 165 Earth years to orbit Sun',
-      'Has 16 known moons'
+      "Strongest winds in solar system (up to 2,100 km/h)",
+      "Takes 165 Earth years to orbit the Sun",
+      "Has a Great Dark Spot similar to Jupiter's Great Red Spot",
+      "Discovered through mathematical prediction"
     ]
   }
 ];
 
 export default function SolarSystem() {
-  const [selectedPlanet, setSelectedPlanet] = useState<Planet>(planets[3]); // Earth as default
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const [selectedPlanet, setSelectedPlanet] = useState<Planet | null>(null);
 
-  useEffect(() => {
-    document.title = "Solar System Explorer - Cosmofy | Interactive Planetary Data";
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const resizeCanvas = () => {
-      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    };
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    let time = 0;
-
-    const animate = () => {
-      const centerX = canvas.offsetWidth / 2;
-      const centerY = canvas.offsetHeight / 2;
-      const maxRadius = Math.min(centerX, centerY) - 30; // Ensure everything fits
-      
-      ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
-      
-      // Draw Sun with improved styling
-      const sunRadius = Math.min(15, maxRadius * 0.08);
-      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, sunRadius);
-      gradient.addColorStop(0, '#FFD700');
-      gradient.addColorStop(0.5, '#FFA500');
-      gradient.addColorStop(1, '#FF6347');
-      
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, sunRadius, 0, 2 * Math.PI);
-      ctx.fillStyle = gradient;
-      ctx.fill();
-      
-      // Add glow effect
-      ctx.shadowColor = '#FFA500';
-      ctx.shadowBlur = 20;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Draw planets with adaptive spacing
-      planets.slice(1).forEach((planet, index) => {
-        const orbitRadius = (maxRadius / 8) * (index + 1.5);
-        const angle = (time * 0.01) / Math.sqrt(planet.distance);
-        const x = centerX + Math.cos(angle) * orbitRadius;
-        const y = centerY + Math.sin(angle) * orbitRadius;
+  const PlanetCard = ({ planet }: { planet: Planet }) => (
+    <Card 
+      className="group relative overflow-hidden bg-neutral-900/50 border-neutral-700 hover:border-neutral-600 transition-all duration-300 hover:scale-105 cursor-pointer"
+      onClick={() => setSelectedPlanet(planet)}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${planet.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+      <CardHeader className="relative">
+        <div className="flex items-center justify-between">
+          <div 
+            className={`w-12 h-12 rounded-full bg-gradient-to-br ${planet.color} shadow-lg`}
+            style={{
+              boxShadow: `0 0 20px rgba(${planet.color.includes('blue') ? '59, 130, 246' : 
+                         planet.color.includes('red') ? '239, 68, 68' :
+                         planet.color.includes('yellow') ? '245, 158, 11' :
+                         planet.color.includes('green') ? '34, 197, 94' : '156, 163, 175'}, 0.3)`
+            }}
+          />
+          <ChevronRight className="h-5 w-5 text-neutral-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+        </div>
+        <CardTitle className="text-2xl font-bold text-white group-hover:text-blue-300 transition-colors duration-300">
+          {planet.name}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="relative space-y-4">
+        <CardDescription className="text-neutral-300">
+          {planet.description}
+        </CardDescription>
         
-        // Draw orbit path
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, orbitRadius, 0, 2 * Math.PI);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        
-        // Draw planet with better sizing and gradients
-        const planetRadius = Math.max(2, Math.min(12, Math.log(planet.radius + 1) * 3));
-        const planetGradient = ctx.createRadialGradient(x - 2, y - 2, 0, x, y, planetRadius);
-        planetGradient.addColorStop(0, planet.color);
-        planetGradient.addColorStop(1, '#000000');
-        
-        ctx.beginPath();
-        ctx.arc(x, y, planetRadius, 0, 2 * Math.PI);
-        ctx.fillStyle = planetGradient;
-        ctx.fill();
-        
-        // Highlight selected planet
-        if (planet.id === selectedPlanet.id) {
-          ctx.strokeStyle = '#60A5FA';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          
-          // Add planet name label
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = '12px Inter, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(planet.name, x, y + planetRadius + 15);
-        }
-      });
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex items-center space-x-2">
+            <Sun className="h-4 w-4 text-orange-400" />
+            <span className="text-neutral-400">{planet.distance} AU</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Timer className="h-4 w-4 text-blue-400" />
+            <span className="text-neutral-400">{planet.orbitalPeriod} days</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Thermometer className="h-4 w-4 text-red-400" />
+            <span className="text-neutral-400">{planet.temperature}°C</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Moon className="h-4 w-4 text-gray-400" />
+            <span className="text-neutral-400">{planet.moons} moons</span>
+          </div>
+        </div>
 
-      time += 1;
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [selectedPlanet]);
-
-  const formatNumber = (num: number) => {
-    return num.toLocaleString();
-  };
-
-  const formatTemperature = (temp: number) => {
-    return temp > 0 ? `+${temp}°C` : `${temp}°C`;
-  };
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="secondary" className="bg-neutral-800 text-neutral-300">
+            {planet.radius}x Earth size
+          </Badge>
+          <Badge variant="secondary" className="bg-neutral-800 text-neutral-300">
+            {planet.mass}x Earth mass
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-800 to-black">
       <Navigation />
-
+      
       {/* Hero Section */}
-      <section className="pt-24 sm:pt-32 pb-12 sm:pb-16 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="stars" />
-          <div className="twinkling" />
-        </div>
-        
-        <div className="container mx-auto px-4 sm:px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center mb-12">
-            <Badge className="mb-4 sm:mb-6 bg-gradient-to-r from-orange-600/20 to-yellow-600/20 border border-orange-500/30 text-orange-300 text-xs sm:text-sm">
-              Interactive Solar System
-            </Badge>
-            
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-white via-yellow-200 to-orange-300 bg-clip-text text-transparent leading-tight">
-              Solar System Explorer
+      <section className="relative pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="mb-8">
+            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent mb-6">
+              Solar System
             </h1>
-            
-            <p className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto mb-6 sm:mb-8 px-4 sm:px-0">
-              Explore our solar system with interactive planetary data, orbital mechanics, and fascinating facts about each celestial body.
+            <p className="text-xl md:text-2xl text-neutral-300 max-w-4xl mx-auto leading-relaxed">
+              Explore our cosmic neighborhood with detailed information about each planet, 
+              their characteristics, and fascinating facts about our solar system
             </p>
+          </div>
+          
+          {/* Solar System Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-400 mb-2">8</div>
+              <div className="text-neutral-400">Planets</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-400 mb-2">290+</div>
+              <div className="text-neutral-400">Moons</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-400 mb-2">4.6B</div>
+              <div className="text-neutral-400">Years Old</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-400 mb-2">1</div>
+              <div className="text-neutral-400">Known Life</div>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Solar System Visualization */}
-          <div className="space-y-6">
-            <Card className="bg-neutral-800/50 border-neutral-700 p-6">
-              <h2 className="text-2xl font-bold mb-4 flex items-center">
-                <Zap className="w-6 h-6 mr-2 text-blue-400" />
-                Interactive Solar System
-              </h2>
-              <div className="relative">
-                <canvas
-                  ref={canvasRef}
-                  className="w-full h-80 bg-black/20 rounded-lg border border-neutral-700"
-                  style={{ cursor: 'pointer' }}
-                />
-                <p className="text-sm text-neutral-400 mt-2 text-center">
-                  Click on planets to explore • Orbits are not to scale
-                </p>
+      {/* Planets Grid */}
+      <section className="pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {planets.map((planet, index) => (
+              <div
+                key={planet.id}
+                className="opacity-0 animate-fade-in-up"
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                  animationFillMode: 'forwards'
+                }}
+              >
+                <PlanetCard planet={planet} />
               </div>
-            </Card>
-
-            {/* Planet Selection */}
-            <Card className="bg-neutral-800/50 border-neutral-700 p-6">
-              <h3 className="text-lg font-semibold mb-4">Select Planet</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                {planets.map((planet) => (
-                  <Button
-                    key={planet.id}
-                    variant={selectedPlanet.id === planet.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedPlanet(planet)}
-                    className="flex flex-col items-center p-3 h-auto"
-                  >
-                    <div 
-                      className="w-6 h-6 rounded-full mb-2"
-                      style={{ backgroundColor: planet.color }}
-                    />
-                    <span className="text-xs">{planet.name}</span>
-                  </Button>
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          {/* Planet Details */}
-          <div className="space-y-6">
-            <Card className="bg-neutral-800/50 border-neutral-700 p-6">
-              <div className="flex items-center mb-4">
-                <div 
-                  className="w-12 h-12 rounded-full mr-4"
-                  style={{ backgroundColor: selectedPlanet.color }}
-                />
-                <div>
-                  <h2 className="text-3xl font-bold">{selectedPlanet.name}</h2>
-                  <Badge className="mt-1 bg-blue-500/10 border-blue-500/20 text-blue-400">
-                    {selectedPlanet.id === 'sun' ? 'Star' : 'Planet'}
-                  </Badge>
-                </div>
-              </div>
-              <p className="text-neutral-300 leading-relaxed mb-6">
-                {selectedPlanet.description}
-              </p>
-
-              {/* Key Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-neutral-900/50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Thermometer className="w-4 h-4 mr-2 text-red-400" />
-                    <span className="text-sm text-neutral-400">Temperature</span>
-                  </div>
-                  <span className="text-xl font-bold">{formatTemperature(selectedPlanet.temperature)}</span>
-                </div>
-
-                <div className="bg-neutral-900/50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Calendar className="w-4 h-4 mr-2 text-blue-400" />
-                    <span className="text-sm text-neutral-400">Year Length</span>
-                  </div>
-                  <span className="text-xl font-bold">
-                    {selectedPlanet.id === 'sun' ? 'N/A' : `${formatNumber(selectedPlanet.orbitalPeriod)} days`}
-                  </span>
-                </div>
-
-                <div className="bg-neutral-900/50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Users className="w-4 h-4 mr-2 text-green-400" />
-                    <span className="text-sm text-neutral-400">Moons</span>
-                  </div>
-                  <span className="text-xl font-bold">{selectedPlanet.moons}</span>
-                </div>
-
-                <div className="bg-neutral-900/50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Info className="w-4 h-4 mr-2 text-purple-400" />
-                    <span className="text-sm text-neutral-400">Mass (Earth = 1)</span>
-                  </div>
-                  <span className="text-xl font-bold">
-                    {selectedPlanet.mass >= 1 ? formatNumber(selectedPlanet.mass) : selectedPlanet.mass.toFixed(3)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Interesting Facts */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Fascinating Facts</h3>
-                <ul className="space-y-2">
-                  {selectedPlanet.facts.map((fact, index) => (
-                    <li key={index} className="flex items-start">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0" />
-                      <span className="text-neutral-300">{fact}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Card>
-
-            {/* Additional Data */}
-            <Card className="bg-neutral-800/50 border-neutral-700 p-6">
-              <h3 className="text-lg font-semibold mb-4">Orbital Data</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-neutral-400">Distance from Sun</span>
-                  <span className="font-medium">
-                    {selectedPlanet.id === 'sun' ? 'Center' : `${selectedPlanet.distance} AU`}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-400">Radius (Earth = 1)</span>
-                  <span className="font-medium">{selectedPlanet.radius}x</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-400">Day Length</span>
-                  <span className="font-medium">
-                    {selectedPlanet.id === 'sun' 
-                      ? '25.4 Earth days' 
-                      : selectedPlanet.rotationPeriod < 0 
-                        ? `${Math.abs(selectedPlanet.rotationPeriod).toFixed(1)}h (retrograde)`
-                        : `${selectedPlanet.rotationPeriod.toFixed(1)}h`
-                    }
-                  </span>
-                </div>
-              </div>
-            </Card>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Planet Detail Modal */}
+      <Dialog open={!!selectedPlanet} onOpenChange={() => setSelectedPlanet(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-neutral-900 border-neutral-700">
+          {selectedPlanet && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center space-x-4 mb-4">
+                  <div 
+                    className={`w-16 h-16 rounded-full bg-gradient-to-br ${selectedPlanet.color} shadow-lg`}
+                    style={{
+                      boxShadow: `0 0 30px rgba(${selectedPlanet.color.includes('blue') ? '59, 130, 246' : 
+                                 selectedPlanet.color.includes('red') ? '239, 68, 68' :
+                                 selectedPlanet.color.includes('yellow') ? '245, 158, 11' :
+                                 selectedPlanet.color.includes('green') ? '34, 197, 94' : '156, 163, 175'}, 0.4)`
+                    }}
+                  />
+                  <div>
+                    <DialogTitle className="text-3xl font-bold text-white">
+                      {selectedPlanet.name}
+                    </DialogTitle>
+                    <DialogDescription className="text-neutral-300 text-lg">
+                      {selectedPlanet.description}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-8">
+                {/* Key Statistics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="bg-neutral-800/50 rounded-lg p-4 text-center">
+                    <Sun className="h-8 w-8 text-orange-400 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-white">{selectedPlanet.distance}</div>
+                    <div className="text-neutral-400 text-sm">AU from Sun</div>
+                  </div>
+                  <div className="bg-neutral-800/50 rounded-lg p-4 text-center">
+                    <Orbit className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-white">{selectedPlanet.orbitalPeriod}</div>
+                    <div className="text-neutral-400 text-sm">Earth days/year</div>
+                  </div>
+                  <div className="bg-neutral-800/50 rounded-lg p-4 text-center">
+                    <Timer className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-white">{selectedPlanet.rotationPeriod}</div>
+                    <div className="text-neutral-400 text-sm">Hours/day</div>
+                  </div>
+                  <div className="bg-neutral-800/50 rounded-lg p-4 text-center">
+                    <Thermometer className="h-8 w-8 text-red-400 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-white">{selectedPlanet.temperature}°C</div>
+                    <div className="text-neutral-400 text-sm">Average temp</div>
+                  </div>
+                </div>
+
+                {/* Comparison to Earth */}
+                <div className="bg-neutral-800/30 rounded-lg p-6">
+                  <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                    <Zap className="mr-2 h-5 w-5 text-blue-400" />
+                    Compared to Earth
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-blue-400">{selectedPlanet.radius}x</div>
+                      <div className="text-neutral-400">Radius</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-green-400">{selectedPlanet.mass}x</div>
+                      <div className="text-neutral-400">Mass</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-purple-400">{selectedPlanet.moons}</div>
+                      <div className="text-neutral-400">Moons</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fascinating Facts */}
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                    <Info className="mr-2 h-5 w-5 text-yellow-400" />
+                    Fascinating Facts
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedPlanet.facts.map((fact, index) => (
+                      <div key={index} className="flex items-start space-x-3 bg-neutral-800/30 rounded-lg p-4">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0" />
+                        <div className="text-neutral-300">{fact}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Footer />
+
+      <style jsx>{`
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation: fade-in-up 0.6s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,176 +1,127 @@
-import React, { useEffect } from 'react';
-import { Link } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Home, ArrowLeft, Rocket } from 'lucide-react';
-import { Navigation } from '@/components/navigation';
-import { CosmicCursor } from '@/components/cosmic-cursor';
-import { Footer } from '@/components/footer';
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Home, ArrowLeft, Rocket, Star, Satellite } from "lucide-react";
 
 export default function NotFoundPage() {
-  useEffect(() => {
-    // Add floating animation keyframes
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes float {
-        0% { transform: translateY(0px) rotate(0deg); }
-        33% { transform: translateY(-10px) rotate(5deg); }
-        66% { transform: translateY(5px) rotate(-5deg); }
-        100% { transform: translateY(0px) rotate(0deg); }
-      }
-      
-      @keyframes glow {
-        0%, 100% { text-shadow: 0 0 20px #3b82f6, 0 0 30px #3b82f6, 0 0 40px #3b82f6; }
-        50% { text-shadow: 0 0 30px #06b6d4, 0 0 40px #06b6d4, 0 0 50px #06b6d4; }
-      }
-      
-      @keyframes stars {
-        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-        10% { opacity: 1; }
-        90% { opacity: 1; }
-        100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
-      }
-      
-      @keyframes rocket-float {
-        0%, 100% { transform: translateY(0px) rotate(-5deg); }
-        50% { transform: translateY(-20px) rotate(5deg); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-blue-950 to-indigo-950 relative overflow-hidden">
-      <CosmicCursor />
-      <Navigation />
-      
-      {/* Animated background stars */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 50 }).map((_, i) => (
+    <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-800 to-black relative overflow-hidden">
+      {/* Animated Background Stars */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(100)].map((_, i) => (
           <div
             key={i}
-            className="absolute rounded-full bg-white opacity-70"
+            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
             style={{
-              width: Math.random() * 3 + 1 + 'px',
-              height: Math.random() * 3 + 1 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-              animation: `stars ${Math.random() * 3 + 2}s linear infinite`,
-              animationDelay: Math.random() * 2 + 's'
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 3}s`,
             }}
           />
         ))}
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
-        <div className="text-center space-y-8 max-w-2xl mx-auto">
-          
-          {/* Floating rocket */}
-          <div 
-            className="flex justify-center mb-8"
-            style={{ animation: 'rocket-float 3s ease-in-out infinite' }}
-          >
-            <Rocket 
-              className="h-24 w-24 text-blue-400 transform rotate-45" 
-              style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))' }}
-            />
-          </div>
+      {/* Floating Rocket */}
+      <div className="absolute top-20 right-10 animate-bounce">
+        <Rocket className="h-16 w-16 text-blue-400 opacity-30" />
+      </div>
 
-          {/* 404 text with glow effect */}
-          <div 
-            className="text-9xl md:text-[12rem] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400"
-            style={{ 
-              animation: 'glow 2s ease-in-out infinite alternate',
-              fontFamily: 'monospace'
-            }}
-          >
-            404
-          </div>
-
-          {/* Error message */}
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Lost in Space
+      {/* Main Content */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto">
+          {/* 404 Text with Glow Effect */}
+          <div className="mb-8">
+            <h1 
+              className="text-8xl md:text-9xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-4"
+              style={{
+                filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.3))',
+              }}
+            >
+              404
             </h1>
-            <p className="text-xl text-blue-200 mb-2">
-              Houston, we have a problem!
+            <div className="flex items-center justify-center space-x-2 mb-6">
+              <Star className="h-6 w-6 text-yellow-400 animate-spin" />
+              <h2 className="text-2xl md:text-3xl font-bold text-white">
+                Lost in Space
+              </h2>
+              <Star className="h-6 w-6 text-yellow-400 animate-spin" />
+            </div>
+          </div>
+
+          {/* Error Message */}
+          <div className="mb-12">
+            <p className="text-lg md:text-xl text-neutral-300 mb-4 leading-relaxed">
+              The page you're looking for has drifted into the cosmic void.
             </p>
-            <p className="text-lg text-slate-300 max-w-md mx-auto leading-relaxed">
-              The page you're looking for has drifted into the cosmic void. 
-              Let's navigate you back to familiar territory.
+            <p className="text-neutral-400">
+              Don't worry, even astronauts get lost sometimes. Let's navigate you back to familiar territory.
             </p>
           </div>
 
-          {/* Floating elements */}
-          <div className="flex justify-center space-x-8 mb-8">
-            {['🌟', '🚀', '🛸', '🌙'].map((emoji, index) => (
-              <div
-                key={index}
-                className="text-3xl"
-                style={{
-                  animation: `float 3s ease-in-out infinite`,
-                  animationDelay: `${index * 0.5}s`
-                }}
-              >
-                {emoji}
-              </div>
-            ))}
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Link href="/">
               <Button 
                 size="lg" 
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 <Home className="mr-2 h-5 w-5" />
-                Return to Earth
+                Return to Home Base
               </Button>
             </Link>
-            
             <Button 
-              variant="outline" 
-              size="lg"
+              variant="outline"
+              size="lg" 
               onClick={() => window.history.back()}
-              className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105"
+              className="border-neutral-600 text-neutral-300 hover:bg-neutral-800 px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:scale-105"
             >
               <ArrowLeft className="mr-2 h-5 w-5" />
               Go Back
             </Button>
           </div>
 
-          {/* Help text */}
-          <div className="pt-8 text-sm text-slate-400">
-            <p>Need assistance? Check out our:</p>
-            <div className="flex flex-wrap justify-center gap-4 mt-2 text-blue-300">
-              <Link href="/gallery" className="hover:text-blue-200 transition-colors">
-                Gallery
+          {/* Quick Navigation */}
+          <div className="bg-neutral-900/50 backdrop-blur-lg border border-neutral-700 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center justify-center">
+              <Satellite className="mr-2 h-5 w-5 text-blue-400" />
+              Quick Navigation
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <Link href="/gallery">
+                <Button variant="ghost" className="w-full text-neutral-400 hover:text-white hover:bg-neutral-800">
+                  Gallery
+                </Button>
               </Link>
-              <span>•</span>
-              <Link href="/iss-tracker" className="hover:text-blue-200 transition-colors">
-                ISS Tracker
+              <Link href="/iss-tracker">
+                <Button variant="ghost" className="w-full text-neutral-400 hover:text-white hover:bg-neutral-800">
+                  ISS Tracker
+                </Button>
               </Link>
-              <span>•</span>
-              <Link href="/space-news" className="hover:text-blue-200 transition-colors">
-                Space News
+              <Link href="/solar-system">
+                <Button variant="ghost" className="w-full text-neutral-400 hover:text-white hover:bg-neutral-800">
+                  Solar System
+                </Button>
               </Link>
-              <span>•</span>
-              <Link href="/satellite-tracker" className="hover:text-blue-200 transition-colors">
-                Satellite Tracker
+              <Link href="/satellites">
+                <Button variant="ghost" className="w-full text-neutral-400 hover:text-white hover:bg-neutral-800">
+                  Satellites
+                </Button>
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom gradient overlay */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-900 to-transparent" />
-      <Footer />
+      {/* Floating Elements */}
+      <div className="absolute bottom-10 left-10 animate-pulse">
+        <div className="w-4 h-4 bg-purple-400 rounded-full opacity-50" />
+      </div>
+      <div className="absolute top-1/3 left-20 animate-pulse">
+        <div className="w-2 h-2 bg-blue-400 rounded-full opacity-60" />
+      </div>
+      <div className="absolute bottom-1/4 right-20 animate-pulse">
+        <div className="w-3 h-3 bg-pink-400 rounded-full opacity-40" />
+      </div>
     </div>
   );
 }
