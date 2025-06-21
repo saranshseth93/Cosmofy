@@ -98,8 +98,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error fetching APOD from NASA:", error);
         clearTimeout(timeout);
-        // Return empty array instead of error to prevent app crash
-        res.json([]);
+        res.status(503).json({ 
+          error: "NASA APOD API unavailable", 
+          message: "Unable to fetch authentic astronomy images from NASA API" 
+        });
       }
     } catch (error) {
       console.error("Error fetching APOD images:", error);
@@ -192,12 +194,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       clearTimeout(timeout);
       console.error("Error fetching ISS position:", error);
       
-      // Return cached position if available on error
-      const fallbackPosition = await storage.getCurrentIssPosition();
-      if (fallbackPosition && !res.headersSent) {
-        res.json(fallbackPosition);
-      } else if (!res.headersSent) {
-        res.status(500).json({ error: "Failed to fetch ISS position" });
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to fetch ISS position from authentic sources" });
       }
     }
   });
