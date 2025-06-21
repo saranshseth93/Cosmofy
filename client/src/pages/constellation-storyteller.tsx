@@ -97,7 +97,7 @@ export default function ConstellationStorytellerPage() {
               latitude,
               longitude,
               timezone: locationData.timezone || 'UTC',
-              city: locationData.city || 'Unknown Location'
+              city: locationData.display || 'Unknown Location'
             });
           } catch (error) {
             setUserLocation({

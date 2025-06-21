@@ -45,6 +45,7 @@ interface LocationData {
   latitude: number;
   longitude: number;
   city: string;
+  display: string;
   timezone: string;
 }
 
@@ -299,7 +300,7 @@ export default function SatelliteTracker() {
           {userLocation && (
             <Badge variant="secondary" className="bg-green-500/20 text-green-300">
               <MapPin className="w-4 h-4 mr-2" />
-              {userLocation.city}
+              {userLocation.display || userLocation.city}
             </Badge>
           )}
           {(!locationLoading && !userLocation) && (

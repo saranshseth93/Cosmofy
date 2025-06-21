@@ -30,6 +30,20 @@ export default function Aurora() {
     },
   });
 
+  // User Location Display Query
+  const { data: userLocationName } = useQuery<string>({
+    queryKey: ['/api/location', coordinates?.latitude, coordinates?.longitude],
+    queryFn: async () => {
+      if (!coordinates) return 'Unknown Location';
+      const response = await fetch(`/api/location?lat=${coordinates.latitude}&lon=${coordinates.longitude}`);
+      if (!response.ok) return 'Unknown Location';
+      const data = await response.json();
+      return data.display || 'Unknown Location';
+    },
+    enabled: !!coordinates,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
   const getActivityLevel = (kpIndex: number) => {
     if (kpIndex <= 2) return { level: 'Quiet', color: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/50' };
     if (kpIndex <= 4) return { level: 'Active', color: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' };

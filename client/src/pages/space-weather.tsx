@@ -87,14 +87,14 @@ export default function SpaceWeatherPage() {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
           
-          // Get city name from coordinates
+          // Get suburb-level location from coordinates
           try {
             const response = await fetch(`/api/location?lat=${lat}&lon=${lon}`);
             const locationData = await response.json();
             setUserLocation({
               lat,
               lon,
-              city: locationData.city || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`
+              city: locationData.display || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`
             });
           } catch (error) {
             setUserLocation({
