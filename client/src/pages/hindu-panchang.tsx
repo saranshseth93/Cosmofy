@@ -211,11 +211,18 @@ export default function HinduPanchangPage() {
   });
 
   // Get Panchang data using coordinates
-  const { data: panchangData, isLoading: panchangLoading } = useQuery<PanchangData>({
+  const { data: panchangData, isLoading: panchangLoading, error: panchangError } = useQuery<PanchangData>({
     queryKey: ['/api/panchang', userCoords?.lat, userCoords?.lon],
-    queryFn: () => fetch(`/api/panchang?lat=${userCoords?.lat}&lon=${userCoords?.lon}`).then(res => res.json()),
+    queryFn: async () => {
+      const response = await fetch(`/api/panchang?lat=${userCoords?.lat}&lon=${userCoords?.lon}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch Panchang data');
+      }
+      return response.json();
+    },
     enabled: !!userCoords,
     staleTime: 60 * 60 * 1000, // 1 hour
+    retry: false,
   });
 
   const formatTime = (date: Date) => {
@@ -253,6 +260,39 @@ export default function HinduPanchangPage() {
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
                 <p className="mt-4 text-muted-foreground">Loading Panchang data...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (panchangError) {
+    return (
+      <>
+        <Navigation />
+        <CosmicCursor />
+        <div className="min-h-screen relative pt-24">
+          {/* Divine Hindu Background */}
+          <DivineBackground />
+          
+          {/* Light Overlay - allows background to show through */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/50 sm:bg-gradient-to-b sm:from-black/45 sm:via-black/35 sm:to-black/45 md:bg-gradient-to-b md:from-black/40 md:via-black/30 md:to-black/40" />
+          
+          {/* Content Container */}
+          <div className="relative z-10">
+            <div className="container mx-auto px-4 py-8">
+              <div className="text-center">
+                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6 max-w-md mx-auto">
+                  <h2 className="text-xl font-semibold text-red-400 mb-4">Panchang Data Unavailable</h2>
+                  <p className="text-gray-300 mb-4">
+                    Unable to fetch authentic Vedic calendar data from the astrology API service.
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    This feature requires ASTROLOGY_USER_ID and ASTROLOGY_API_KEY environment variables to access live Panchang calculations.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

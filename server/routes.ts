@@ -386,6 +386,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Panchang Route
+  app.get("/api/panchang", async (req, res) => {
+    try {
+      const lat = parseFloat(req.query.lat as string) || 28.6139; // Default to Delhi
+      const lon = parseFloat(req.query.lon as string) || 77.2090;
+      const date = req.query.date as string || new Date().toISOString().split('T')[0];
+      
+      // Use authentic Vedic calendar calculation service
+      const panchangResponse = await fetch(
+        `https://api.astrologyapi.com/v1/basic_panchang/${date}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic ' + Buffer.from(`${process.env.ASTROLOGY_USER_ID}:${process.env.ASTROLOGY_API_KEY}`).toString('base64')
+          },
+          body: JSON.stringify({
+            day: parseInt(date.split('-')[2]),
+            month: parseInt(date.split('-')[1]),
+            year: parseInt(date.split('-')[0]),
+            hour: 6,
+            min: 0,
+            lat: lat,
+            lon: lon,
+            tzone: 5.5
+          })
+        }
+      );
+      
+      if (!panchangResponse.ok) {
+        return res.status(503).json({ 
+          error: "Panchang API unavailable",
+          message: "Unable to fetch authentic Vedic calendar data. Please configure ASTROLOGY_USER_ID and ASTROLOGY_API_KEY environment variables."
+        });
+      }
+      
+      const panchangData = await panchangResponse.json();
+      res.json(panchangData);
+    } catch (error) {
+      console.error("Panchang API Error:", error);
+      res.status(503).json({ 
+        error: "Failed to fetch Panchang data",
+        message: "Vedic calendar API service unavailable" 
+      });
+    }
+  });
+
   // Location Route
   app.get("/api/location", async (req, res) => {
     try {
