@@ -479,6 +479,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentVara = varaNames[targetDate.getDay()];
         
         console.log('Using panchangJS library for comprehensive authentic calculations');
+        console.log('Panchang Data Details:');
+        console.log('- Tithi:', tithi, '(Index:', currentTithiIndex, ')');
+        console.log('- Paksh:', paksh);
+        console.log('- Nakshatra:', nakshatra);
+        console.log('- Yoga:', yoga);
+        console.log('- Karana:', karana);
+        console.log('- Vara:', currentVara);
+        console.log('- Masa:', currentHindiMonth);
+        console.log('- Yug:', currentYug);
+        console.log('- Location:', cityName, 'at', lat, lon);
+        console.log('- Samvat Systems:', Array.isArray(samvatData) ? samvatData.length : 'single', 'calendars');
+        console.log('- Kaal Ikai:', kaalIkaiData);
       } catch (error) {
         console.log('panchangJS library error, using astronomical calculations as backup');
         
@@ -710,6 +722,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           scrapingVerification = { verified: false, error: 'Verification failed' };
         }
       }
+      
+      // Log comprehensive verification data
+      if (scrapingVerification.verified) {
+        console.log('Data Verification Results:');
+        console.log('- Tithi verification:', scrapingVerification.tithi);
+        console.log('- Nakshatra verification:', scrapingVerification.nakshatra);
+        console.log('- Yoga verification:', scrapingVerification.yoga);
+        console.log('- Karana verification:', scrapingVerification.karana);
+      }
+      
+      // Log complete API response structure
+      console.log('Full API Response Structure:');
+      console.log('- Date:', date);
+      console.log('- Sunrise/Sunset:', sunrise, '/', sunset);
+      console.log('- Festivals:', festivals);
+      console.log('- Vrats:', vratsAndOccasions);
+      console.log('- Verification status:', scrapingVerification.verified || false);
       
       // Enhanced Panchang data with comprehensive authentic calculations
       const panchangData = {
