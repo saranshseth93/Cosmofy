@@ -211,6 +211,14 @@ Changelog:
     - Added proper seasonal visibility checking based on constellation's best viewing months
     - Improved sky conditions API with lunar cycle calculations and optimal viewing times
     - Enhanced astronomical accuracy for all 88 constellations with hemisphere-specific calculations
+  * Complete data authenticity cleanup (June 21, 2025):
+    - Eliminated all synthetic/fallback data generators across the entire codebase
+    - Removed generateDefaultStars, generateDefaultDSOs, and all random coordinate generators
+    - Updated all API endpoints to return clear error messages when authentic data sources fail
+    - Enhanced error handling to show specific messages about API unavailability instead of displaying synthetic data
+    - Cleaned up both server/services/constellation-api.ts and netlify/functions/constellations.ts
+    - Removed corrupted backup files and ensured only authentic scraped data is used
+    - All APIs now fail gracefully with informative error messages rather than showing fake data
 ```
 
 ## User Preferences
