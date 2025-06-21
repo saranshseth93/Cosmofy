@@ -45,6 +45,17 @@ export interface AstroResponse {
   }>;
 }
 
+export interface IssOrbitResponse {
+  orbitPath: Array<{
+    latitude: number;
+    longitude: number;
+    timestamp: number;
+  }>;
+  period: number;
+  inclination: number;
+  altitude: number;
+}
+
 export interface NeoResponse {
   links: any;
   element_count: number;
@@ -237,6 +248,65 @@ export class NasaApiService {
   async getAstronauts(): Promise<AstroResponse> {
     const response = await this.fetchWithRetry("http://api.open-notify.org/astros.json");
     return response.json();
+  }
+
+  async getIssOrbit(): Promise<IssOrbitResponse> {
+    try {
+      // Get current ISS position as starting point
+      const currentPosition = await this.getIssPosition();
+      const currentLat = parseFloat(currentPosition.iss_position.latitude);
+      const currentLon = parseFloat(currentPosition.iss_position.longitude);
+      const currentTime = Date.now();
+      
+      // ISS orbital parameters (authentic values)
+      const orbitalPeriod = 92.68 * 60 * 1000; // 92.68 minutes in milliseconds
+      const inclination = 51.6; // degrees - ISS orbital inclination
+      const altitude = 408; // km - average ISS altitude
+      const earthRadius = 6371; // km
+      const orbitalRadius = earthRadius + altitude;
+      const angularVelocity = (2 * Math.PI) / orbitalPeriod; // radians per millisecond
+      
+      // Calculate orbital path points for one complete orbit
+      const orbitPath = [];
+      const numPoints = 100; // Points along the orbit
+      
+      for (let i = 0; i < numPoints; i++) {
+        const timeOffset = (i * orbitalPeriod) / numPoints;
+        const timestamp = currentTime + timeOffset;
+        
+        // Calculate position using simplified orbital mechanics
+        // This accounts for Earth's rotation and ISS orbital motion
+        const meanAnomaly = angularVelocity * timeOffset;
+        const earthRotation = (timeOffset / (24 * 60 * 60 * 1000)) * 360; // Earth rotation in degrees
+        
+        // Calculate latitude using orbital inclination
+        const orbitPhase = (currentLon + (meanAnomaly * 180 / Math.PI)) % 360;
+        const latitude = Math.sin((orbitPhase * Math.PI) / 180) * inclination;
+        
+        // Calculate longitude accounting for Earth's rotation
+        let longitude = currentLon + (meanAnomaly * 180 / Math.PI) - earthRotation;
+        
+        // Normalize longitude to -180 to 180
+        while (longitude > 180) longitude -= 360;
+        while (longitude < -180) longitude += 360;
+        
+        orbitPath.push({
+          latitude: Math.max(-90, Math.min(90, latitude)),
+          longitude,
+          timestamp: Math.floor(timestamp)
+        });
+      }
+      
+      return {
+        orbitPath,
+        period: orbitalPeriod / (60 * 1000), // in minutes
+        inclination,
+        altitude
+      };
+    } catch (error) {
+      console.error('Error calculating ISS orbit:', error);
+      throw new Error('Unable to calculate ISS orbital path from current position data');
+    }
   }
 
   async getNearEarthObjects(startDate: string, endDate: string): Promise<NeoResponse> {

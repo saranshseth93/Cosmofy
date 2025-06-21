@@ -87,6 +87,18 @@ export default function ISSTracker() {
     refetchInterval: autoRefresh ? 10000 : false,
   });
 
+  // ISS Orbit Query
+  const { data: orbitData, isLoading: orbitLoading } = useQuery({
+    queryKey: ['/api/iss/orbit'],
+    queryFn: async () => {
+      const response = await fetch('/api/iss/orbit');
+      if (!response.ok) throw new Error('Failed to fetch ISS orbit');
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchInterval: autoRefresh ? 5 * 60 * 1000 : false, // Refresh every 5 minutes
+  });
+
   // ISS Passes Query
   const { data: passes, isLoading: passesLoading } = useQuery<IssPass[]>({
     queryKey: ['/api/iss/passes', activeCoordinates?.latitude, activeCoordinates?.longitude],

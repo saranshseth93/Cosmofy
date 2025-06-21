@@ -289,6 +289,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ISS Orbit Route
+  app.get("/api/iss/orbit", async (req, res) => {
+    try {
+      const orbitData = await nasaApi.getIssOrbit();
+      res.json(orbitData);
+    } catch (error) {
+      console.error("Error fetching ISS orbit:", error);
+      res.status(503).json({ 
+        error: "ISS orbit calculation failed", 
+        message: "Unable to calculate authentic ISS orbital path from current position data" 
+      });
+    }
+  });
+
   // Asteroids Route
   app.get("/api/asteroids", async (req, res) => {
     try {
