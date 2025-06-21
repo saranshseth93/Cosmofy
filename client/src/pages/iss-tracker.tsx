@@ -830,12 +830,12 @@ export default function ISSTracker() {
               </CardContent>
             </Card>
 
-            {/* Environmental Data */}
+            {/* Mission Statistics */}
             <Card className="glass-morphism">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center text-lg">
                   <Gauge className="text-green-400 mr-3 h-5 w-5" />
-                  Environmental Systems
+                  Mission Statistics
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -843,44 +843,41 @@ export default function ISSTracker() {
                   <div className="bg-gray-800/30 p-4 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-gray-300 flex items-center">
-                        <Wind className="w-4 h-4 mr-2 text-gray-400" />
-                        Atmospheric Pressure
+                        <Timer className="w-4 h-4 mr-2 text-green-400" />
+                        Mission Duration
                       </span>
-                      <span className="text-green-400 font-semibold">{systemStatus.pressure.toFixed(1)} kPa</span>
+                      <span className="text-green-400 font-semibold">25+ Years</span>
                     </div>
-                    <Progress value={(systemStatus.pressure / 110) * 100} className="h-2" />
                   </div>
 
                   <div className="bg-gray-800/30 p-4 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-gray-300 flex items-center">
-                        <Activity className="w-4 h-4 mr-2 text-blue-400" />
-                        Oxygen Level
+                        <Globe className="w-4 h-4 mr-2 text-blue-400" />
+                        Earth Coverage
                       </span>
-                      <span className="text-blue-400 font-semibold">{systemStatus.oxygen.toFixed(1)}%</span>
+                      <span className="text-blue-400 font-semibold">93%</span>
                     </div>
-                    <Progress value={(systemStatus.oxygen / 25) * 100} className="h-2" />
                   </div>
 
                   <div className="bg-gray-800/30 p-4 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-gray-300 flex items-center">
-                        <Thermometer className="w-4 h-4 mr-2 text-orange-400" />
-                        Internal Temperature
+                        <Users className="w-4 h-4 mr-2 text-orange-400" />
+                        Crew Capacity
                       </span>
-                      <span className="text-orange-400 font-semibold">{systemStatus.temperature.toFixed(1)}°C</span>
+                      <span className="text-orange-400 font-semibold">7 People</span>
                     </div>
-                    <Progress value={(systemStatus.temperature / 30) * 100} className="h-2" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                      <div className="text-lg font-bold text-green-400">NOMINAL</div>
-                      <div className="text-xs text-gray-400">Life Support</div>
+                      <div className="text-lg font-bold text-green-400">ACTIVE</div>
+                      <div className="text-xs text-gray-400">Mission Status</div>
                     </div>
                     <div className="text-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                      <div className="text-lg font-bold text-blue-400">STABLE</div>
-                      <div className="text-xs text-gray-400">Atmosphere</div>
+                      <div className="text-lg font-bold text-blue-400">LIVE</div>
+                      <div className="text-xs text-gray-400">Tracking Data</div>
                     </div>
                   </div>
                 </div>

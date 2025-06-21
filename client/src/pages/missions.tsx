@@ -11,36 +11,64 @@ import { CosmicPulse } from '@/components/lottie-loader';
 import { PulseCTA, CosmicCTA } from '@/components/cosmic-cta';
 
 interface SpaceMission {
-  id: number;
+  id: string;
   name: string;
-  description: string;
-  status: string;
-  launchDate: Date;
-  agency: string;
-  missionType: string;
-  destination: string;
-  imageUrl?: string;
-  websiteUrl?: string;
-  crew?: string[];
-  missionDuration?: string;
-  objectives?: string[];
-  keyAchievements?: string[];
-  keyDiscoveries?: string[];
-  instruments?: string[];
-  records?: string[];
-  keyMilestones?: Array<{ date: string; event: string }>;
-  budget?: string;
-  launchVehicle?: string;
-  arrivalDate?: Date;
-  currentLocation?: string;
-  distanceTraveled?: string;
-  samplesCollected?: number;
-  mirrorDiameter?: string;
-  operatingTemperature?: string;
-  closestApproach?: Date;
-  currentSpeed?: string;
-  uniqueFeatures?: string[];
-  flightCapability?: string;
+  status: {
+    id: number;
+    name: string;
+    abbrev: string;
+    description: string;
+  };
+  net: string;
+  window_end: string;
+  window_start: string;
+  mission?: {
+    id: number;
+    name: string;
+    description: string;
+    type: string;
+    orbit?: {
+      id: number;
+      name: string;
+      abbrev: string;
+    };
+  };
+  pad: {
+    id: number;
+    name: string;
+    location: {
+      id: number;
+      name: string;
+      country_code: string;
+    };
+  };
+  rocket: {
+    id: number;
+    configuration: {
+      id: number;
+      name: string;
+      family: string;
+      full_name: string;
+      variant: string;
+    };
+  };
+  launch_service_provider: {
+    id: number;
+    name: string;
+    type: string;
+  };
+  image?: string;
+  infographic?: string;
+  program?: Array<{
+    id: number;
+    name: string;
+    description: string;
+    agencies: Array<{
+      id: number;
+      name: string;
+      type: string;
+    }>;
+  }>;
 }
 
 export default function SpaceMissions() {
@@ -62,14 +90,17 @@ export default function SpaceMissions() {
   });
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active':
+    switch (status.toLowerCase()) {
+      case 'go':
+      case 'success':
         return 'bg-green-500/20 text-green-300 border-green-500/50';
-      case 'Planned':
+      case 'tbd':
+      case 'to be determined':
         return 'bg-blue-500/20 text-blue-300 border-blue-500/50';
-      case 'Completed':
-        return 'bg-purple-500/20 text-purple-300 border-purple-500/50';
-      case 'Operational':
+      case 'failure':
+      case 'partial failure':
+        return 'bg-red-500/20 text-red-300 border-red-500/50';
+      case 'in flight':
         return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50';
       default:
         return 'bg-gray-500/20 text-gray-300 border-gray-500/50';
@@ -78,9 +109,9 @@ export default function SpaceMissions() {
 
   const filteredMissions = selectedFilter === 'All' 
     ? missions || []
-    : missions?.filter(mission => mission.status === selectedFilter) || [];
+    : missions?.filter(mission => mission.status?.name === selectedFilter) || [];
 
-  const uniqueStatuses = missions ? ['All', ...Array.from(new Set(missions.map(m => m.status)))] : ['All'];
+  const uniqueStatuses = missions ? ['All', ...Array.from(new Set(missions.map(m => m.status?.name).filter(Boolean)))] : ['All'];
 
   const formatDate = (date: Date | string) => {
     const d = new Date(date);

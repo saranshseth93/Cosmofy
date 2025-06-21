@@ -357,6 +357,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Space Missions Route
+  app.get("/api/missions", async (req, res) => {
+    try {
+      const limit = req.query.limit || '10';
+      const offset = req.query.offset || '0';
+      const mode = req.query.mode || 'detailed';
+      
+      const response = await fetch(
+        `https://ll.thespacedevs.com/2.2.0/launch/?limit=${limit}&offset=${offset}&mode=${mode}`
+      );
+      
+      if (!response.ok) {
+        return res.status(503).json({ 
+          error: "Launch Library API unavailable",
+          message: `API returned status ${response.status}. Please try again later.`
+        });
+      }
+      
+      const data = await response.json();
+      res.json(data.results || []);
+    } catch (error) {
+      console.error("Missions API Error:", error);
+      res.status(503).json({ 
+        error: "Failed to fetch space mission data",
+        message: "Launch Library API service unavailable" 
+      });
+    }
+  });
+
   // Location Route
   app.get("/api/location", async (req, res) => {
     try {
