@@ -81,8 +81,8 @@ class NetlifyConstellationApi {
 
     console.log(`Found ${links.length} constellation links`);
 
-    // Process in smaller batches for serverless function limits
-    for (let i = 0; i < Math.min(links.length, 20); i++) {
+    // Process first 10 constellations for serverless function limits
+    for (let i = 0; i < Math.min(links.length, 10); i++) {
       try {
         const constellation = await this.scrapeConstellationDetail(links[i]);
         if (constellation) {
@@ -233,34 +233,11 @@ class NetlifyConstellationApi {
       { name: `${constellationName} Nebula`, type: 'Nebula', magnitude: 7.5, description: `Nebula in ${constellationName}` }
     ];
   }
-
-  getSkyConditions(lat: number, lon: number): any {
-    const isNorthern = lat > 0;
-    const now = new Date();
-    const hour = now.getHours();
-    const month = now.getMonth() + 1;
-    
-    // Basic visibility calculation
-    const visibleConstellations = isNorthern 
-      ? ['orion', 'ursa-major', 'cassiopeia', 'perseus', 'andromeda']
-      : ['orion', 'crux', 'centaurus', 'carina', 'vela'];
-    
-    return {
-      visibleConstellations: visibleConstellations.slice(0, Math.floor(Math.random() * 5) + 3),
-      moonPhase: 'First Quarter',
-      moonIllumination: Math.floor(Math.random() * 100),
-      bestViewingTime: isNorthern ? '21:00 - 02:00' : '20:00 - 01:00',
-      conditions: hour >= 20 || hour <= 4 ? 'Good viewing conditions' : 'Daylight - not visible'
-    };
-  }
 }
 
 const constellationApi = new NetlifyConstellationApi();
 
 export const handler: Handler = async (event, context) => {
-  const { httpMethod, queryStringParameters, body } = event;
-  
-  // Add CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -268,102 +245,19 @@ export const handler: Handler = async (event, context) => {
     'Content-Type': 'application/json',
   };
 
-  // Handle preflight requests
-  if (httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: '',
-    };
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
   }
 
   try {
-    // Extract the API path from query parameters since Netlify functions handle routing differently
-    const apiPath = queryStringParameters?.path || '/';
-    
-    console.log('API Path:', apiPath, 'Method:', httpMethod, 'Event path:', event.path);
-    
-    switch (apiPath) {
-      case '/constellations':
-        if (httpMethod === 'GET') {
-          const constellations = await constellationApi.getConstellations();
-          return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify(constellations),
-          };
-        }
-        break;
-
-      case '/sky-conditions':
-        if (httpMethod === 'GET') {
-          const lat = parseFloat(queryStringParameters?.lat || '0');
-          const lon = parseFloat(queryStringParameters?.lon || '0');
-          const skyConditions = constellationApi.getSkyConditions(lat, lon);
-          
-          return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify(skyConditions),
-          };
-        }
-        break;
-
-      case '/location':
-        if (httpMethod === 'GET') {
-          const locationData = {
-            latitude: -37.6123312438664,
-            longitude: 144.9918038934098,
-            city: 'Melbourne, Australia',
-            timezone: 'UTC'
-          };
-          return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify(locationData),
-          };
-        }
-        break;
-
-      case '/apod':
-        if (httpMethod === 'GET') {
-          // Return sample APOD data for deployment
-          const apodData = [
-            {
-              id: 1,
-              date: '2024-12-21',
-              title: 'Orion Nebula in Infrared',
-              explanation: 'The Orion Nebula is a stellar nursery where new stars are born.',
-              url: 'https://science.nasa.gov/wp-content/uploads/2023/09/orion-nebula-by-hubble-and-spitzer.jpg',
-              hdurl: 'https://science.nasa.gov/wp-content/uploads/2023/09/orion-nebula-by-hubble-and-spitzer.jpg',
-              mediaType: 'image',
-              copyright: 'NASA/ESA'
-            }
-          ];
-          return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify(apodData),
-          };
-        }
-        break;
-
-      default:
-        console.log('Unknown API path:', apiPath);
-        return {
-          statusCode: 404,
-          headers,
-          body: JSON.stringify({ error: `API endpoint not found: ${apiPath}` }),
-        };
-    }
-
+    const constellations = await constellationApi.getConstellations();
     return {
-      statusCode: 405,
+      statusCode: 200,
       headers,
-      body: JSON.stringify({ error: 'Method not allowed' }),
+      body: JSON.stringify(constellations),
     };
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('Constellation API Error:', error);
     return {
       statusCode: 500,
       headers,
