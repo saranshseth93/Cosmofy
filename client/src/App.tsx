@@ -39,6 +39,7 @@ function Router() {
       <Route path="/mars-rover" component={MarsRover} />
       <Route path="/constellations" component={ConstellationStoryteller} />
       <Route path="/satellite-tracker" component={SatelliteTracker} />
+      <Route path="/satellites" component={SatelliteTracker} />
       <Route path="/panchang" component={HinduPanchang} />
       <Route component={NotFound} />
     </Switch>

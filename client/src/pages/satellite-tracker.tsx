@@ -180,7 +180,7 @@ export default function SatelliteTracker() {
   };
 
   const getTypeColor = (type: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       space_station: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       communication: 'bg-green-500/20 text-green-400 border-green-500/30',
       earth_observation: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
