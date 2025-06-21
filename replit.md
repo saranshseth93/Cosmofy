@@ -240,6 +240,9 @@ Changelog:
     - Complete data authenticity achieved: Zero synthetic data generators remain in entire codebase
     - All pages now exclusively use authentic space data sources or show clear error messages when APIs unavailable
     - Final cleanup completed: All 11 Netlify functions and server routes now maintain complete data integrity
+    - Fixed ISS tracker missing crew and passes display by adding proper API endpoints to server routes
+    - Removed synthetic fallback data from NASA API service ISS passes method to maintain data authenticity
+    - Enhanced ISS tracker error handling to show clear messages when NASA APIs are unavailable instead of blank sections
 ```
 
 ## User Preferences

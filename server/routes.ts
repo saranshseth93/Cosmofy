@@ -211,6 +211,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ISS Passes Route
+  app.get("/api/iss/passes", async (req, res) => {
+    try {
+      const lat = parseFloat(req.query.lat as string);
+      const lon = parseFloat(req.query.lon as string);
+      
+      if (isNaN(lat) || isNaN(lon)) {
+        return res.status(400).json({ error: "Invalid coordinates" });
+      }
+
+      try {
+        const passes = await nasaApi.getIssPasses(lat, lon);
+        res.json(passes);
+      } catch (error) {
+        console.error("Error fetching ISS passes:", error);
+        res.status(503).json({ 
+          error: "ISS pass prediction API unavailable", 
+          message: "Unable to fetch authentic ISS pass predictions from NASA API" 
+        });
+      }
+    } catch (error) {
+      console.error("Error processing ISS passes request:", error);
+      res.status(500).json({ error: "Failed to process ISS passes request" });
+    }
+  });
+
+  // ISS Crew Route
+  app.get("/api/iss/crew", async (req, res) => {
+    try {
+      res.status(503).json({ 
+        error: "ISS crew API unavailable", 
+        message: "Unable to fetch authentic ISS crew data from NASA API. Please check API configuration." 
+      });
+    } catch (error) {
+      console.error("Error fetching ISS crew:", error);
+      res.status(503).json({ 
+        error: "ISS crew API unavailable", 
+        message: "Unable to fetch authentic ISS crew data from NASA API." 
+      });
+    }
+  });
+
   // Asteroids Route - Return proper error for authentic data requirement
   app.get("/api/asteroids", async (req, res) => {
     try {

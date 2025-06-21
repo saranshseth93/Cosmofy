@@ -632,7 +632,9 @@ export default function ISSTracker() {
                   </div>
                 ) : (
                   <div className="text-center text-gray-400 py-8">
-                    No upcoming passes found for your location
+                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+                    <div className="text-lg font-medium mb-2">Pass predictions unavailable</div>
+                    <div className="text-sm">Unable to fetch authentic ISS pass data from NASA API</div>
                   </div>
                 )}
               </CardContent>
@@ -751,11 +753,20 @@ export default function ISSTracker() {
                     </Card>
                   ))}
                 </div>
+              ) : crewLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="p-4 bg-gray-800/30 rounded-lg">
+                      <div className="h-4 bg-gray-700/50 rounded mb-2 animate-pulse" />
+                      <div className="h-3 bg-gray-700/50 rounded w-1/2 animate-pulse" />
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="text-center text-gray-400 py-12">
-                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                  <div className="text-lg font-medium mb-2">No crew information available</div>
-                  <div className="text-sm">Unable to load current ISS crew data</div>
+                  <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                  <div className="text-lg font-medium mb-2">Crew data unavailable</div>
+                  <div className="text-sm">Unable to fetch authentic ISS crew data from NASA API</div>
                 </div>
               )}
             </CardContent>

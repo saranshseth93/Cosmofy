@@ -168,45 +168,13 @@ export class NasaApiService {
   }
 
   async getIssPasses(lat: number, lon: number, passes = 5): Promise<IssPassesResponse> {
-    // Try primary API first
-    try {
-      const url = new URL("http://api.open-notify.org/iss-pass.json");
-      url.searchParams.set("lat", lat.toString());
-      url.searchParams.set("lon", lon.toString());
-      url.searchParams.set("n", passes.toString());
+    const url = new URL("http://api.open-notify.org/iss-pass.json");
+    url.searchParams.set("lat", lat.toString());
+    url.searchParams.set("lon", lon.toString());
+    url.searchParams.set("n", passes.toString());
 
-      const response = await this.fetchWithRetry(url.toString());
-      return response.json();
-    } catch (error) {
-      console.warn("Primary ISS passes API unavailable, using calculated predictions");
-      
-      // Generate realistic pass predictions based on ISS orbital mechanics
-      const now = Date.now();
-      const predictions = [];
-      
-      for (let i = 0; i < passes; i++) {
-        // ISS orbits Earth approximately every 93 minutes
-        const passTime = now + (i * 93 * 60 * 1000) + (Math.random() * 30 * 60 * 1000);
-        const duration = 300 + Math.random() * 300; // 5-10 minute passes
-        
-        predictions.push({
-          duration: Math.floor(duration),
-          risetime: Math.floor(passTime / 1000)
-        });
-      }
-      
-      return {
-        message: "success",
-        request: {
-          altitude: 100,
-          datetime: Math.floor(now / 1000),
-          latitude: lat,
-          longitude: lon,
-          passes: passes
-        },
-        response: predictions
-      };
-    }
+    const response = await this.fetchWithRetry(url.toString());
+    return response.json();
   }
 
   async getAstronauts(): Promise<AstroResponse> {
