@@ -160,9 +160,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recentPosition = await storage.getCurrentIssPosition();
       if (recentPosition) {
         const age = Date.now() - new Date(recentPosition.timestamp).getTime();
-        if (age < 60000) { // If less than 1 minute old, return cached
+        if (age < 60000) { // If less than 1 minute old, return cached with location
           clearTimeout(timeout);
-          res.json(recentPosition);
+          
+          // Add location to cached position if missing
+          let location = "Over Ocean";
+          try {
+            console.log(`Getting location for cached position: ${recentPosition.latitude}, ${recentPosition.longitude}`);
+            location = await geolocationService.getCityFromCoordinates(
+              recentPosition.latitude,
+              recentPosition.longitude
+            );
+            console.log(`Got location for cached position: ${location}`);
+          } catch (error) {
+            console.error("Error getting cached ISS location:", error);
+          }
+          
+          const positionWithLocation = {
+            ...recentPosition,
+            location
+          };
+          
+          res.json(positionWithLocation);
           return;
         }
       }
