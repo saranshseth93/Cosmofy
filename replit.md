@@ -243,6 +243,11 @@ Changelog:
     - Fixed ISS tracker missing crew and passes display by adding proper API endpoints to server routes
     - Removed synthetic fallback data from NASA API service ISS passes method to maintain data authenticity
     - Enhanced ISS tracker error handling to show clear messages when NASA APIs are unavailable instead of blank sections
+    - Completely updated all Netlify functions to exactly match authentic API formats and sorting behavior
+    - Fixed location API to show suburb/locality names instead of just country names using BigDataCloud reverse geocoding
+    - Updated all server API routes to properly handle NASA API authentication and return authentic data when credentials available
+    - Fixed asteroid, APOD, ISS crew, and location APIs to load data correctly without any synthetic fallbacks
+    - Implemented proper error handling across all APIs to show meaningful messages when authentic sources unavailable
 ```
 
 ## User Preferences
