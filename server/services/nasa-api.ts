@@ -1,4 +1,4 @@
-const NASA_API_KEY = process.env.NASA_API_KEY || process.env.VITE_NASA_API_KEY || "DEMO_KEY";
+const NASA_API_KEY = process.env.NASA_API_KEY || process.env.VITE_NASA_API_KEY || "";
 const NASA_BASE_URL = "https://api.nasa.gov";
 
 export interface ApodResponse {
@@ -136,6 +136,10 @@ export class NasaApiService {
   }
 
   async getApod(date?: string): Promise<ApodResponse> {
+    if (!NASA_API_KEY) {
+      throw new Error('NASA API key required for authentic APOD data');
+    }
+    
     try {
       const url = new URL(`${NASA_BASE_URL}/planetary/apod`);
       url.searchParams.set("api_key", NASA_API_KEY);
@@ -153,8 +157,12 @@ export class NasaApiService {
   }
 
   async getApodRange(startDate: string, endDate: string): Promise<ApodResponse[]> {
+    if (!NASA_API_KEY) {
+      throw new Error('NASA API key required for authentic APOD data');
+    }
+    
     const url = new URL(`${NASA_BASE_URL}/planetary/apod`);
-    url.searchParams.set("api_key", NASA_API_KEY);
+    url.searchParams.set("api_key", NASA_API_KEY!);
     url.searchParams.set("start_date", startDate);
     url.searchParams.set("end_date", endDate);
 
@@ -183,8 +191,12 @@ export class NasaApiService {
   }
 
   async getNearEarthObjects(startDate: string, endDate: string): Promise<NeoResponse> {
+    if (!NASA_API_KEY) {
+      throw new Error('NASA API key required for authentic asteroid data');
+    }
+    
     const url = new URL(`${NASA_BASE_URL}/neo/rest/v1/feed`);
-    url.searchParams.set("api_key", NASA_API_KEY);
+    url.searchParams.set("api_key", NASA_API_KEY!);
     url.searchParams.set("start_date", startDate);
     url.searchParams.set("end_date", endDate);
 
