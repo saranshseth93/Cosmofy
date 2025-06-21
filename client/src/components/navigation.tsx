@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Menu, X, Home, Camera, Satellite, Zap, Circle, Rocket, Globe, Newspaper, Volume2, Telescope, Calendar, Star, MapPin, CloudRain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import logoImage from '@assets/Cosmo - 1_1750298158776.png';
+// Logo removed - using text instead
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,11 +46,9 @@ export function Navigation() {
       <div className="container mx-auto px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <img 
-              src={logoImage}
-              alt="Space Explorer Logo" 
-              className="h-8 w-auto"
-            />
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+              COSMOFY
+            </span>
           </Link>
 
           {/* Hamburger Menu Button (Both Desktop and Mobile) */}

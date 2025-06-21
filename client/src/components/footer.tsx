@@ -1,7 +1,7 @@
 import { Link } from 'wouter';
 import { Rocket } from 'lucide-react';
 import { FaTwitter, FaInstagram, FaYoutube, FaGithub } from 'react-icons/fa';
-import logoImage from '@assets/Cosmo - 1_1750298158776.png';
+// Logo removed - using text instead
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
