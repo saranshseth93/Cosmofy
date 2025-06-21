@@ -148,12 +148,71 @@ export default function SatelliteTracker() {
     { id: 'debris', name: 'Space Debris', count: satellites.filter(s => s.type === 'debris').length }
   ];
 
-  // Use React Query for location data
+  // Get user's actual coordinates using browser geolocation
+  const [coordinates, setCoordinates] = useState<{lat: number; lon: number} | null>(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCoordinates({ lat: latitude, lon: longitude });
+          setGeoError(null);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          setGeoError(error.message);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 5 * 60 * 1000 // 5 minutes
+        }
+      );
+    } else {
+      setGeoError('Geolocation not supported');
+    }
+  }, []);
+
+  // Use React Query for location data with actual coordinates
   const { data: userLocation, isLoading: locationLoading, refetch: refetchLocation } = useQuery<LocationData>({
-    queryKey: ['/api/location'],
+    queryKey: ['/api/location', coordinates?.lat, coordinates?.lon],
+    queryFn: async () => {
+      if (!coordinates) {
+        throw new Error('No coordinates available');
+      }
+      const response = await fetch(`/api/location?lat=${coordinates.lat}&lon=${coordinates.lon}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch location');
+      }
+      return response.json();
+    },
+    enabled: !!coordinates,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });
+
+  const handleRefreshLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCoordinates({ lat: latitude, lon: longitude });
+          setGeoError(null);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          setGeoError(error.message);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0 // Force fresh location
+        }
+      );
+    }
+  };
 
   const filteredSatellites = satellites.filter(satellite => {
     const matchesCategory = selectedCategory === 'all' || satellite.type === selectedCategory;
@@ -218,7 +277,7 @@ export default function SatelliteTracker() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => refetchLocation()}
+              onClick={handleRefreshLocation}
               className="text-xs"
             >
               <RefreshCw className="w-3 h-3 mr-1" />
