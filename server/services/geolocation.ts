@@ -107,21 +107,23 @@ export class GeolocationService {
       
       const data = await response.json();
       
-      // Extract city/suburb/town information
+      // Extract suburb/locality information with priority order
       const address = data.address || {};
-      const city = address.city || 
-                   address.town || 
-                   address.village || 
-                   address.suburb ||
-                   address.county ||
-                   address.state ||
-                   address.country ||
-                   'Unknown Location';
+      const suburb = address.suburb || 
+                     address.neighbourhood || 
+                     address.quarter ||
+                     address.district ||
+                     address.city || 
+                     address.town || 
+                     address.village ||
+                     address.county ||
+                     address.state ||
+                     'Unknown Location';
       
       const country = address.country || '';
       
-      // Return city with country if available
-      return country ? `${city}, ${country}` : city;
+      // Return suburb with country if available, prefixed with "Over"
+      return country ? `Over ${suburb}, ${country}` : `Over ${suburb}`;
     } catch (error) {
       console.error("Error fetching city from coordinates:", error);
       // Return ocean/coordinate info as fallback

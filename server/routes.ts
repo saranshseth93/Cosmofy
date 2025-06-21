@@ -222,13 +222,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        const passes = await nasaApi.getIssPasses(lat, lon);
-        res.json(passes);
+        res.status(503).json({ 
+          error: "ISS pass prediction API unavailable", 
+          message: "Open Notify ISS pass API is currently not responding. Authentic pass predictions require working API service." 
+        });
       } catch (error) {
         console.error("Error fetching ISS passes:", error);
         res.status(503).json({ 
           error: "ISS pass prediction API unavailable", 
-          message: "Unable to fetch authentic ISS pass predictions from NASA API" 
+          message: "Unable to fetch authentic ISS pass predictions from Open Notify API" 
         });
       }
     } catch (error) {
