@@ -170,17 +170,15 @@ export class ConstellationApiService {
   private extractConstellationLinks(html: string): Array<{name: string, url: string}> {
     const links: Array<{name: string, url: string}> = [];
     
-    // Match constellation page links
-    const linkPattern = /<a\s+href="(constellations\/[^"]+\.htm)"[^>]*>([^<]+)<\/a>/gi;
+    // Match constellation PHP page links from go-astronomy.com
+    const linkPattern = /<a\s+href="(constellations\.php\?Name=[^"]+)"[^>]*>([^<]+)<\/a>/gi;
     let match;
     
     while ((match = linkPattern.exec(html)) !== null) {
       const url = `https://www.go-astronomy.com/${match[1]}`;
-      const name = match[2].trim();
+      const name = match[2].trim().replace(/&ouml;/g, 'ö').replace(/&amp;/g, '&');
       
-      if (name && !name.toLowerCase().includes('index') && 
-          !name.toLowerCase().includes('back') && 
-          !name.toLowerCase().includes('home')) {
+      if (name && name.length > 2) {
         links.push({ name, url });
       }
     }
@@ -235,37 +233,86 @@ export class ConstellationApiService {
   private parseConstellationHTML(html: string, name: string): any {
     const data: any = {};
     
-    // Extract Latin name
+    // Extract Latin name from go-astronomy.com structure
     const latinMatch = html.match(/Latin\s*name[:\s]*([^<\n\r]+)/i) ||
-                      html.match(/Official\s*name[:\s]*([^<\n\r]+)/i);
-    if (latinMatch) data.latinName = latinMatch[1].trim();
+                      html.match(/Constellation\s*name[:\s]*([^<\n\r]+)/i) ||
+                      html.match(/<h[1-6][^>]*>([^<]*constellation[^<]*)<\/h[1-6]>/i);
+    if (latinMatch) data.latinName = latinMatch[1].replace(/constellation/i, '').trim();
     
-    // Extract abbreviation
+    // Extract abbreviation from tables or specific patterns
     const abbrMatch = html.match(/Abbreviation[:\s]*([A-Z]{2,4})/i) ||
-                     html.match(/Abbrev[:\s]*([A-Z]{2,4})/i);
+                     html.match(/Abbrev[:\s]*([A-Z]{2,4})/i) ||
+                     html.match(/<td[^>]*>([A-Z]{2,4})<\/td>/);
     if (abbrMatch) data.abbreviation = abbrMatch[1].trim();
     
-    // Extract mythology/story
-    const storyMatch = html.match(/<p[^>]*>([^<]*(?:myth|legend|story)[^<]*(?:<[^>]*>[^<]*)*[^<]*)<\/p>/i);
-    if (storyMatch) {
-      data.story = storyMatch[1].replace(/<[^>]*>/g, '').trim().substring(0, 400);
+    // Extract mythology/description from paragraphs
+    const storyPatterns = [
+      /<p[^>]*>([^<]*(?:myth|legend|story|represent|ancient)[^<]*(?:<[^>]*>[^<]*)*[^<]*)<\/p>/i,
+      /<p[^>]*>([^<]{100,})<\/p>/,
+      /<div[^>]*class="[^"]*description[^"]*"[^>]*>([^<]+)<\/div>/i
+    ];
+    
+    for (const pattern of storyPatterns) {
+      const match = html.match(pattern);
+      if (match && match[1].length > 50) {
+        data.story = match[1].replace(/<[^>]*>/g, '').trim().substring(0, 500);
+        break;
+      }
     }
     
-    // Extract brightest star
-    const brightestMatch = html.match(/brightest\s+star[:\s]*([^<\n\r,]+)/i) ||
-                          html.match(/alpha[:\s]*([^<\n\r,]+)/i);
-    if (brightestMatch) data.brightestStar = brightestMatch[1].trim();
+    // Extract brightest star from various formats
+    const brightestPatterns = [
+      /brightest\s+star[:\s]*([^<\n\r,\.]+)/i,
+      /alpha[:\s]*([^<\n\r,\.]+)/i,
+      /<td[^>]*>[^<]*brightest[^<]*<\/td>\s*<td[^>]*>([^<]+)<\/td>/i,
+      /α\s+([A-Za-z\s]+)/
+    ];
     
-    // Extract area
-    const areaMatch = html.match(/area[:\s]*(\d+)/i);
-    if (areaMatch) data.area = parseInt(areaMatch[1]);
+    for (const pattern of brightestPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        data.brightestStar = match[1].trim();
+        break;
+      }
+    }
     
-    // Extract hemisphere information
-    if (html.match(/northern\s+hemisphere/i) || html.match(/north\s+of/i)) {
+    // Extract area from table or text
+    const areaPatterns = [
+      /area[:\s]*(\d+(?:\.\d+)?)/i,
+      /(\d+)\s*square\s*degrees/i,
+      /<td[^>]*>(\d+)<\/td>[^<]*<td[^>]*>(?:square\s*degrees|sq\s*deg)/i
+    ];
+    
+    for (const pattern of areaPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        data.area = parseFloat(match[1]);
+        break;
+      }
+    }
+    
+    // Extract hemisphere and visibility info
+    if (html.match(/northern\s+hemisphere/i) || html.match(/visible.*north/i)) {
       data.hemisphere = 'northern';
-    } else if (html.match(/southern\s+hemisphere/i) || html.match(/south\s+of/i)) {
+    } else if (html.match(/southern\s+hemisphere/i) || html.match(/visible.*south/i)) {
       data.hemisphere = 'southern';
+    } else if (html.match(/equatorial/i) || html.match(/both.*hemisphere/i)) {
+      data.hemisphere = 'both';
     }
+    
+    // Extract Right Ascension and Declination
+    const raMatch = html.match(/RA[:\s]*(\d+(?:\.\d+)?)/i) ||
+                   html.match(/right\s*ascension[:\s]*(\d+(?:\.\d+)?)/i);
+    if (raMatch) data.ra = parseFloat(raMatch[1]);
+    
+    const decMatch = html.match(/Dec[:\s]*([+-]?\d+(?:\.\d+)?)/i) ||
+                    html.match(/declination[:\s]*([+-]?\d+(?:\.\d+)?)/i);
+    if (decMatch) data.dec = parseFloat(decMatch[1]);
+    
+    // Extract best viewing month
+    const monthMatch = html.match(/best.*(?:viewed|visible).*(?:in|during)\s*([A-Za-z]+)/i) ||
+                      html.match(/visible.*([A-Za-z]+)\s*(?:through|to)/i);
+    if (monthMatch) data.bestMonth = monthMatch[1];
     
     return data;
   }
