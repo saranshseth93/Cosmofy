@@ -203,6 +203,14 @@ Changelog:
     - Organized feature cards with appropriate icons and direct routing
     - Updated to include all new pages: Space Weather, Virtual Telescope, Cosmic Events, Mars Rover, Constellation Guide, Satellite Tracker, and Hindu Panchang
     - Maintains consistent design and user experience across entire application
+  * Enhanced constellation service with authentic data extraction (June 21, 2025):
+    - Removed all backup/fallback data to use only authentic sources
+    - Improved HTML parsing with comprehensive patterns for Latin names, abbreviations, and astronomical data
+    - Enhanced image extraction directly from go-astronomy.com and NOIRLab sources
+    - Implemented accurate location-based visibility calculations using declination and latitude matching
+    - Added proper seasonal visibility checking based on constellation's best viewing months
+    - Improved sky conditions API with lunar cycle calculations and optimal viewing times
+    - Enhanced astronomical accuracy for all 88 constellations with hemisphere-specific calculations
 ```
 
 ## User Preferences
