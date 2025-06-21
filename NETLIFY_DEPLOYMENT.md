@@ -1,62 +1,67 @@
 # Netlify Deployment Guide for Cosmofy
 
-## Overview
-This guide explains how to deploy Cosmofy to Netlify with full constellation scraping functionality.
+## Fixed Deployment Configuration
 
-## Deployment Steps
+The project now uses individual Netlify Functions for reliable deployment:
 
-### 1. Build Configuration
-The project is configured with:
-- **Static Files**: Frontend built to `dist/` directory
-- **Serverless Functions**: API endpoints in `netlify/functions/`
-- **Redirects**: All API calls routed to serverless functions
+### Build Settings (Netlify Dashboard)
+- **Build command**: `npm run build`
+- **Publish directory**: `dist/public`
+- **Functions directory**: `netlify/functions`
 
-### 2. Environment Variables
-Set these in Netlify dashboard under Site Settings > Environment Variables:
+### Working API Functions
+Each endpoint has its own dedicated function:
 
+1. **`/api/constellations`** → `netlify/functions/constellations.ts`
+   - Scrapes authentic data from go-astronomy.com
+   - Returns up to 10 constellations per request (serverless limit)
+   - 30-day caching for performance
+
+2. **`/api/sky-conditions`** → `netlify/functions/sky-conditions.ts`
+   - Location-based visibility calculations
+   - Real-time moon phase and illumination
+   - Hemisphere-specific constellation visibility
+
+3. **`/api/location`** → `netlify/functions/location.ts`
+   - Default location data for deployment
+   - Melbourne, Australia coordinates
+
+### Redirect Configuration
+The `client/public/_redirects` file handles routing:
+```
+/api/constellations  /.netlify/functions/constellations  200
+/api/sky-conditions  /.netlify/functions/sky-conditions  200
+/api/location        /.netlify/functions/location        200
+/*                   /index.html                         200
+```
+
+### Environment Variables (Optional)
+Set in Netlify Dashboard → Site Settings → Environment Variables:
 ```
 NASA_API_KEY=your_nasa_api_key_here
 NODE_ENV=production
 ```
 
-### 3. Build Settings
-- **Build command**: `npm run build`
-- **Publish directory**: `dist`
-- **Functions directory**: `netlify/functions`
+### Key Features Working
+- ✅ Authentic constellation scraping from go-astronomy.com
+- ✅ No synthetic or fallback data
+- ✅ Location-based visibility calculations  
+- ✅ Proper SPA routing for all pages
+- ✅ CORS handling for API requests
+- ✅ Serverless function optimization
 
-### 4. API Endpoints
-All API endpoints work through Netlify Functions:
+### Files Changed for Deployment
+- `netlify.toml` - Build and redirect configuration
+- `netlify/functions/constellations.ts` - Constellation scraping API
+- `netlify/functions/sky-conditions.ts` - Sky visibility calculations
+- `netlify/functions/location.ts` - Location data endpoint
+- `client/public/_redirects` - SPA and API routing rules
 
-- `/api/constellations` - Returns all 88 constellations with authentic scraped data
-- `/api/sky-conditions?lat=X&lon=Y` - Location-based visibility calculations
-- `/api/location` - User location detection
-- `/api/apod` - NASA Astronomy Picture of the Day
+### Deployment Process
+1. Push all files to your repository
+2. Connect repository to Netlify
+3. Build settings auto-detected from `netlify.toml`
+4. Functions deploy automatically
+5. Site accessible at your Netlify domain
 
-### 5. Key Features Working on Netlify
-- ✅ Constellation data scraping from go-astronomy.com and NOIRLab
-- ✅ Location-based constellation visibility
-- ✅ Authentic astronomical data extraction
-- ✅ Image scraping from authentic sources
-- ✅ All 88 IAU constellations with accurate data
-
-### 6. Performance Optimizations
-- Constellation data cached for 30 days
-- Batch processing for faster scraping
-- Parallel image extraction
-- Optimized for serverless execution
-
-### 7. Troubleshooting
-If APIs don't load:
-1. Check Netlify Functions logs in dashboard
-2. Verify environment variables are set
-3. Ensure build completed successfully
-4. Check Network tab for CORS errors
-
-## Manual Deployment Process
-1. Run `npm run build` locally
-2. Deploy `dist/` folder to Netlify
-3. Copy `netlify/functions/` to deployment
-4. Set environment variables
-5. Test all API endpoints
-
-The deployment will have full constellation functionality with authentic data scraping.
+The constellation page will load authentic data from go-astronomy.com through the serverless functions.
