@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Satellite, MapPin, Search, Zap } from 'lucide-react';
+import { Satellite, MapPin, Search, Zap, RefreshCw } from 'lucide-react';
 import { Navigation } from '@/components/navigation';
 import { CosmicCursor } from '@/components/cosmic-cursor';
 import { Footer } from '@/components/footer';
+import { useQuery } from '@tanstack/react-query';
 
 interface SatelliteData {
   id: string;
@@ -51,7 +52,6 @@ interface LocationData {
 export default function SatelliteTracker() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [userLocation, setUserLocation] = useState<LocationData | null>(null);
 
   // Authentic satellite data based on real NORAD catalog
   const satellites: SatelliteData[] = [
@@ -148,22 +148,12 @@ export default function SatelliteTracker() {
     { id: 'debris', name: 'Space Debris', count: satellites.filter(s => s.type === 'debris').length }
   ];
 
-  // Get user location
-  useEffect(() => {
-    const fetchLocation = async () => {
-      try {
-        const response = await fetch('/api/location');
-        if (response.ok) {
-          const data = await response.json();
-          setUserLocation(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch location:', error);
-      }
-    };
-
-    fetchLocation();
-  }, []);
+  // Use React Query for location data
+  const { data: userLocation, isLoading: locationLoading, refetch: refetchLocation } = useQuery<LocationData>({
+    queryKey: ['/api/location'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 
   const filteredSatellites = satellites.filter(satellite => {
     const matchesCategory = selectedCategory === 'all' || satellite.type === selectedCategory;
@@ -208,14 +198,33 @@ export default function SatelliteTracker() {
             </p>
           </div>
 
-          {userLocation && (
-            <div className="flex justify-center">
+          <div className="flex justify-center items-center gap-4">
+            {locationLoading ? (
+              <Badge variant="outline" className="text-sm px-4 py-2 bg-blue-500/10 border-blue-500/30">
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Detecting location...
+              </Badge>
+            ) : userLocation ? (
               <Badge variant="outline" className="text-sm px-4 py-2 bg-blue-500/10 border-blue-500/30">
                 <MapPin className="w-4 h-4 mr-2" />
                 Observing from: {userLocation.city}
               </Badge>
-            </div>
-          )}
+            ) : (
+              <Badge variant="outline" className="text-sm px-4 py-2 bg-orange-500/10 border-orange-500/30">
+                <MapPin className="w-4 h-4 mr-2" />
+                Location not detected
+              </Badge>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => refetchLocation()}
+              className="text-xs"
+            >
+              <RefreshCw className="w-3 h-3 mr-1" />
+              Refresh Location
+            </Button>
+          </div>
 
           <div className="space-y-4">
             <div className="relative max-w-md mx-auto">
