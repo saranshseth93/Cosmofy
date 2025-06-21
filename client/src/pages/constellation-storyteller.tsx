@@ -370,7 +370,11 @@ export default function ConstellationStorytellerPage() {
                     <img
                       src={constellation.imageUrl}
                       alt={`${constellation.name} constellation`}
-                      className="w-full h-64 lg:h-80 object-cover"
+                      className="w-full h-64 lg:h-80 object-contain bg-gradient-to-br from-slate-900 to-slate-800"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=400&h=300&fit=crop&q=80`;
+                      }}
                     />
                     <div className="absolute top-2 left-2 space-y-2">
                       <Badge variant="outline" className="bg-black/50 text-white border-white/30">
