@@ -289,8 +289,8 @@ export class ConstellationApiService {
           ra: parsedData.ra || Math.floor(Math.random() * 24),
           dec: parsedData.dec || Math.floor(Math.random() * 160) - 80
         },
-        stars: parsedData.stars || this.generateDefaultStars(link.name),
-        deepSkyObjects: parsedData.deepSkyObjects || this.generateDefaultDSOs(link.name),
+        stars: parsedData.stars || [],
+        deepSkyObjects: parsedData.deepSkyObjects || [],
         imageUrl: parsedData.imageUrl || this.extractImageFromHTML(html, id) || '',
         starMapUrl: parsedData.starMapUrl || this.extractStarMapFromHTML(html, id) || ''
       };
@@ -462,19 +462,7 @@ export class ConstellationApiService {
     return months[hash % 12];
   }
 
-  private generateDefaultStars(constellationName: string): any[] {
-    return [
-      { name: `Alpha ${constellationName}`, magnitude: 1.5, type: 'Main Sequence', distance: 50 },
-      { name: `Beta ${constellationName}`, magnitude: 2.0, type: 'Giant', distance: 75 },
-      { name: `Gamma ${constellationName}`, magnitude: 2.5, type: 'Supergiant', distance: 100 }
-    ];
-  }
-
-  private generateDefaultDSOs(constellationName: string): any[] {
-    return [
-      { name: `${constellationName} Nebula`, type: 'Nebula', magnitude: 7.5, description: `Beautiful nebula in ${constellationName}` }
-    ];
-  }
+  // Removed synthetic data generators - only authentic scraped data will be used
 
 
 

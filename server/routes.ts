@@ -105,7 +105,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Error fetching APOD images:", error);
-      res.status(500).json({ error: "Failed to fetch APOD images" });
+      res.status(503).json({ 
+        error: "NASA APOD API unavailable", 
+        message: "Unable to fetch authentic astronomy images from NASA API. Please check API key configuration." 
+      });
     }
   });
 
