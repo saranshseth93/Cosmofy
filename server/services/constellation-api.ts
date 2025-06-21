@@ -1141,9 +1141,9 @@ export class ConstellationApiService {
       const month = now.getMonth() + 1;
       const isNorthern = lat > 0;
       
-      const allConstellations = this.getConstellationData();
+      const allConstellations = await this.getConstellations();
       const visibleConstellationIds = allConstellations
-        .filter(constellation => {
+        .filter((constellation: ConstellationData) => {
           // Filter based on hemisphere
           if (constellation.astronomy.visibility.hemisphere === 'northern' && !isNorthern) return false;
           if (constellation.astronomy.visibility.hemisphere === 'southern' && isNorthern) return false;
