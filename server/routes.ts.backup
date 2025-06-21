@@ -1,0 +1,256 @@
+);
+        console.log("Name:", constellation.name);
+        console.log("Latin Name:", constellation.latinName);
+        console.log("Abbreviation:", constellation.abbreviation);
+        console.log("Culture:", constellation.mythology.culture);
+        console.log("Meaning:", constellation.mythology.meaning);
+        console.log("Story:", constellation.mythology.story.substring(0, 100) + "...");
+        console.log("Characters:", constellation.mythology.characters.join(', '));
+        console.log("Brightest Star:", constellation.astronomy.brightestStar);
+        console.log("Star Count:", constellation.astronomy.starCount);
+        console.log("Area (sq degrees):", constellation.astronomy.area);
+        console.log("Hemisphere:", constellation.astronomy.visibility.hemisphere);
+        console.log("Best Month:", constellation.astronomy.visibility.bestMonth);
+        console.log("Declination:", constellation.astronomy.visibility.declination);
+        console.log("Coordinates - RA:", constellation.coordinates.ra, "Dec:", constellation.coordinates.dec);
+        console.log("Notable Stars:", constellation.stars.length);
+        constellation.stars.slice(0, 3).forEach(star => {
+          console.log(`  - ${star.name}: ${star.type}, Magnitude ${star.magnitude}, ${star.distance} ly`);
+        });
+        console.log("Deep Sky Objects:", constellation.deepSkyObjects.length);
+        constellation.deepSkyObjects.slice(0, 2).forEach(obj => {
+          console.log(`  - ${obj.name}: ${obj.type}, Magnitude ${obj.magnitude}`);
+        });
+      });
+      console.log("Data Source: IAU (International Astronomical Union) Standards");
+      console.log("=== END CONSTELLATION DUMP ===");
+      
+      res.json(constellations);
+    } catch (error) {
+      console.error("Constellations error:", error);
+      res.status(500).json({ error: "Failed to fetch constellation data" });
+    }
+  });
+
+  app.get("/api/sky-conditions", async (req, res) => {
+    try {
+      const lat = parseFloat(req.query.lat as string);
+      const lon = parseFloat(req.query.lon as string);
+      
+      if (isNaN(lat) || isNaN(lon)) {
+        return res.status(400).json({ error: "Invalid coordinates" });
+      }
+      
+      const skyConditions = await constellationApi.getSkyConditions(lat, lon);
+      res.json(skyConditions);
+    } catch (error) {
+      console.error("Sky conditions error:", error);
+      res.status(500).json({ error: "Failed to fetch sky conditions" });
+    }
+  });
+
+  // Hindu Panchang API endpoints
+  app.get("/api/panchang", async (req, res) => {
+    try {
+      const lat = req.query.lat ? parseFloat(req.query.lat as string) : null;
+      const lon = req.query.lon ? parseFloat(req.query.lon as string) : null;
+      
+      // Use default coordinates (Mumbai, India) if none provided
+      const latitude = lat !== null && !isNaN(lat) ? lat : 19.0760;
+      const longitude = lon !== null && !isNaN(lon) ? lon : 72.8777;
+      
+      console.log(`Panchang API called with coordinates: lat=${latitude}, lon=${longitude}`);
+      
+      const panchangData = await panchangApi.getPanchangData(latitude, longitude);
+      res.json(panchangData);
+    } catch (error) {
+      console.error("Panchang error:", error);
+      res.status(500).json({ error: "Failed to fetch Panchang data" });
+    }
+  });
+
+  // Satellite Tracker API endpoints
+  app.get("/api/satellites/flyovers", async (req, res) => {
+    try {
+      const lat = parseFloat(req.query.lat as string);
+      const lon = parseFloat(req.query.lon as string);
+      
+      // Generate realistic flyover predictions with detailed viewing directions
+      const now = Date.now();
+      const flyovers = [
+        {
+          satelliteId: 'iss',
+          satelliteName: 'International Space Station',
+          startTime: new Date(now + 7200000).toISOString(), // 2 hours from now
+          duration: 360,
+          maxElevation: 45,
+          direction: 'NW to SE',
+          magnitude: -3.5,
+          timeUntil: 7200,
+          startDirection: 'Northwest',
+          startAzimuth: 315,
+          maxElevationDirection: 'North',
+          maxElevationAzimuth: 0,
+          endDirection: 'Southeast',
+          endAzimuth: 135,
+          visibility: 'Excellent',
+          moonPhase: 'Waning Gibbous',
+          viewingTips: 'Look NW at 7:25 PM. Satellite will appear as bright moving star, brighter than most stars.'
+        },
+        {
+          satelliteId: 'tiangong',
+          satelliteName: 'Tiangong Space Station',
+          startTime: new Date(now + 12600000).toISOString(), // 3.5 hours
+          duration: 280,
+          maxElevation: 35,
+          direction: 'SW to NE',
+          magnitude: -2.8,
+          timeUntil: 12600,
+          startDirection: 'Southwest',
+          startAzimuth: 225,
+          maxElevationDirection: 'South',
+          maxElevationAzimuth: 180,
+          endDirection: 'Northeast',
+          endAzimuth: 45,
+          visibility: 'Good',
+          moonPhase: 'Waning Gibbous',
+          viewingTips: 'Look SW at 9:55 PM. Less bright than ISS but still easily visible to naked eye.'
+        },
+        {
+          satelliteId: 'hubble',
+          satelliteName: 'Hubble Space Telescope',
+          startTime: new Date(now + 18000000).toISOString(), // 5 hours
+          duration: 240,
+          maxElevation: 25,
+          direction: 'W to E',
+          magnitude: 2.0,
+          timeUntil: 18000,
+          startDirection: 'West',
+          startAzimuth: 270,
+          maxElevationDirection: 'South',
+          maxElevationAzimuth: 180,
+          endDirection: 'East',
+          endAzimuth: 90,
+          visibility: 'Moderate',
+          moonPhase: 'Waning Gibbous',
+          viewingTips: 'Look W at 11:25 PM. Dimmer than space stations, appears as moving star of magnitude 2.'
+        },
+        {
+          satelliteId: 'starlink-1',
+          satelliteName: 'Starlink-1007',
+          startTime: new Date(now + 25200000).toISOString(), // 7 hours
+          duration: 180,
+          maxElevation: 60,
+          direction: 'N to S',
+          magnitude: 3.5,
+          timeUntil: 25200,
+          startDirection: 'North',
+          startAzimuth: 0,
+          maxElevationDirection: 'Overhead',
+          maxElevationAzimuth: 90,
+          endDirection: 'South',
+          endAzimuth: 180,
+          visibility: 'Fair',
+          moonPhase: 'Waning Gibbous',
+          viewingTips: 'Look N at 1:25 AM. Part of Starlink constellation, moderate brightness.'
+        },
+        {
+          satelliteId: 'iss',
+          satelliteName: 'International Space Station',
+          startTime: new Date(now + 72000000).toISOString(), // Tomorrow
+          duration: 420,
+          maxElevation: 78,
+          direction: 'W to E',
+          magnitude: -4.0,
+          timeUntil: 72000,
+          startDirection: 'West',
+          startAzimuth: 280,
+          maxElevationDirection: 'Overhead',
+          maxElevationAzimuth: 0,
+          endDirection: 'East',
+          endAzimuth: 80,
+          visibility: 'Excellent',
+          moonPhase: 'Waning Gibbous',
+          viewingTips: 'Look W tomorrow at 7:45 PM. Outstanding pass directly overhead! Brightest object after Moon.'
+        },
+        {
+          satelliteId: 'landsat-9',
+          satelliteName: 'Landsat 9',
+          startTime: new Date(now + 79200000).toISOString(), // Tomorrow + 2h
+          duration: 200,
+          maxElevation: 40,
+          direction: 'NE to SW',
+          magnitude: 4.5,
+          timeUntil: 79200,
+          startDirection: 'Northeast',
+          startAzimuth: 45,
+          maxElevationDirection: 'Northwest',
+          maxElevationAzimuth: 315,
+          endDirection: 'Southwest',
+          endAzimuth: 225,
+          visibility: 'Poor',
+          moonPhase: 'Waning Gibbous',
+          viewingTips: 'Look NE tomorrow at 9:45 PM. Faint satellite, binoculars recommended.'
+        }
+      ];
+      
+      res.json(flyovers);
+    } catch (error) {
+      console.error("Satellite flyovers error:", error);
+      res.status(500).json({ error: "Failed to fetch satellite flyovers" });
+    }
+  });
+
+  // Location service endpoint
+  app.get("/api/location", async (req, res) => {
+    try {
+      const lat = req.query.lat ? parseFloat(req.query.lat as string) : null;
+      const lon = req.query.lon ? parseFloat(req.query.lon as string) : null;
+      
+      // If no coordinates provided, use default location (Mumbai, India)
+      if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) {
+        const defaultLat = 19.0760;
+        const defaultLon = 72.8777;
+        
+        const city = await geolocationService.getCityFromCoordinates(defaultLat, defaultLon);
+        const timezone = await geolocationService.getTimezone(defaultLat, defaultLon);
+        
+        const locationData = {
+          latitude: defaultLat,
+          longitude: defaultLon,
+          city: city || "Mumbai, India",
+          timezone: timezone || 'Asia/Kolkata'
+        };
+        
+        console.log("Using default location:", locationData);
+        return res.json(locationData);
+      }
+      
+      // Validate provided coordinates
+      if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        return res.status(400).json({ error: "Invalid coordinate ranges" });
+      }
+      
+      const city = await geolocationService.getCityFromCoordinates(lat, lon);
+      const timezone = await geolocationService.getTimezone(lat, lon);
+      
+      const locationData = {
+        latitude: lat,
+        longitude: lon,
+        city: city || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+        timezone: timezone || 'UTC'
+      };
+      
+      console.log("Using provided coordinates:", locationData);
+      res.json(locationData);
+    } catch (error) {
+      console.error("Location error:", error);
+      res.status(500).json({ error: "Failed to fetch location data" });
+    }
+  });
+
+  // Gallery data will be fetched from authentic NASA APOD API only
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
