@@ -507,10 +507,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sunrise = calculateSunrise(lat, lon, targetDate);
       const sunset = calculateSunset(lat, lon, targetDate);
       
+      // Calculate festivals and occasions based on date
+      const calculateFestivals = (date: Date) => {
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const festivals = [];
+        
+        // Major Hindu festivals by month
+        if (month === 1) festivals.push('Makar Sankranti', 'Vasant Panchami');
+        if (month === 3) festivals.push('Holi', 'Ram Navami');
+        if (month === 4) festivals.push('Hanuman Jayanti', 'Akshaya Tritiya');
+        if (month === 7) festivals.push('Guru Purnima');
+        if (month === 8) festivals.push('Raksha Bandhan', 'Krishna Janmashtami');
+        if (month === 9) festivals.push('Ganesh Chaturthi');
+        if (month === 10) festivals.push('Navratri', 'Dussehra');
+        if (month === 11) festivals.push('Diwali', 'Karva Chauth');
+        
+        return festivals;
+      };
+      
+      const calculateVrats = (date: Date) => {
+        const dayOfWeek = date.getDay();
+        const vrats = [];
+        
+        // Weekly vrats
+        if (dayOfWeek === 1) vrats.push('Somvar Vrat');
+        if (dayOfWeek === 2) vrats.push('Mangalwar Vrat');
+        if (dayOfWeek === 4) vrats.push('Brihaspativar Vrat');
+        if (dayOfWeek === 5) vrats.push('Shukravar Vrat');
+        if (dayOfWeek === 6) vrats.push('Shanivar Vrat');
+        
+        // Monthly vrats
+        if (tithi === 'Ekadashi') vrats.push('Ekadashi Vrat');
+        if (tithi === 'Chaturthi') vrats.push('Ganesh Chaturthi Vrat');
+        
+        return vrats;
+      };
+      
       // Calculate muhurat timings based on sunrise
       const sunriseMinutes = parseInt(sunrise.split(':')[0]) * 60 + parseInt(sunrise.split(':')[1]);
       const rahuKaalStart = Math.floor((sunriseMinutes + 390) / 60); // 6.5 hours after sunrise
       const rahuKaalEnd = rahuKaalStart + 1.5;
+      
+      // Get festivals and vrats for the date
+      const festivals = calculateFestivals(targetDate);
+      const vratsAndOccasions = calculateVrats(targetDate);
       
       const panchangData = {
         date: date,
@@ -552,6 +593,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gulikaKaal: `${Math.floor(rahuKaalStart)}:00 - ${Math.floor(rahuKaalEnd)}:30`,
           yamaGandaKaal: `${Math.floor(rahuKaalStart + 1)}:00 - ${Math.floor(rahuKaalEnd + 1)}:30`
         },
+        festivals: festivals,
+        vratsAndOccasions: vratsAndOccasions,
         source: 'Authentic astronomical calculations',
         dataFreshness: 'Real-time computed'
       };
