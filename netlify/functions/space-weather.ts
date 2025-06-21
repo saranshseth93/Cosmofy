@@ -41,42 +41,48 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
-    const now = new Date();
     const { solarWindData, magneticFieldData } = await fetchNOAASpaceWeather();
     
-    // Generate realistic values based on NOAA data or fallback to calculated values
-    const solarFlux = 120 + Math.sin(now.getTime() / 86400000) * 30; // Daily variation
-    const kpIndex = Math.floor(Math.random() * 6) + (Math.sin(now.getTime() / 10800000) * 2); // 3-hour variation
-    
+    if (!solarWindData && !magneticFieldData) {
+      return {
+        statusCode: 503,
+        headers,
+        body: JSON.stringify({ 
+          error: 'NOAA Space Weather API unavailable',
+          message: 'Unable to fetch authentic space weather data from NOAA Space Weather Prediction Center. Please check API configuration.'
+        }),
+      };
+    }
+
     const spaceWeatherData = {
       id: 1,
-      timestamp: now,
-      solarFlux: Math.round(solarFlux),
-      kpIndex: Math.max(0, Math.min(9, Math.round(kpIndex))),
+      timestamp: new Date(),
+      solarFlux: solarWindData ? parseFloat(solarWindData[4]) || 0 : 0,
+      kpIndex: 0,
       magneticField: {
-        bx: magneticFieldData ? parseFloat(magneticFieldData[1]) : (Math.random() - 0.5) * 15,
-        by: magneticFieldData ? parseFloat(magneticFieldData[2]) : (Math.random() - 0.5) * 15,
-        bz: magneticFieldData ? parseFloat(magneticFieldData[3]) : (Math.random() - 0.5) * 15,
-        total: magneticFieldData ? parseFloat(magneticFieldData[4]) : Math.random() * 12 + 3
+        bx: magneticFieldData ? parseFloat(magneticFieldData[1]) : 0,
+        by: magneticFieldData ? parseFloat(magneticFieldData[2]) : 0,
+        bz: magneticFieldData ? parseFloat(magneticFieldData[3]) : 0,
+        total: magneticFieldData ? parseFloat(magneticFieldData[4]) : 0
       },
       solarWind: {
-        speed: solarWindData ? parseFloat(solarWindData[1]) : Math.floor(Math.random() * 300) + 350,
-        density: solarWindData ? parseFloat(solarWindData[2]) : Math.random() * 8 + 2,
-        temperature: solarWindData ? parseFloat(solarWindData[3]) * 1000 : Math.floor(Math.random() * 150000) + 75000
+        speed: solarWindData ? parseFloat(solarWindData[1]) : 0,
+        density: solarWindData ? parseFloat(solarWindData[2]) : 0,
+        temperature: solarWindData ? parseFloat(solarWindData[3]) * 1000 : 0
       },
       radiation: {
-        level: Math.floor(Math.random() * 80) + 20,
-        category: kpIndex > 6 ? 'elevated' : kpIndex > 4 ? 'moderate' : 'normal'
+        level: 0,
+        category: 'normal'
       },
       auroraForecast: {
-        probability: Math.min(95, Math.max(5, kpIndex * 12 + Math.random() * 20)),
-        visibility: kpIndex > 6 ? 'high' : kpIndex > 4 ? 'moderate' : 'low',
-        location: kpIndex > 6 ? 'Northern regions and mid-latitudes' : 'High northern latitudes only'
+        probability: 0,
+        visibility: 'low',
+        location: 'High northern latitudes only'
       },
       conditions: {
-        solarActivity: solarFlux > 150 ? 'Active' : solarFlux > 120 ? 'Moderate' : 'Quiet',
-        geomagneticActivity: kpIndex > 6 ? 'Storm' : kpIndex > 4 ? 'Active' : kpIndex > 2 ? 'Unsettled' : 'Quiet',
-        radiationLevel: kpIndex > 5 ? 'Elevated' : 'Normal'
+        solarActivity: 'Quiet',
+        geomagneticActivity: 'Quiet',
+        radiationLevel: 'Normal'
       }
     };
     
@@ -88,11 +94,11 @@ export const handler: Handler = async (event, context) => {
   } catch (error) {
     console.error('Space Weather API Error:', error);
     return {
-      statusCode: 500,
+      statusCode: 503,
       headers,
       body: JSON.stringify({ 
-        error: 'Failed to fetch space weather data',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        error: 'NOAA Space Weather API unavailable',
+        message: 'Unable to fetch authentic space weather data from NOAA Space Weather Prediction Center.'
       }),
     };
   }

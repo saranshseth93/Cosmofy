@@ -57,7 +57,7 @@ export const handler: Handler = async (event, context): Promise<any> => {
       // Mars photos endpoint - requires NASA API key for authentic data
       if (NASA_API_KEY) {
         try {
-          const sol = Math.floor(Math.random() * 100) + 3000;
+          const sol = 3900; // Default sol number
           const rover = 'perseverance';
           const response = await fetch(
             `https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos?sol=${sol}&api_key=${NASA_API_KEY}`

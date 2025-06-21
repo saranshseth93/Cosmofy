@@ -228,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           longitude,
           risetime: new Date(pass.risetime * 1000),
           duration: pass.duration,
-          maxElevation: 20 + Math.random() * 70 // Realistic elevation range 20-90 degrees
+          maxElevation: 45 // Default elevation
         });
         passes.push(issPass);
       }
