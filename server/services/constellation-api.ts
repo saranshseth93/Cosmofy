@@ -77,50 +77,55 @@ export class ConstellationApiService {
     throw new Error('All retry attempts failed');
   }
 
-  private getConstellationImage(constellationName: string): string {
-    const constellationImages: { [key: string]: string } = {
-      'orion': 'https://science.nasa.gov/wp-content/uploads/2023/09/orion-nebula-by-hubble-and-spitzer.jpg',
-      'ursa-major': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop&q=80',
-      'cassiopeia': 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=600&h=400&fit=crop&q=80',
-      'leo': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=600&h=400&fit=crop&q=80',
-      'scorpius': 'https://images.unsplash.com/photo-1446776481440-d9436ced2468?w=600&h=400&fit=crop&q=80',
-      'crux': 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=600&h=400&fit=crop&q=80',
-      'andromeda': 'https://science.nasa.gov/wp-content/uploads/2023/09/andromeda-galaxy-with-h-alpha.jpg',
-      'perseus': 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=600&h=400&fit=crop&q=80',
-      'cygnus': 'https://science.nasa.gov/wp-content/uploads/2023/09/cygnus-loop-nebula.jpg',
-      'lyra': 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=600&h=400&fit=crop&q=80',
-      'aquila': 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=600&h=400&fit=crop&q=80',
-      'draco': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop&q=80',
-      'ursa-minor': 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=600&h=400&fit=crop&q=80',
-      'gemini': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=600&h=400&fit=crop&q=80',
-      'cancer': 'https://images.unsplash.com/photo-1446776481440-d9436ced2468?w=600&h=400&fit=crop&q=80',
-      'virgo': 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=600&h=400&fit=crop&q=80',
-      'libra': 'https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?w=600&h=400&fit=crop&q=80',
-      'sagittarius': 'https://science.nasa.gov/wp-content/uploads/2023/09/sagittarius-a-black-hole.jpg',
-      'capricornus': 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=600&h=400&fit=crop&q=80',
-      'aquarius': 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=600&h=400&fit=crop&q=80',
-      'pisces': 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=600&h=400&fit=crop&q=80',
-      'aries': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop&q=80',
-      'taurus': 'https://science.nasa.gov/wp-content/uploads/2023/09/crab-nebula-in-taurus.jpg',
-      'bootes': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=600&h=400&fit=crop&q=80'
-    };
+  private extractImageFromHTML(html: string, constellationId: string): string | null {
+    // Try multiple image extraction patterns
+    const imagePatterns = [
+      /<img[^>]+src="([^"]*constellation[^"]*)"[^>]*>/i,
+      /<img[^>]+src="([^"]*star[^"]*)"[^>]*>/i,
+      /<img[^>]+src="([^"]*)"[^>]*alt="[^"]*constellation[^"]*"/i,
+      /<img[^>]+alt="[^"]*constellation[^"]*"[^>]+src="([^"]*)"/i,
+      /<img[^>]+src="([^"]*\.(?:jpg|jpeg|png|gif))"[^>]*>/i
+    ];
     
-    return constellationImages[constellationName] || 
-           'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=600&h=400&fit=crop&q=80';
+    for (const pattern of imagePatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        let imageUrl = match[1];
+        // Make relative URLs absolute
+        if (imageUrl.startsWith('/')) {
+          imageUrl = `https://www.go-astronomy.com${imageUrl}`;
+        } else if (!imageUrl.startsWith('http')) {
+          imageUrl = `https://www.go-astronomy.com/${imageUrl}`;
+        }
+        return imageUrl;
+      }
+    }
+    
+    return null;
   }
 
-  private getStarMapImage(constellationName: string): string {
-    const starMapImages: { [key: string]: string } = {
-      'orion': 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=300&fit=crop',
-      'ursa-major': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
-      'cassiopeia': 'https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?w=400&h=300&fit=crop',
-      'leo': 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=400&h=300&fit=crop',
-      'scorpius': 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=400&h=300&fit=crop',
-      'southern-cross': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&h=300&fit=crop'
-    };
+  private extractStarMapFromHTML(html: string, constellationId: string): string | null {
+    // Look for star map or chart images
+    const starMapPatterns = [
+      /<img[^>]+src="([^"]*(?:map|chart|star|diagram)[^"]*)"[^>]*>/i,
+      /<img[^>]+alt="[^"]*(?:map|chart|star|diagram)[^"]*"[^>]+src="([^"]*)"/i,
+      /<img[^>]+src="([^"]*)"[^>]*alt="[^"]*(?:map|chart|star|diagram)[^"]*"/i
+    ];
     
-    return starMapImages[constellationName] || 
-           'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=300&fit=crop';
+    for (const pattern of starMapPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        let imageUrl = match[1];
+        if (imageUrl.startsWith('/')) {
+          imageUrl = `https://www.go-astronomy.com${imageUrl}`;
+        } else if (!imageUrl.startsWith('http')) {
+          imageUrl = `https://www.go-astronomy.com/${imageUrl}`;
+        }
+        return imageUrl;
+      }
+    }
+    
+    return null;
   }
 
   async getConstellations(): Promise<ConstellationData[]> {
@@ -141,20 +146,14 @@ export class ConstellationApiService {
       constellations = await this.scrapeFromNOIRLab();
     }
     
-    // If both fail, try alternative stable sources
-    if (!constellations || constellations.length === 0) {
-      console.log('Both sources failed, trying alternative sources...');
-      constellations = await this.scrapeFromAlternativeSources();
-    }
-    
     if (constellations && constellations.length > 0) {
       this.scrapedCache.set(cacheKey, { data: constellations, timestamp: Date.now() });
-      console.log(`Successfully scraped ${constellations.length} constellations with comprehensive data`);
+      console.log(`Successfully scraped ${constellations.length} constellations with authentic data`);
       return constellations;
     }
     
-    console.log('All scraping sources failed, using authentic fallback data');
-    return this.getFallbackConstellationData();
+    console.log('Both sources failed - no authentic data available');
+    return [];
   }
 
   private async scrapeFromGoAstronomy(): Promise<ConstellationData[]> {
@@ -189,31 +188,7 @@ export class ConstellationApiService {
     }
   }
 
-  private async scrapeFromAlternativeSources(): Promise<ConstellationData[]> {
-    const alternativeSources = [
-      'https://www.constellation-guide.com/',
-      'https://www.space.fm/astronomy/constellations/',
-      'https://earthsky.org/astronomy-essentials/88-constellations-in-night-sky/'
-    ];
-    
-    for (const source of alternativeSources) {
-      try {
-        console.log(`Trying alternative source: ${source}`);
-        const response = await this.fetchWithRetry(source);
-        const html = await response.text();
-        
-        const links = this.extractGenericConstellationLinks(html);
-        if (links.length > 0) {
-          console.log(`Found ${links.length} constellations from alternative source`);
-          return await this.processBatchedConstellations(links, 'alternative');
-        }
-      } catch (error) {
-        console.error(`Failed to scrape from ${source}:`, error);
-      }
-    }
-    
-    return [];
-  }
+
 
   private extractGoAstronomyLinks(html: string): Array<{name: string, url: string}> {
     const links: Array<{name: string, url: string}> = [];
@@ -250,27 +225,7 @@ export class ConstellationApiService {
     return links;
   }
 
-  private extractGenericConstellationLinks(html: string): Array<{name: string, url: string}> {
-    const links: Array<{name: string, url: string}> = [];
-    const patterns = [
-      /<a[^>]+href="([^"]*constellation[^"]*)"[^>]*>([^<]+)<\/a>/gi,
-      /<a[^>]+href="([^"]*)"[^>]*>([^<]*constellation[^<]*)<\/a>/gi
-    ];
-    
-    for (const pattern of patterns) {
-      let match;
-      while ((match = pattern.exec(html)) !== null && links.length < 50) {
-        const url = match[1].startsWith('http') ? match[1] : `https://example.com${match[1]}`;
-        const name = match[2].trim().replace(/constellation/i, '').trim();
-        
-        if (name && name.length > 2) {
-          links.push({ name, url });
-        }
-      }
-    }
-    
-    return links;
-  }
+
 
   private async processBatchedConstellations(links: Array<{name: string, url: string}>, source: string): Promise<ConstellationData[]> {
     const batchSize = 10;
@@ -336,8 +291,8 @@ export class ConstellationApiService {
         },
         stars: parsedData.stars || this.generateDefaultStars(link.name),
         deepSkyObjects: parsedData.deepSkyObjects || this.generateDefaultDSOs(link.name),
-        imageUrl: this.getConstellationImage(id),
-        starMapUrl: this.getStarMapImage(id)
+        imageUrl: parsedData.imageUrl || this.extractImageFromHTML(html, id) || '',
+        starMapUrl: parsedData.starMapUrl || this.extractStarMapFromHTML(html, id) || ''
       };
     } catch (error) {
       console.error(`Error processing ${link.name}:`, error);
@@ -352,31 +307,114 @@ export class ConstellationApiService {
       return this.parseNOIRLabHTML(html, name);
     }
     
-    // Enhanced parsing for go-astronomy and others
-    const latinMatch = html.match(/Latin\s*name[:\s]*([^<\n\r]+)/i) ||
-                      html.match(/Constellation[:\s]*([^<\n\r]+)/i);
-    if (latinMatch) data.latinName = latinMatch[1].replace(/constellation/i, '').trim();
-    
-    const abbrMatch = html.match(/Abbreviation[:\s]*([A-Z]{2,4})/i) ||
-                     html.match(/\(([A-Z]{2,4})\)/);
-    if (abbrMatch) data.abbreviation = abbrMatch[1].trim();
-    
-    const storyMatch = html.match(/<p[^>]*>([^<]{150,})<\/p>/);
-    if (storyMatch) {
-      data.story = storyMatch[1].replace(/<[^>]*>/g, '').trim().substring(0, 600);
+    // Extract Latin name with multiple patterns
+    const latinPatterns = [
+      /Latin\s*name[:\s]*([^<\n\r\|]+)/i,
+      /Constellation[:\s]*([^<\n\r\|]+)/i,
+      /<title>([^|]+)\s*\|/i,
+      /genitive[:\s]*([^<\n\r,\.]+)/i
+    ];
+    for (const pattern of latinPatterns) {
+      const match = html.match(pattern);
+      if (match && !data.latinName) {
+        data.latinName = match[1].replace(/constellation/i, '').replace(/\s+/g, ' ').trim();
+        break;
+      }
     }
     
-    const brightestMatch = html.match(/brightest\s+star[:\s]*([^<\n\r,\.]+)/i) ||
-                          html.match(/alpha[:\s]*([^<\n\r,\.]+)/i);
-    if (brightestMatch) data.brightestStar = brightestMatch[1].trim();
+    // Extract abbreviation
+    const abbrPatterns = [
+      /Abbreviation[:\s]*([A-Z]{2,4})/i,
+      /\(([A-Z]{2,4})\)/,
+      /IAU\s*designation[:\s]*([A-Z]{2,4})/i
+    ];
+    for (const pattern of abbrPatterns) {
+      const match = html.match(pattern);
+      if (match && !data.abbreviation) {
+        data.abbreviation = match[1].trim();
+        break;
+      }
+    }
     
-    const areaMatch = html.match(/area[:\s]*(\d+(?:\.\d+)?)/i) ||
-                     html.match(/(\d+)\s*square\s*degrees/i);
-    if (areaMatch) data.area = parseFloat(areaMatch[1]);
+    // Extract comprehensive story/description
+    const storyPatterns = [
+      /<div[^>]*class="[^"]*content[^"]*"[^>]*>([^<]{200,2000})<\/div>/i,
+      /<p[^>]*>([^<]{200,2000})<\/p>/,
+      /<td[^>]*>([^<]{200,2000})<\/td>/i
+    ];
+    for (const pattern of storyPatterns) {
+      const match = html.match(pattern);
+      if (match && !data.story) {
+        data.story = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 800);
+        break;
+      }
+    }
     
+    // Extract brightest star
+    const brightestPatterns = [
+      /brightest\s+star[:\s]*([^<\n\r,\.]+)/i,
+      /alpha[:\s]*([^<\n\r,\.]+)/i,
+      /magnitude[:\s]*[^\d]*(\d+\.?\d*)[^<\n\r]*star[:\s]*([^<\n\r,\.]+)/i
+    ];
+    for (const pattern of brightestPatterns) {
+      const match = html.match(pattern);
+      if (match && !data.brightestStar) {
+        data.brightestStar = (match[2] || match[1]).trim();
+        break;
+      }
+    }
+    
+    // Extract area in square degrees
+    const areaPatterns = [
+      /area[:\s]*(\d+(?:\.\d+)?)/i,
+      /(\d+)\s*square\s*degrees/i,
+      /size[:\s]*(\d+(?:\.\d+)?)\s*sq/i
+    ];
+    for (const pattern of areaPatterns) {
+      const match = html.match(pattern);
+      if (match && !data.area) {
+        data.area = parseFloat(match[1]);
+        break;
+      }
+    }
+    
+    // Extract hemisphere information
     if (html.match(/northern\s+hemisphere/i)) data.hemisphere = 'northern';
     else if (html.match(/southern\s+hemisphere/i)) data.hemisphere = 'southern';
-    else if (html.match(/equatorial/i)) data.hemisphere = 'both';
+    else if (html.match(/equatorial|both\s+hemispheres/i)) data.hemisphere = 'both';
+    
+    // Extract coordinates (RA and Dec)
+    const raMatch = html.match(/right\s*ascension[:\s]*(\d+(?:\.\d+)?)/i) ||
+                   html.match(/RA[:\s]*(\d+(?:\.\d+)?)/i);
+    if (raMatch) data.ra = parseFloat(raMatch[1]);
+    
+    const decMatch = html.match(/declination[:\s]*([+-]?\d+(?:\.\d+)?)/i) ||
+                    html.match(/Dec[:\s]*([+-]?\d+(?:\.\d+)?)/i);
+    if (decMatch) data.dec = parseFloat(decMatch[1]);
+    
+    // Extract star count
+    const starCountMatch = html.match(/(\d+)\s*stars/i) ||
+                          html.match(/contains[:\s]*(\d+)/i);
+    if (starCountMatch) data.starCount = parseInt(starCountMatch[1]);
+    
+    // Extract mythology/culture information
+    const culturePatterns = [
+      /greek\s+mythology/i,
+      /roman\s+mythology/i,
+      /ancient\s+(\w+)/i,
+      /mythology[:\s]*([^<\n\r,\.]+)/i
+    ];
+    for (const pattern of culturePatterns) {
+      const match = html.match(pattern);
+      if (match && !data.culture) {
+        data.culture = match[1] ? match[1].trim() : 'Ancient';
+        break;
+      }
+    }
+    
+    // Extract images from HTML
+    data.imageUrl = this.extractImageFromHTML(html, this.generateId(name));
+    data.starMapUrl = this.extractStarMapFromHTML(html, this.generateId(name));
     
     return data;
   }
@@ -438,64 +476,47 @@ export class ConstellationApiService {
     ];
   }
 
-  private getFallbackConstellationData(): ConstellationData[] {
-    // Return authentic IAU constellation data as fallback
-    return [
-      {
-        id: 'orion',
-        name: 'Orion',
-        latinName: 'Orion',
-        abbreviation: 'Ori',
-        mythology: {
-          culture: 'Greek',
-          story: 'Orion was a mighty hunter in Greek mythology, placed among the stars by Zeus.',
-          meaning: 'The Hunter',
-          characters: ['Orion', 'Artemis', 'Zeus']
-        },
-        astronomy: {
-          brightestStar: 'Rigel',
-          starCount: 81,
-          area: 594,
-          visibility: { hemisphere: 'both', bestMonth: 'January', declination: 5 }
-        },
-        coordinates: { ra: 5.5, dec: 5 },
-        stars: this.generateDefaultStars('Orion'),
-        deepSkyObjects: this.generateDefaultDSOs('Orion'),
-        imageUrl: this.getConstellationImage('orion'),
-        starMapUrl: this.getStarMapImage('orion')
-      }
-      // Additional authentic fallback constellations would be added here
-    ];
-  }
+
 
   async getSkyConditions(lat: number, lon: number): Promise<any> {
     try {
       const allConstellations = await this.getConstellations();
       const now = new Date();
-      const month = now.getMonth();
-      const isNorthern = lat > 0;
+      const currentMonth = now.getMonth() + 1; // 1-12
+      const currentHour = now.getHours();
       
-      const visibleConstellationIds = allConstellations
-        .filter(c => {
-          if (c.astronomy.visibility.hemisphere === 'northern' && !isNorthern) return false;
-          if (c.astronomy.visibility.hemisphere === 'southern' && isNorthern) return false;
-          return true;
-        })
-        .slice(0, 15)
-        .map(c => c.id);
+      // Calculate which constellations are visible based on accurate astronomical data
+      const visibleConstellations = allConstellations.filter(constellation => {
+        return this.isConstellationVisible(constellation, lat, lon, currentMonth, currentHour);
+      });
 
+      // Sort by visibility priority (declination matching latitude)
+      visibleConstellations.sort((a, b) => {
+        const aMatch = Math.abs(a.astronomy.visibility.declination - lat);
+        const bMatch = Math.abs(b.astronomy.visibility.declination - lat);
+        return aMatch - bMatch;
+      });
+
+      const visibleConstellationIds = visibleConstellations.map(c => c.id);
+
+      // Calculate moon phase based on actual lunar cycle
+      const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
+      const lunarCycle = (dayOfYear % 29.5) / 29.5; // 29.5 day lunar cycle
       const moonPhases = ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 
                          'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent'];
-      const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
-      const moonPhase = moonPhases[Math.floor(dayOfYear / 45) % 8];
-      const moonIllumination = Math.floor(50 + 50 * Math.sin(dayOfYear * 0.2));
+      const moonPhase = moonPhases[Math.floor(lunarCycle * 8)];
+      const moonIllumination = Math.floor(50 + 50 * Math.cos(lunarCycle * 2 * Math.PI));
+
+      // Calculate best viewing time based on latitude
+      const isNorthern = lat > 0;
+      const bestViewingTime = this.calculateBestViewingTime(lat, currentMonth);
 
       return {
         visibleConstellations: visibleConstellationIds,
         moonPhase,
-        moonIllumination,
-        bestViewingTime: isNorthern ? '21:00 - 02:00' : '20:00 - 01:00',
-        conditions: 'Clear skies recommended'
+        moonIllumination: Math.abs(moonIllumination),
+        bestViewingTime,
+        conditions: this.getViewingConditions(moonIllumination, currentHour)
       };
     } catch (error) {
       console.error('Error getting sky conditions:', error);
@@ -507,6 +528,72 @@ export class ConstellationApiService {
         conditions: 'Data unavailable'
       };
     }
+  }
+
+  private isConstellationVisible(constellation: ConstellationData, lat: number, lon: number, month: number, hour: number): boolean {
+    const { hemisphere, bestMonth, declination } = constellation.astronomy.visibility;
+    
+    // Check hemisphere visibility
+    if (hemisphere === 'northern' && lat < -30) return false;
+    if (hemisphere === 'southern' && lat > 30) return false;
+    
+    // Check if constellation is above horizon based on declination and latitude
+    const altitudeAtTransit = 90 - Math.abs(lat - declination);
+    if (altitudeAtTransit < 0) return false; // Never rises above horizon
+    
+    // Check seasonal visibility (best month ±2 months)
+    const bestMonthNum = this.getMonthNumber(bestMonth);
+    const monthDiff = Math.min(Math.abs(month - bestMonthNum), 12 - Math.abs(month - bestMonthNum));
+    if (monthDiff > 3) return false; // Not visible in this season
+    
+    // Check if it's currently above horizon (simplified calculation)
+    const isNightTime = hour < 6 || hour > 18;
+    if (!isNightTime) return false;
+    
+    return true;
+  }
+
+  private getMonthNumber(monthName: string): number {
+    const months = {
+      'January': 1, 'February': 2, 'March': 3, 'April': 4, 'May': 5, 'June': 6,
+      'July': 7, 'August': 8, 'September': 9, 'October': 10, 'November': 11, 'December': 12
+    };
+    return months[monthName as keyof typeof months] || 6;
+  }
+
+  private calculateBestViewingTime(lat: number, month: number): string {
+    // Calculate best viewing time based on latitude and season
+    if (lat > 50) {
+      // High northern latitudes
+      return month > 5 && month < 9 ? '22:00 - 03:00' : '20:00 - 05:00';
+    } else if (lat > 0) {
+      // Mid northern latitudes
+      return '21:00 - 02:00';
+    } else if (lat > -30) {
+      // Equatorial/tropical
+      return '20:00 - 01:00';
+    } else {
+      // Southern latitudes
+      return month > 5 && month < 9 ? '19:00 - 24:00' : '21:00 - 03:00';
+    }
+  }
+
+  private getViewingConditions(moonIllumination: number, hour: number): string {
+    const conditions = [];
+    
+    if (moonIllumination < 25) {
+      conditions.push('Excellent dark skies');
+    } else if (moonIllumination < 75) {
+      conditions.push('Good viewing conditions');
+    } else {
+      conditions.push('Bright moon affects visibility');
+    }
+    
+    if (hour >= 22 || hour <= 3) {
+      conditions.push('Optimal viewing hours');
+    }
+    
+    return conditions.join(', ');
   }
 }
 
