@@ -79,34 +79,34 @@ export class ConstellationApiService {
   private getConstellationImage(constellationName: string): string {
     // Authentic constellation images from astronomical sources
     const constellationImages: { [key: string]: string } = {
-      'orion': 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=400&h=300&fit=crop',
-      'ursa-major': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
-      'cassiopeia': 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=400&h=300&fit=crop',
-      'leo': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&h=300&fit=crop',
-      'scorpius': 'https://images.unsplash.com/photo-1446776481440-d9436ced2468?w=400&h=300&fit=crop',
-      'southern-cross': 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=400&h=300&fit=crop',
-      'andromeda': 'https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?w=400&h=300&fit=crop',
-      'perseus': 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=400&h=300&fit=crop',
-      'cygnus': 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=400&h=300&fit=crop',
-      'lyra': 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=300&fit=crop',
-      'aquila': 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=400&h=300&fit=crop',
-      'draco': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
-      'ursa-minor': 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=400&h=300&fit=crop',
-      'gemini': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&h=300&fit=crop',
-      'cancer': 'https://images.unsplash.com/photo-1446776481440-d9436ced2468?w=400&h=300&fit=crop',
-      'virgo': 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=400&h=300&fit=crop',
-      'libra': 'https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?w=400&h=300&fit=crop',
-      'sagittarius': 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=400&h=300&fit=crop',
-      'capricornus': 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=400&h=300&fit=crop',
-      'aquarius': 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=300&fit=crop',
-      'pisces': 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=400&h=300&fit=crop',
-      'aries': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
-      'taurus': 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=400&h=300&fit=crop',
-      'bootes': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&h=300&fit=crop'
+      'orion': 'https://science.nasa.gov/wp-content/uploads/2023/09/orion-nebula-by-hubble-and-spitzer.jpg',
+      'ursa-major': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop&q=80',
+      'cassiopeia': 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=600&h=400&fit=crop&q=80',
+      'leo': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=600&h=400&fit=crop&q=80',
+      'scorpius': 'https://images.unsplash.com/photo-1446776481440-d9436ced2468?w=600&h=400&fit=crop&q=80',
+      'crux': 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=600&h=400&fit=crop&q=80',
+      'andromeda': 'https://science.nasa.gov/wp-content/uploads/2023/09/andromeda-galaxy-with-h-alpha.jpg',
+      'perseus': 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=600&h=400&fit=crop&q=80',
+      'cygnus': 'https://science.nasa.gov/wp-content/uploads/2023/09/cygnus-loop-nebula.jpg',
+      'lyra': 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=600&h=400&fit=crop&q=80',
+      'aquila': 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=600&h=400&fit=crop&q=80',
+      'draco': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop&q=80',
+      'ursa-minor': 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=600&h=400&fit=crop&q=80',
+      'gemini': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=600&h=400&fit=crop&q=80',
+      'cancer': 'https://images.unsplash.com/photo-1446776481440-d9436ced2468?w=600&h=400&fit=crop&q=80',
+      'virgo': 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=600&h=400&fit=crop&q=80',
+      'libra': 'https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?w=600&h=400&fit=crop&q=80',
+      'sagittarius': 'https://science.nasa.gov/wp-content/uploads/2023/09/sagittarius-a-black-hole.jpg',
+      'capricornus': 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=600&h=400&fit=crop&q=80',
+      'aquarius': 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=600&h=400&fit=crop&q=80',
+      'pisces': 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=600&h=400&fit=crop&q=80',
+      'aries': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop&q=80',
+      'taurus': 'https://science.nasa.gov/wp-content/uploads/2023/09/crab-nebula-in-taurus.jpg',
+      'bootes': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=600&h=400&fit=crop&q=80'
     };
     
     return constellationImages[constellationName] || 
-           'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=400&h=300&fit=crop';
+           'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=600&h=400&fit=crop&q=80';
   }
 
   private getStarMapImage(constellationName: string): string {
