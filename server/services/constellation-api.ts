@@ -135,53 +135,116 @@ export class ConstellationApiService {
       return cached.data;
     }
 
+    // Try primary source: go-astronomy.com
+    let constellations = await this.scrapeFromGoAstronomy();
+    
+    // If primary fails, try backup source: NOIRLab
+    if (!constellations || constellations.length === 0) {
+      console.log('Primary source failed, trying NOIRLab backup...');
+      constellations = await this.scrapeFromNOIRLab();
+    }
+    
+    // If both fail, try alternative stable sources
+    if (!constellations || constellations.length === 0) {
+      console.log('Both sources failed, trying alternative sources...');
+      constellations = await this.scrapeFromAlternativeSources();
+    }
+    
+    if (constellations && constellations.length > 0) {
+      this.scrapedCache.set(cacheKey, { data: constellations, timestamp: Date.now() });
+      console.log(`Successfully scraped ${constellations.length} constellations with comprehensive data`);
+      return constellations;
+    }
+    
+    console.log('All scraping sources failed, using fallback data');
+    return this.getFallbackConstellationData();
+  }
+
+  private async scrapeFromGoAstronomy(): Promise<ConstellationData[]> {
     try {
       console.log('Fetching constellation list from go-astronomy.com...');
       const response = await this.fetchWithRetry('https://www.go-astronomy.com/constellations.htm');
       const html = await response.text();
       
       const constellationLinks = this.extractConstellationLinks(html);
-      console.log(`Found ${constellationLinks.length} constellations to process`);
+      console.log(`Found ${constellationLinks.length} constellations to process from go-astronomy`);
       
-      // Process in batches for faster loading
-      const batchSize = 10;
-      const constellations: ConstellationData[] = [];
-      
-      for (let i = 0; i < constellationLinks.length && i < 88; i += batchSize) {
-        const batch = constellationLinks.slice(i, i + batchSize);
-        console.log(`Processing batch ${Math.floor(i/batchSize) + 1}: ${batch.map(l => l.name).join(', ')}`);
-        
-        // Process batch in parallel
-        const batchPromises = batch.map(async (link) => {
-          try {
-            return await this.scrapeConstellationDetailWithCache(link);
-          } catch (error) {
-            console.error(`Failed to scrape ${link.name}:`, error);
-            return null;
-          }
-        });
-        
-        const batchResults = await Promise.all(batchPromises);
-        const validResults = batchResults.filter(data => data !== null) as ConstellationData[];
-        constellations.push(...validResults);
-        
-        // Small delay between batches to be respectful
-        if (i + batchSize < constellationLinks.length) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      }
-      
-      if (constellations.length > 0) {
-        this.scrapedCache.set(cacheKey, { data: constellations, timestamp: Date.now() });
-        console.log(`Successfully scraped ${constellations.length} constellations with comprehensive data`);
-        return constellations;
-      }
+      return await this.processBatchedConstellations(constellationLinks, 'go-astronomy');
     } catch (error) {
-      console.error('Error scraping constellation data:', error);
+      console.error('Error scraping from go-astronomy.com:', error);
+      return [];
+    }
+  }
+
+  private async scrapeFromNOIRLab(): Promise<ConstellationData[]> {
+    try {
+      console.log('Fetching constellation list from NOIRLab...');
+      const response = await this.fetchWithRetry('https://noirlab.edu/public/education/constellations/');
+      const html = await response.text();
+      
+      const constellationLinks = this.extractNOIRLabLinks(html);
+      console.log(`Found ${constellationLinks.length} constellations to process from NOIRLab`);
+      
+      return await this.processBatchedConstellations(constellationLinks, 'noirlab');
+    } catch (error) {
+      console.error('Error scraping from NOIRLab:', error);
+      return [];
+    }
+  }
+
+  private async scrapeFromAlternativeSources(): Promise<ConstellationData[]> {
+    const alternativeSources = [
+      'https://www.constellation-guide.com/',
+      'https://www.space.fm/astronomy/constellations/',
+      'https://earthsky.org/astronomy-essentials/88-constellations-in-night-sky/'
+    ];
+    
+    for (const source of alternativeSources) {
+      try {
+        console.log(`Trying alternative source: ${source}`);
+        const response = await this.fetchWithRetry(source);
+        const html = await response.text();
+        
+        const links = this.extractGenericConstellationLinks(html);
+        if (links.length > 0) {
+          console.log(`Found ${links.length} constellations from alternative source`);
+          return await this.processBatchedConstellations(links, 'alternative');
+        }
+      } catch (error) {
+        console.error(`Failed to scrape from ${source}:`, error);
+      }
     }
     
-    // Return fallback data if scraping fails
-    return this.getFallbackConstellationData();
+    return [];
+  }
+
+  private async processBatchedConstellations(links: Array<{name: string, url: string}>, source: string): Promise<ConstellationData[]> {
+    const batchSize = 10;
+    const constellations: ConstellationData[] = [];
+    
+    for (let i = 0; i < links.length && i < 88; i += batchSize) {
+      const batch = links.slice(i, i + batchSize);
+      console.log(`Processing ${source} batch ${Math.floor(i/batchSize) + 1}: ${batch.map(l => l.name).join(', ')}`);
+      
+      const batchPromises = batch.map(async (link) => {
+        try {
+          return await this.scrapeConstellationDetailWithCache(link, source);
+        } catch (error) {
+          console.error(`Failed to scrape ${link.name} from ${source}:`, error);
+          return null;
+        }
+      });
+      
+      const batchResults = await Promise.all(batchPromises);
+      const validResults = batchResults.filter(data => data !== null) as ConstellationData[];
+      constellations.push(...validResults);
+      
+      if (i + batchSize < links.length) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+    }
+    
+    return constellations;
   }
 
   private extractConstellationLinks(html: string): Array<{name: string, url: string}> {
@@ -203,15 +266,15 @@ export class ConstellationApiService {
     return links;
   }
 
-  private async scrapeConstellationDetailWithCache(link: {name: string, url: string}): Promise<ConstellationData | null> {
-    const cacheKey = `constellation-${this.generateId(link.name)}`;
+  private async scrapeConstellationDetailWithCache(link: {name: string, url: string}, source: string = 'go-astronomy'): Promise<ConstellationData | null> {
+    const cacheKey = `constellation-${this.generateId(link.name)}-${source}`;
     const cached = this.individualCache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < this.INDIVIDUAL_CACHE_DURATION) {
       return cached.data;
     }
     
-    const data = await this.scrapeConstellationDetail(link);
+    const data = await this.scrapeConstellationDetail(link, source);
     if (data) {
       this.individualCache.set(cacheKey, { data, timestamp: Date.now() });
     }
