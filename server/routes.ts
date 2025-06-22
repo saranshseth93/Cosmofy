@@ -3,7 +3,7 @@ import { createServer, Server } from "http";
 import { storage } from "./storage";
 import { nasaApi } from "./services/nasa-api";
 import { geolocationService } from "./services/geolocation";
-import { drikPanchangScraper } from "./services/drikpanchang-scraper-simple";
+import { drikPanchangScraper } from "./services/drikpanchang-scraper";
 
 async function refreshApodData() {
   try {
