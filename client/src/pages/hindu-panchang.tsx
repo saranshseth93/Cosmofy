@@ -45,49 +45,62 @@ interface LocationData {
 
 interface PanchangData {
   date: string;
-  location: {
-    city: string;
-    coordinates: { latitude: number; longitude: number };
-    timezone: string;
-  };
   tithi: {
     name: string;
-    sanskrit: string;
     deity: string;
+    type?: string;
+    number?: number;
+    start?: string;
+    end?: string;
+    nextTithi?: string;
+    meaning?: string;
+    special?: string;
     significance: string;
     endTime: string;
-    paksh: string;
-    number: number;
   };
   nakshatra: {
     name: string;
-    sanskrit: string;
+    lord?: string;
     deity: string;
+    number?: number;
+    start?: string;
+    end?: string;
+    nextNakshatra?: string;
+    meaning?: string;
+    special?: string;
+    summary?: string;
+    words?: string;
     qualities: string;
     endTime: string;
-    lord: string;
   };
   yoga: {
     name: string;
-    sanskrit: string;
+    number?: number;
+    start?: string;
+    end?: string;
     meaning: string;
+    special?: string;
+    nextYoga?: string;
     endTime: string;
-    type: string;
   };
   karana: {
     name: string;
-    sanskrit: string;
+    lord?: string;
+    deity?: string;
+    type?: string;
+    number?: number;
+    start?: string;
+    end?: string;
+    special?: string;
+    nextKarana?: string;
     meaning: string;
     endTime: string;
-    type: string;
   };
-  vara: string;
   rashi: {
     name: string;
     element: string;
     lord: string;
   };
-  masa: string;
   sunrise: string;
   sunset: string;
   moonrise: string;
@@ -98,22 +111,34 @@ interface PanchangData {
     gulikaKaal: string;
     yamaGandaKaal: string;
   };
+  advancedDetails?: {
+    solarNoon: string;
+    nextFullMoon: string;
+    nextNewMoon: string;
+    masa: {
+      amantaName: string;
+      purnimaName: string;
+      adhikMaasa: boolean;
+      ayana: string;
+      moonPhase: string;
+      paksha: string;
+      ritu: string;
+    };
+    vaara: string;
+    dishaShool: string;
+  };
+  auspiciousTimes?: Array<{
+    name: string;
+    time: string;
+    description: string;
+  }>;
+  inauspiciousTimes?: Array<{
+    name: string;
+    time: string;
+    description: string;
+  }>;
   festivals: string[];
   vratsAndOccasions: string[];
-  samvat: string[];
-  yug: string;
-  kaalIkai: string[];
-  verification: {
-    tithi: { library: string; scraped: string | null };
-    nakshatra: { library: string; scraped: string | null };
-    yoga: { library: string; scraped: string | null };
-    karana: { library: string; scraped: string | null };
-    verified: boolean;
-  };
-  source: string;
-  dataFreshness: string;
-  backupSource: string;
-  calculationMethod: string;
 }
 
 export default function HinduPanchangPage() {
@@ -121,7 +146,6 @@ export default function HinduPanchangPage() {
 
   // Update time every second
   useEffect(() => {
-    console.log('🕐 Starting Hindu Panchang page initialization...');
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -190,35 +214,15 @@ export default function HinduPanchangPage() {
   const { data: panchangData, isLoading: panchangLoading, error: panchangError } = useQuery<PanchangData>({
     queryKey: ['/api/panchang', userCoords?.lat, userCoords?.lon],
     queryFn: async () => {
-      console.log('🔮 Fetching Panchang data for coordinates:', userCoords);
-      const url = `/api/panchang?lat=${userCoords?.lat}&lon=${userCoords?.lon}`;
-      console.log('🔗 API URL:', url);
-      
-      const response = await fetch(url);
-      console.log('📡 Response status:', response.status);
-      
+      const response = await fetch(`/api/panchang?lat=${userCoords?.lat}&lon=${userCoords?.lon}`);
       if (!response.ok) {
-        console.error('❌ API Error:', response.status, response.statusText);
-        throw new Error(`Failed to fetch Panchang data: ${response.status}`);
+        throw new Error('Failed to fetch Panchang data');
       }
-      
-      const data = await response.json();
-      console.log('✅ Panchang data received:', data);
-      console.log('📊 Data structure verification:');
-      console.log('- Tithi:', data.tithi);
-      console.log('- Nakshatra:', data.nakshatra);
-      console.log('- Yoga:', data.yoga);
-      console.log('- Karana:', data.karana);
-      console.log('- Location:', data.location);
-      console.log('- Verification:', data.verification);
-      console.log('- Source:', data.source);
-      
-      return data;
+      return response.json();
     },
     enabled: !!userCoords,
     staleTime: 60 * 60 * 1000, // 1 hour
     retry: false,
-
   });
 
   const formatTime = (date: Date) => {

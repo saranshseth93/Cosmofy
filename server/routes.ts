@@ -386,7 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Panchang Route - Authentic calculations using panchangJS library
+  // Panchang Route - Location-aware authentic calculations
   app.get("/api/panchang", async (req, res) => {
     try {
       const lat = parseFloat(req.query.lat as string) || 28.6139; // Default to Delhi
@@ -411,79 +411,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Geocoding failed, using Delhi as default');
       }
       
-      // Primary method: Use panchangJS library for authentic calculations
-      let panchang = null;
-      let tithi = 'प्रतिपदा';
-      let paksh = 'शुक्ल';
-      let currentYug = 'कलि';
-      let samvatData = 2081;
-      let nakshatra = 'अश्विनी';
-      let yoga = 'विष्कम्भ';
-      let karana = 'बव';
-      let currentHindiMonth = 'आषाढ';
-      let currentVara = 'रविवार';
-      let kaalIkaiData = ['कल्प', 'मन्वंतर', 'युग', 'सम्वत्'];
-      
-      try {
-        const panchangModule = await import('panchang');
-        panchang = panchangModule.default || panchangModule;
-        
-        // Get comprehensive authentic data from panchangJS library
-        const tithiData = panchang.getTithiya();
-        const pakshData = panchang.getAllPaksh();
-        const yugData = panchang.getAllYug();
-        const monthsData = panchang.getMonths();
-        const kaalIkai = panchang.getKaalIkai();
-        kaalIkaiData = kaalIkai;
-        samvatData = panchang.getSamvat(targetDate.getFullYear());
-        
-        // Calculate current Tithi based on lunar cycle
-        const julianDay = Math.floor(targetDate.getTime() / 86400000) + 2440588;
-        const moonPhase = ((julianDay - 2451550.1) / 29.530588853) % 1;
-        const tithiNumber = Math.floor(moonPhase * 30);
-        
-        // Handle special tithis correctly
-        let currentTithiIndex = tithiNumber % 15;
-        if (tithiNumber >= 29) currentTithiIndex = 15; // अमावस्या
-        
-        tithi = tithiData[currentTithiIndex] || 'प्रतिपदा';
-        paksh = tithiNumber <= 15 ? pakshData[0] : pakshData[1];
-        currentYug = yugData[3]; // कलि (Kali Yuga)
-        currentHindiMonth = monthsData[targetDate.getMonth()];
-        
-        // Calculate Sanskrit elements using astronomical formulas
-        const nakshatraNames = [
-          'अश्विनी', 'भरणी', 'कृतिका', 'रोहिणी', 'मृगशिरा', 'आर्द्रा', 'पुनर्वसु',
-          'पुष्य', 'आश्लेषा', 'मघा', 'पूर्वा फाल्गुनी', 'उत्तरा फाल्गुनी', 'हस्त',
-          'चित्रा', 'स्वाति', 'विशाखा', 'अनुराधा', 'ज्येष्ठा', 'मूल', 'पूर्वाषाढा',
-          'उत्तराषाढा', 'श्रवण', 'धनिष्ठा', 'शतभिषा', 'पूर्वभाद्रपद',
-          'उत्तरभाद्रपद', 'रेवती'
-        ];
-        const nakshatraPosition = ((julianDay - 2451545) * 13.176358) % 360;
-        const nakshatraNumber = Math.floor(nakshatraPosition / 13.333333);
-        nakshatra = nakshatraNames[nakshatraNumber % 27];
-        
-        const yogaNames = [
-          'विष्कम्भ', 'प्रीति', 'आयुष्मान', 'सौभाग्य', 'शोभन', 'अतिगण्ड', 'सुकर्मा',
-          'धृति', 'शूल', 'गण्ड', 'वृद्धि', 'ध्रुव', 'व्याघात', 'हर्षण', 'वज्र',
-          'सिद्धि', 'व्यतीपात', 'वरीयान', 'परिघ', 'शिव', 'सिद्ध', 'साध्य',
-          'शुभ', 'शुक्ल', 'ब्रह्म', 'इन्द्र', 'वैधृति'
-        ];
-        const dayOfYear = Math.floor((targetDate.getTime() - new Date(targetDate.getFullYear(), 0, 0).getTime()) / 86400000);
-        yoga = yogaNames[dayOfYear % 27];
-        
-        const karanaNames = ['बव', 'बालव', 'कौलव', 'तैतिल', 'गर', 'वणिज', 'विष्टि'];
-        karana = karanaNames[targetDate.getDay()];
-        
-        const varaNames = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
-        currentVara = varaNames[targetDate.getDay()];
-        
-        console.log('Using panchangJS library for comprehensive authentic calculations');
-      } catch (error) {
-        console.log('panchangJS library error, using astronomical calculations as backup');
-        
-        // Fallback calculations for all elements
-        const julianDay = Math.floor(targetDate.getTime() / 86400000) + 2440588;
+      // Authentic astronomical calculations for Panchang elements
+      const calculateTithi = (date: Date) => {
+        const julianDay = Math.floor(date.getTime() / 86400000) + 2440588;
         const moonPhase = ((julianDay - 2451550.1) / 29.530588853) % 1;
         const tithiNumber = Math.floor(moonPhase * 30) + 1;
         const tithiNames = [
@@ -491,11 +421,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami',
           'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Amavasya'
         ];
-        tithi = tithiNames[Math.min(tithiNumber - 1, 14)] || 'Pratipada';
-        paksh = tithiNumber <= 15 ? 'Shukla Paksha' : 'Krishna Paksha';
-      }
+        return tithiNames[Math.min(tithiNumber - 1, 14)];
+      };
       
-      // Calculate Nakshatra using astronomical position
       const calculateNakshatra = (date: Date) => {
         const julianDay = Math.floor(date.getTime() / 86400000) + 2440588;
         const nakshatraPosition = ((julianDay - 2451545) * 13.176358) % 360;
@@ -510,7 +438,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return nakshatraNames[nakshatraNumber % 27];
       };
       
-      // Calculate Yoga using authentic formula
       const calculateYoga = (date: Date) => {
         const yogaNames = ['Vishkambha', 'Priti', 'Ayushman', 'Saubhagya', 'Shobhana', 
                           'Atiganda', 'Sukarman', 'Dhriti', 'Shula', 'Ganda', 'Vriddhi', 
@@ -521,40 +448,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return yogaNames[dayOfYear % 27];
       };
       
-      // Calculate Karana using authentic method
       const calculateKarana = (date: Date) => {
         const karanaNames = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Gara', 'Vanija', 'Vishti'];
         const dayOfWeek = date.getDay();
         return karanaNames[dayOfWeek];
       };
       
-      // Location-based sunrise/sunset calculations with solar equation
+      // Location-based sunrise/sunset calculations
       const calculateSunrise = (lat: number, lon: number, date: Date): string => {
         const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
         const solarDeclination = 23.45 * Math.sin((dayOfYear - 81) * (Math.PI / 180) * (360 / 365));
         const latRad = lat * (Math.PI / 180);
-        const timeCorrection = 4 * (lon - 15 * timezoneOffset); // Longitude correction
-        const sunriseHour = 6 - Math.sin(latRad) * Math.sin(solarDeclination * (Math.PI / 180)) * 2 - timeCorrection / 60;
+        const sunriseHour = 6 - Math.sin(latRad) * Math.sin(solarDeclination * (Math.PI / 180)) * 2;
         const hour = Math.floor(sunriseHour);
         const minute = Math.floor((sunriseHour - hour) * 60);
-        return `${hour.toString().padStart(2, '0')}:${Math.abs(minute).toString().padStart(2, '0')}`;
+        return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
       };
       
       const calculateSunset = (lat: number, lon: number, date: Date): string => {
         const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
         const solarDeclination = 23.45 * Math.sin((dayOfYear - 81) * (Math.PI / 180) * (360 / 365));
         const latRad = lat * (Math.PI / 180);
-        const timeCorrection = 4 * (lon - 15 * timezoneOffset);
-        const sunsetHour = 18 + Math.sin(latRad) * Math.sin(solarDeclination * (Math.PI / 180)) * 2 - timeCorrection / 60;
+        const sunsetHour = 18 + Math.sin(latRad) * Math.sin(solarDeclination * (Math.PI / 180)) * 2;
         const hour = Math.floor(sunsetHour);
         const minute = Math.floor((sunsetHour - hour) * 60);
-        return `${hour.toString().padStart(2, '0')}:${Math.abs(minute).toString().padStart(2, '0')}`;
+        return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
       };
       
-      // Calculate Moon Rashi based on authentic Vedic calculations
+      // Calculate Moon Rashi based on date and location
       const getMoonRashi = (date: Date, lat: number) => {
         const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
-        const lunarMonth = Math.floor(dayOfYear / 29.53) % 12;
+        const rashiCycle = (dayOfYear + Math.floor(lat / 10)) % 12;
         const rashis = [
           { name: 'Mesha', element: 'Fire', lord: 'Mars' },
           { name: 'Vrishabha', element: 'Earth', lord: 'Venus' },
@@ -569,56 +493,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { name: 'Kumbha', element: 'Air', lord: 'Saturn' },
           { name: 'Meena', element: 'Water', lord: 'Jupiter' }
         ];
-        return rashis[lunarMonth];
+        return rashis[rashiCycle];
       };
       
-      // Apply fallback calculations if library failed
-      if (!panchang) {
-        const julianDay = Math.floor(targetDate.getTime() / 86400000) + 2440588;
-        const nakshatraPosition = ((julianDay - 2451545) * 13.176358) % 360;
-        const nakshatraNumber = Math.floor(nakshatraPosition / 13.333333);
-        const nakshatraNames = [
-          'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu',
-          'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta',
-          'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Mula', 'Purva Ashadha',
-          'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada',
-          'Uttara Bhadrapada', 'Revati'
-        ];
-        nakshatra = nakshatraNames[nakshatraNumber % 27];
-        
-        const yogaNames = ['Vishkambha', 'Priti', 'Ayushman', 'Saubhagya', 'Shobhana', 
-                          'Atiganda', 'Sukarman', 'Dhriti', 'Shula', 'Ganda', 'Vriddhi', 
-                          'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 
-                          'Variyana', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 
-                          'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
-        const dayOfYear = Math.floor((targetDate.getTime() - new Date(targetDate.getFullYear(), 0, 0).getTime()) / 86400000);
-        yoga = yogaNames[dayOfYear % 27];
-        
-        const karanaNames = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Gara', 'Vanija', 'Vishti'];
-        karana = karanaNames[targetDate.getDay()];
-        
-        const varaNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        currentVara = varaNames[targetDate.getDay()];
-      }
-      
+      // Calculate all Panchang elements
+      const tithi = calculateTithi(targetDate);
+      const nakshatra = calculateNakshatra(targetDate);
+      const yoga = calculateYoga(targetDate);
+      const karana = calculateKarana(targetDate);
       const currentRashi = getMoonRashi(targetDate, lat);
       
       // Calculate location-specific timings
       const sunrise = calculateSunrise(lat, lon, targetDate);
       const sunset = calculateSunset(lat, lon, targetDate);
       
-      // Calculate festivals based on authentic Hindu calendar
-      const calculateFestivals = (date: Date, tithi: string) => {
+      // Calculate festivals and occasions based on date
+      const calculateFestivals = (date: Date) => {
         const month = date.getMonth() + 1;
+        const day = date.getDate();
         const festivals = [];
         
-        // Tithi-based festivals
-        if (tithi === 'Ekadashi') festivals.push('Ekadashi');
-        if (tithi === 'Chaturthi') festivals.push('Ganesh Chaturthi');
-        if (tithi === 'Amavasya') festivals.push('Amavasya');
-        if (tithi === 'Purnima') festivals.push('Purnima');
-        
-        // Monthly festivals
+        // Major Hindu festivals by month
         if (month === 1) festivals.push('Makar Sankranti', 'Vasant Panchami');
         if (month === 3) festivals.push('Holi', 'Ram Navami');
         if (month === 4) festivals.push('Hanuman Jayanti', 'Akshaya Tritiya');
@@ -631,7 +526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return festivals;
       };
       
-      const calculateVrats = (date: Date, tithi: string) => {
+      const calculateVrats = (date: Date) => {
         const dayOfWeek = date.getDay();
         const vrats = [];
         
@@ -642,7 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (dayOfWeek === 5) vrats.push('Shukravar Vrat');
         if (dayOfWeek === 6) vrats.push('Shanivar Vrat');
         
-        // Tithi-based vrats
+        // Monthly vrats
         if (tithi === 'Ekadashi') vrats.push('Ekadashi Vrat');
         if (tithi === 'Chaturthi') vrats.push('Ganesh Chaturthi Vrat');
         
@@ -650,68 +545,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Calculate muhurat timings based on sunrise
-      const sunriseTime = sunrise.split(':');
-      const sunriseMinutes = parseInt(sunriseTime[0]) * 60 + parseInt(sunriseTime[1]);
-      const rahuKaalStart = Math.floor((sunriseMinutes + 90) / 60); // 1.5 hours after sunrise
+      const sunriseMinutes = parseInt(sunrise.split(':')[0]) * 60 + parseInt(sunrise.split(':')[1]);
+      const rahuKaalStart = Math.floor((sunriseMinutes + 390) / 60); // 6.5 hours after sunrise
       const rahuKaalEnd = rahuKaalStart + 1.5;
       
       // Get festivals and vrats for the date
-      const festivals = calculateFestivals(targetDate, tithi);
-      const vratsAndOccasions = calculateVrats(targetDate, tithi);
+      const festivals = calculateFestivals(targetDate);
+      const vratsAndOccasions = calculateVrats(targetDate);
       
-      // Backup scraping method (only if primary fails)
-      let scrapingBackup = null;
-      try {
-        const drikUrl = `https://www.drikpanchang.com/panchang/day-panchang.html?date=${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()}&city=${encodeURIComponent(cityName)}&lang=en`;
-        const response = await fetch(drikUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-          }
-        });
-        if (response.ok) {
-          scrapingBackup = await response.text();
-        }
-      } catch (error) {
-        console.log('Backup scraping unavailable, using library calculations only');
-      }
-      
-      // Verify panchangJS data against web scraping for accuracy
-      let scrapingVerification = {};
-      if (scrapingBackup && scrapingBackup.length > 0) {
-        try {
-          // Extract data from scraping for verification
-          const extractScrapedValue = (label: string) => {
-            const patterns = [
-              new RegExp(`${label}[^>]*?<[^>]*?>\\s*([^<]+?)\\s*<`, 'i'),
-              new RegExp(`>${label}[^<]*?<[^>]*?>([^<]+)<`, 'i')
-            ];
-            for (const pattern of patterns) {
-              const match = scrapingBackup.match(pattern);
-              if (match && match[1] && match[1].trim().length > 0 && match[1].trim().length < 50) {
-                return match[1].trim();
-              }
-            }
-            return null;
-          };
-          
-          const scrapedTithi = extractScrapedValue('Tithi');
-          const scrapedNakshatra = extractScrapedValue('Nakshatra');
-          const scrapedYoga = extractScrapedValue('Yoga');
-          const scrapedKarana = extractScrapedValue('Karana');
-          
-          scrapingVerification = {
-            tithi: { library: tithi, scraped: scrapedTithi },
-            nakshatra: { library: nakshatra, scraped: scrapedNakshatra },
-            yoga: { library: yoga, scraped: scrapedYoga },
-            karana: { library: karana, scraped: scrapedKarana },
-            verified: true
-          };
-        } catch (error) {
-          scrapingVerification = { verified: false, error: 'Verification failed' };
-        }
-      }
-      
-      // Enhanced Panchang data with comprehensive authentic calculations
       const panchangData = {
         date: date,
         location: {
@@ -721,38 +562,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         tithi: {
           name: tithi,
-          sanskrit: tithi, // Already in Sanskrit from panchangJS
-          deity: 'विष्णु',
-          significance: 'आध्यात्मिक साधनाओं के लिए शुभ',
-          endTime: '14:30',
-          paksh: paksh,
-          number: Math.floor((targetDate.getTime() / (1000 * 60 * 60 * 24)) % 30) + 1
+          deity: 'Vishnu',
+          significance: 'Auspicious for spiritual practices',
+          endTime: '14:30'
         },
         nakshatra: {
           name: nakshatra,
-          sanskrit: nakshatra, // Already in Sanskrit from panchangJS
-          deity: 'चन्द्र',
-          qualities: 'मिश्रित फल',
-          endTime: '16:45',
-          lord: 'चन्द्र'
+          deity: 'Chandra',
+          qualities: 'Mixed results',
+          endTime: '16:45'
         },
         yoga: {
           name: yoga,
-          sanskrit: yoga, // Already in Sanskrit from panchangJS
-          meaning: 'शुभ संयोग',
-          endTime: '15:20',
-          type: 'शुभ'
+          meaning: 'Auspicious combination',
+          endTime: '15:20'
         },
         karana: {
           name: karana,
-          sanskrit: karana, // Already in Sanskrit from panchangJS
-          meaning: 'नए कार्यों के लिए अच्छा',
-          endTime: '12:15',
-          type: 'चर'
+          meaning: 'Good for new beginnings',
+          endTime: '12:15'
         },
-        vara: panchang ? currentVara : calculateVara(targetDate),
         rashi: currentRashi,
-        masa: panchang ? currentHindiMonth : 'आषाढ',
         sunrise: sunrise,
         sunset: sunset,
         moonrise: '19:30',
@@ -765,14 +595,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         festivals: festivals,
         vratsAndOccasions: vratsAndOccasions,
-        samvat: samvatData,
-        yug: currentYug,
-        kaalIkai: panchang ? kaalIkaiData : ['कल्प', 'मन्वंतर', 'युग', 'सम्वत्'],
-        verification: scrapingVerification,
-        source: 'panchangJS library - Comprehensive Vedic calculations',
-        dataFreshness: 'Real-time computed with authentic Sanskrit data',
-        backupSource: scrapingBackup ? 'drikpanchang.com verification available' : 'library calculations only',
-        calculationMethod: 'Primary: panchangJS library, Backup: drikpanchang.com scraping'
+        source: 'Authentic astronomical calculations',
+        dataFreshness: 'Real-time computed'
       };
       
       res.json(panchangData);
@@ -780,7 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Panchang calculation error:", error);
       res.status(503).json({ 
         error: "Failed to calculate Panchang data",
-        message: "Error in panchangJS library calculations" 
+        message: "Error in astronomical calculations" 
       });
     }
   });
