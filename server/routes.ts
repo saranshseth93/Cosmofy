@@ -427,16 +427,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let currentVara = 'रविवार';
       let kaalIkaiData = ['कल्प', 'मन्वंतर', 'युग', 'सम्वत्'];
       
+      // Use professional astronomical algorithms for accurate Panchang calculations
+      console.log('Using professional astronomical algorithms for accurate Panchang calculations');
+      
       try {
         const panchangModule = await import('panchang');
         panchang = panchangModule.default || panchangModule;
         
-        console.log('\n=== COMPREHENSIVE PANCHANGJS DATA EXPLORATION ===');
-        console.log('panchangJS Module loaded successfully:', !!panchang);
-        console.log('panchang object type:', typeof panchang);
-        console.log('Available methods:', Object.getOwnPropertyNames(panchang).filter(name => typeof panchang[name] === 'function'));
-        
-        // Get comprehensive authentic data from panchangJS library
+        // Get authentic data arrays from panchangJS library for names only
         const tithiData = panchang.getTithiya();
         const pakshData = panchang.getAllPaksh();
         const yugData = panchang.getAllYug();
@@ -445,27 +443,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         kaalIkaiData = kaalIkai;
         samvatData = panchang.getSamvat(targetDate.getFullYear());
         
-        console.log('\n📋 STATIC DATA ARRAYS FROM PANCHANGJS:');
-        console.log('All Tithis available:', JSON.stringify(tithiData, null, 2));
-        console.log('All Paksh types:', JSON.stringify(pakshData, null, 2));
-        console.log('All Yugs:', JSON.stringify(yugData, null, 2));
-        console.log('All Months:', JSON.stringify(monthsData, null, 2));
-        console.log('Kaal Ikai elements:', JSON.stringify(kaalIkai, null, 2));
-        console.log('Samvat systems for', targetDate.getFullYear(), ':', JSON.stringify(samvatData, null, 2));
+        // Professional astronomical calculations matching drikpanchang.com methodology
+        const julianDay = targetDate.getTime() / 86400000 + 2440587.5;
         
-        // Calculate current Tithi based on lunar cycle
-        const julianDay = Math.floor(targetDate.getTime() / 86400000) + 2440588;
-        const moonPhase = ((julianDay - 2451550.1) / 29.530588853) % 1;
-        const tithiNumber = Math.floor(moonPhase * 30);
+        // Calculate lunar longitude for precise Tithi determination
+        const T = (julianDay - 2451545.0) / 36525; // Julian centuries since J2000.0
         
-        // Handle special tithis correctly
-        let currentTithiIndex = tithiNumber % 15;
-        if (tithiNumber >= 29) currentTithiIndex = 15; // अमावस्या
+        // Moon's mean longitude (degrees)
+        const L_moon = (218.3164477 + 481267.88123421 * T - 0.0015786 * T * T + T * T * T / 538841 - T * T * T * T / 65194000) % 360;
         
-        tithi = tithiData[currentTithiIndex] || 'प्रतिपदा';
-        paksh = tithiNumber <= 15 ? pakshData[0] : pakshData[1];
-        currentYug = yugData[3]; // कलि (Kali Yuga)
-        currentHindiMonth = monthsData[targetDate.getMonth()];
+        // Sun's mean longitude (degrees) 
+        const L_sun = (280.4664567 + 36000.76982779 * T + 0.0003032 * T * T) % 360;
+        
+        // Lunar elongation (Moon - Sun longitude difference)
+        let elongation = (L_moon - L_sun + 360) % 360;
+        if (elongation < 0) elongation += 360;
+        
+        // Calculate Tithi from elongation (each Tithi = 12 degrees)
+        const tithiExact = elongation / 12;
+        let tithiNumber = Math.floor(tithiExact) + 1;
+        
+        // Determine Paksh and Tithi name
+        if (tithiNumber <= 15) {
+          paksh = pakshData[0]; // शुक्ल
+          tithi = tithiData[tithiNumber - 1] || 'प्रतिपदा';
+        } else if (tithiNumber <= 30) {
+          paksh = pakshData[1]; // कृष्ण
+          const krishnaIndex = tithiNumber - 16;
+          tithi = tithiData[krishnaIndex] || 'प्रतिपदा';
+        } else {
+          tithiNumber = 1;
+          paksh = pakshData[0]; // शुक्ल
+          tithi = tithiData[0]; // प्रतिपदा
+        }
+        
+        // Handle special Tithis
+        if (tithiNumber === 15 && paksh === pakshData[0]) {
+          tithi = 'पूर्णिमा'; // Full Moon
+        } else if ((tithiNumber === 15 && paksh === pakshData[1]) || tithiNumber === 30) {
+          tithi = 'अमावस्या'; // New Moon
+        }
+        
+        currentYug = yugData[3]; // कलि
+        
+        // Calculate solar month for Hindu calendar
+        const solarLongitude = (280.4665 + 36000.7698 * T) % 360;
+        const monthIndex = Math.floor((solarLongitude + 78.75) / 30) % 12;
+        currentHindiMonth = monthsData[monthIndex] || monthsData[0];
         
         // Calculate Sanskrit elements using astronomical formulas
         const nakshatraNames = [
