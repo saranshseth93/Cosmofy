@@ -386,6 +386,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Import the simplified Drik Panchang scraper
+  const { simpleDrikScraper } = await import('./services/drik-scraper-simple');
+
+  // Test scraper endpoint
+  app.get("/api/scraper/test", async (req, res) => {
+    try {
+      const city = req.query.city as string || 'Delhi';
+      const data = await simpleDrikScraper.test(city);
+      
+      res.json({
+        success: true,
+        message: `Successfully scraped Panchang data for ${city}`,
+        data: data,
+        scrapedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Scraper test error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Scraping test failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+        troubleshooting: {
+          possibleCauses: [
+            "Network connectivity issues",
+            "Drik Panchang website structure changes",
+            "Rate limiting from the website",
+            "Invalid city name or date format"
+          ],
+          solutions: [
+            "Check internet connection",
+            "Try with a different city name", 
+            "Wait a few minutes before retrying",
+            "Use fallback astronomical calculations"
+          ]
+        }
+      });
+    }
+  });
+
+  // Scrape specific date and city
+  app.get("/api/scraper/panchang", async (req, res) => {
+    try {
+      const date = req.query.date as string || new Date().toISOString().split('T')[0];
+      const city = req.query.city as string || 'Delhi';
+      const lat = req.query.lat ? parseFloat(req.query.lat as string) : undefined;
+      const lon = req.query.lon ? parseFloat(req.query.lon as string) : undefined;
+
+      console.log(`Scraping Panchang for ${date} in ${city}`);
+      
+      const data = await simpleDrikScraper.scrapePanchang(date, city);
+      
+      res.json({
+        success: true,
+        data: data,
+        metadata: {
+          scrapedAt: new Date().toISOString(),
+          source: 'drikpanchang.com',
+          city: city,
+          date: date,
+          coordinates: lat && lon ? { latitude: lat, longitude: lon } : null
+        }
+      });
+    } catch (error) {
+      console.error("Panchang scraping error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to scrape Panchang data",
+        message: error instanceof Error ? error.message : "Unknown error",
+        fallbackMessage: "Consider using the astronomical calculation endpoint: /api/panchang"
+      });
+    }
+  });
+
+  // Scrape date range for batch processing
+  app.get("/api/scraper/batch", async (req, res) => {
+    try {
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+      const city = req.query.city as string || 'Delhi';
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({
+          success: false,
+          error: "Missing required parameters",
+          message: "Both startDate and endDate are required",
+          example: "/api/scraper/batch?startDate=2025-06-22&endDate=2025-06-24&city=Delhi"
+        });
+      }
+
+      // Validate date range (limit to 7 days to prevent abuse)
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
+      
+      if (daysDiff > 7) {
+        return res.status(400).json({
+          success: false,
+          error: "Date range too large",
+          message: "Maximum 7 days allowed for batch scraping",
+          requestedDays: daysDiff
+        });
+      }
+
+      console.log(`Batch scraping ${daysDiff} days from ${startDate} to ${endDate} for ${city}`);
+      
+      const results = await drikPanchangScraper.scrapeDateRange(startDate, endDate, city);
+      
+      res.json({
+        success: true,
+        data: results,
+        metadata: {
+          scrapedAt: new Date().toISOString(),
+          source: 'drikpanchang.com',
+          city: city,
+          dateRange: { startDate, endDate },
+          totalDays: daysDiff,
+          successfulScrapes: results.length
+        }
+      });
+    } catch (error) {
+      console.error("Batch scraping error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Batch scraping failed",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get scraper status and configuration
+  app.get("/api/scraper/status", (req, res) => {
+    res.json({
+      success: true,
+      status: "operational",
+      configuration: {
+        baseUrl: "https://www.drikpanchang.com",
+        timeout: "30 seconds",
+        rateLimit: "1 request per second",
+        maxBatchSize: "7 days"
+      },
+      endpoints: {
+        test: "/api/scraper/test?city=Delhi",
+        single: "/api/scraper/panchang?date=2025-06-22&city=Delhi",
+        batch: "/api/scraper/batch?startDate=2025-06-22&endDate=2025-06-24&city=Delhi"
+      },
+      supportedCities: [
+        "Delhi", "Mumbai", "Kolkata", "Chennai", "Bangalore", "Hyderabad",
+        "Pune", "Ahmedabad", "Jaipur", "Lucknow", "Kanpur", "Nagpur"
+      ],
+      usage: {
+        bestPractices: [
+          "Use specific city names for better accuracy",
+          "Include coordinates when available",
+          "Limit batch requests to 7 days maximum",
+          "Add delays between requests to avoid rate limiting"
+        ],
+        troubleshooting: [
+          "If scraping fails, use /api/panchang for calculated data",
+          "Check network connectivity if requests timeout",
+          "Try different city spellings if data seems incorrect"
+        ]
+      }
+    });
+  });
+
   // Panchang Route - Location-aware authentic calculations
   app.get("/api/panchang", async (req, res) => {
     try {
