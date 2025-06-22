@@ -397,15 +397,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const timezoneOffset = Math.round(lon / 15);
       const localOffset = timezoneOffset > 12 ? timezoneOffset - 24 : timezoneOffset;
       
-      // Get city name from coordinates
-      let cityName = 'Delhi';
+      // Get detailed location name from coordinates with suburb/locality priority
+      let cityName = 'Delhi, India';
       try {
         const geocodeResponse = await fetch(
           `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
         );
         if (geocodeResponse.ok) {
           const locationData = await geocodeResponse.json();
-          cityName = locationData.city || locationData.locality || locationData.principalSubdivision || 'Delhi';
+          const suburb = locationData.locality || locationData.city || locationData.principalSubdivision;
+          const country = locationData.countryName;
+          cityName = suburb && country ? `${suburb}, ${country}` : 
+                    (locationData.city && country ? `${locationData.city}, ${country}` : 'Delhi, India');
         }
       } catch (error) {
         console.log('Geocoding failed, using Delhi as default');

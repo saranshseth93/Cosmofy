@@ -35,7 +35,10 @@ interface LocationData {
   latitude: number;
   longitude: number;
   timezone: string;
+  suburb: string;
   city: string;
+  country: string;
+  display: string;
 }
 
 interface PanchangData {
@@ -258,7 +261,7 @@ export default function HinduPanchangSimplePage() {
               <div className="bg-orange-900/30 border border-orange-500/40 rounded-full px-4 py-2 flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-orange-400" />
                 <span className="text-orange-200 text-sm">
-                  {locationData?.city || panchangData?.location?.city || 'Mumbai'}
+                  {locationData?.display || locationData?.suburb || panchangData?.location?.city || 'Mumbai, India'}
                 </span>
               </div>
             </div>
