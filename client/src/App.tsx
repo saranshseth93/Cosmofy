@@ -1,8 +1,6 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { CosmicCursor } from "@/components/cosmic-cursor";
 import Home from "@/pages/home";
 import Gallery from "@/pages/gallery";
 import ISSTracker from "@/pages/iss-tracker";
@@ -51,9 +49,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-800 to-black">
-        <CosmicCursor />
-        <Toaster />
-        <Router />
+        {/* <CosmicCursor /> */}
+        {/* <Toaster /> */}
+        <div className="text-white text-center pt-20">
+          <h1 className="text-4xl font-bold">COSMOFY</h1>
+          <p>Space Exploration Platform</p>
+        </div>
       </div>
     </QueryClientProvider>
   );
