@@ -386,14 +386,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Import the enhanced Drik Panchang scraper that targets JavaScript data
-  const { enhancedDrikPanchangScraper } = await import('./services/drik-panchang-enhanced');
+  // Import the comprehensive Drik Panchang scraper with multiple extraction methods
+  const { comprehensiveDrikPanchangScraper } = await import('./services/drik-panchang-comprehensive');
 
   // Test scraper endpoint
   app.get("/api/scraper/test", async (req, res) => {
     try {
       const city = req.query.city as string || 'Delhi';
-      const data = await enhancedDrikPanchangScraper.test(city);
+      const data = await comprehensiveDrikPanchangScraper.test(city);
       
       res.json({
         success: true,
@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Scraping Panchang for ${date} in ${city}`);
       
-      const data = await enhancedDrikPanchangScraper.scrapePanchang(date, city);
+      const data = await comprehensiveDrikPanchangScraper.scrapePanchang(date, city);
       
       res.json({
         success: true,
@@ -491,7 +491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Batch scraping ${daysDiff} days from ${startDate} to ${endDate} for ${city}`);
       
-      const results = await enhancedDrikPanchangScraper.scrapeDateRange(startDate, endDate, city);
+      const results = await comprehensiveDrikPanchangScraper.scrapeDateRange(startDate, endDate, city);
       
       res.json({
         success: true,
