@@ -441,7 +441,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let calculatedFestivals: string[] = [];
       let calculatedVrats: string[] = [];
       
-      // Use professional astronomical algorithms for accurate Panchang calculations
+      // FIRST: Get accurate sunrise/sunset times from API
+      console.log('Fetching accurate astronomical data from APIs');
+      
+      // Get sunrise/sunset from reliable API
+      try {
+        const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lon}&date=${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}&formatted=0`;
+        
+        const sunResponse = await fetch(sunApiUrl);
+        const sunData = await sunResponse.json();
+        
+        if (sunData.status === 'OK') {
+          const sunriseUTC = new Date(sunData.results.sunrise);
+          const sunsetUTC = new Date(sunData.results.sunset);
+          
+          const localSunrise = new Date(sunriseUTC.getTime() + (localOffset * 60 * 60 * 1000));
+          const localSunset = new Date(sunsetUTC.getTime() + (localOffset * 60 * 60 * 1000));
+          
+          calculatedSunrise = `${localSunrise.getHours().toString().padStart(2, '0')}:${localSunrise.getMinutes().toString().padStart(2, '0')}`;
+          calculatedSunset = `${localSunset.getHours().toString().padStart(2, '0')}:${localSunset.getMinutes().toString().padStart(2, '0')}`;
+          
+          console.log(`API Sunrise: ${calculatedSunrise}, Sunset: ${calculatedSunset} for ${lat}, ${lon}`);
+        } else {
+          throw new Error('Sunrise API failed');
+        }
+      } catch (error) {
+        console.error('Sunrise API error:', error);
+        // Fallback calculation
+        const dayOfYear = Math.floor((targetDate.getTime() - new Date(targetDate.getFullYear(), 0, 0).getTime()) / 86400000);
+        const P = Math.asin(0.39795 * Math.cos(0.98563 * (dayOfYear - 173) * Math.PI / 180));
+        const sunriseDecimal = 12 - Math.sqrt(144 - 48 * Math.tan(Math.PI * lat / 180) * Math.tan(P)) / 4;
+        const sunsetDecimal = 12 + Math.sqrt(144 - 48 * Math.tan(Math.PI * lat / 180) * Math.tan(P)) / 4;
+        
+        calculatedSunrise = `${Math.floor(sunriseDecimal).toString().padStart(2, '0')}:${Math.floor((sunriseDecimal % 1) * 60).toString().padStart(2, '0')}`;
+        calculatedSunset = `${Math.floor(sunsetDecimal).toString().padStart(2, '0')}:${Math.floor((sunsetDecimal % 1) * 60).toString().padStart(2, '0')}`;
+        console.log(`Fallback calculation - Sunrise: ${calculatedSunrise}, Sunset: ${calculatedSunset}`);
+      }
+      
+      // Calculate dynamic Muhurats based on actual sunrise/sunset
+      const parseTimeToDecimal = (timeStr: string) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours + minutes / 60;
+      };
+      
+      const formatDecimalToTime = (hours: number) => {
+        const h = Math.floor(hours);
+        const m = Math.floor((hours - h) * 60);
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+      };
+      
+      const sunriseDecimal = parseTimeToDecimal(calculatedSunrise);
+      const sunsetDecimal = parseTimeToDecimal(calculatedSunset);
+      const dayLength = sunsetDecimal - sunriseDecimal;
+      
+      // Calculate accurate Muhurats
+      const weekdayRahuMult = [7.5, 1, 2.5, 5.5, 4, 1.5, 6];
+      const rahukaalStart = sunriseDecimal + (dayLength / 8) * weekdayRahuMult[targetDate.getDay()];
+      const rahukaalEnd = rahukaalStart + dayLength / 8;
+      calculatedRahuKaal = `${formatDecimalToTime(rahukaalStart)} - ${formatDecimalToTime(rahukaalEnd)}`;
+      
+      const solarNoon = sunriseDecimal + dayLength / 2;
+      const abhijitStart = solarNoon - 0.4;
+      const abhijitEnd = solarNoon + 0.4;
+      calculatedAbhijit = `${formatDecimalToTime(abhijitStart)} - ${formatDecimalToTime(abhijitEnd)}`;
+      
+      const weekdayGulikaMult = [6, 5, 4, 3, 2, 1, 0];
+      const gulikaStart = sunriseDecimal + (dayLength / 8) * weekdayGulikaMult[targetDate.getDay()];
+      const gulikaEnd = gulikaStart + dayLength / 8;
+      calculatedGulikaKaal = `${formatDecimalToTime(gulikaStart)} - ${formatDecimalToTime(gulikaEnd)}`;
+      
+      const weekdayYamaMult = [4, 3, 2, 1, 0, 7, 6];
+      const yamaStart = sunriseDecimal + (dayLength / 8) * weekdayYamaMult[targetDate.getDay()];
+      const yamaEnd = yamaStart + dayLength / 8;
+      calculatedYamaGanda = `${formatDecimalToTime(yamaStart)} - ${formatDecimalToTime(yamaEnd)}`;
+      
       console.log('Using professional astronomical algorithms for accurate Panchang calculations');
       
       try {
@@ -666,54 +739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const varaNames = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
         currentVara = varaNames[targetDate.getDay()];
         
-        // DYNAMIC SUNRISE/SUNSET CALCULATION USING ASTRONOMICAL API
-        try {
-          const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lon}&date=${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}&formatted=0`;
-          
-          const sunResponse = await fetch(sunApiUrl);
-          const sunData = await sunResponse.json();
-          
-          if (sunData.status === 'OK') {
-            // Convert UTC times to local timezone
-            const sunriseUTC = new Date(sunData.results.sunrise);
-            const sunsetUTC = new Date(sunData.results.sunset);
-            
-            // Add timezone offset for local time
-            const localSunrise = new Date(sunriseUTC.getTime() + (localOffset * 60 * 60 * 1000));
-            const localSunset = new Date(sunsetUTC.getTime() + (localOffset * 60 * 60 * 1000));
-            
-            calculatedSunrise = `${localSunrise.getHours().toString().padStart(2, '0')}:${localSunrise.getMinutes().toString().padStart(2, '0')}`;
-            calculatedSunset = `${localSunset.getHours().toString().padStart(2, '0')}:${localSunset.getMinutes().toString().padStart(2, '0')}`;
-            
-            console.log(`Astronomical API - Sunrise: ${calculatedSunrise}, Sunset: ${calculatedSunset} for coordinates ${lat}, ${lon}`);
-          } else {
-            throw new Error('Sunrise API failed');
-          }
-        } catch (error) {
-          console.error('Sunrise API error:', error);
-          // Professional astronomical calculation fallback
-          const calculateSunTimes = (lat: number, lon: number, date: Date) => {
-            const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
-            const P = Math.asin(0.39795 * Math.cos(0.98563 * (dayOfYear - 173) * Math.PI / 180));
-            const equation = 4 * (lon - 15 * localOffset) + 4 * Math.atan2(Math.tan(P), Math.cos(Math.PI * lat / 180));
-            
-            const sunriseDecimal = 12 - Math.sqrt(144 - 48 * Math.tan(Math.PI * lat / 180) * Math.tan(P)) / 4 - equation / 60;
-            const sunsetDecimal = 12 + Math.sqrt(144 - 48 * Math.tan(Math.PI * lat / 180) * Math.tan(P)) / 4 - equation / 60;
-            
-            const formatTime = (decimal: number) => {
-              const hours = Math.floor(decimal);
-              const minutes = Math.floor((decimal - hours) * 60);
-              return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-            };
-            
-            return { sunrise: formatTime(sunriseDecimal), sunset: formatTime(sunsetDecimal) };
-          };
-          
-          const sunTimes = calculateSunTimes(lat, lon, targetDate);
-          calculatedSunrise = sunTimes.sunrise;
-          calculatedSunset = sunTimes.sunset;
-          console.log(`Fallback calculation - Sunrise: ${calculatedSunrise}, Sunset: ${calculatedSunset}`);
-        }
+        // Sunrise/sunset times already calculated at the beginning - using those values
         // DYNAMIC MOONRISE/MOONSET CALCULATION USING ASTRONOMICAL API
         try {
           const moonApiUrl = `https://api.farmsense.net/v1/moonphases/?d=${targetDate.getTime()}`;
@@ -781,45 +807,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Fallback moon calculation - Moonrise: ${calculatedMoonrise}, Moonset: ${calculatedMoonset}`);
         }
         
-        // DYNAMIC MUHURAT CALCULATIONS BASED ON ACTUAL SUNRISE/SUNSET TIMES
-        const parseTime = (timeStr: string) => {
-          const [hours, minutes] = timeStr.split(':').map(Number);
-          return hours + minutes / 60;
-        };
-        
-        const formatTimeFromHours = (hours: number) => {
-          const h = Math.floor(hours);
-          const m = Math.floor((hours - h) * 60);
-          return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-        };
-        
-        const sunrise = parseTime(calculatedSunrise);
-        const sunset = parseTime(calculatedSunset);
-        const dayLength = sunset - sunrise;
-        
-        // Calculate Rahu Kaal using authentic weekday-specific formulas
-        const weekdayRahuMult = [7.5, 1, 2.5, 5.5, 4, 1.5, 6]; // Sunday through Saturday (in eighths)
-        const rahukaalStart = sunrise + (dayLength / 8) * weekdayRahuMult[targetDate.getDay()];
-        const rahukaalEnd = rahukaalStart + dayLength / 8;
-        calculatedRahuKaal = `${formatTimeFromHours(rahukaalStart)} - ${formatTimeFromHours(rahukaalEnd)}`;
-        
-        // Calculate Abhijit Muhurat (solar noon ± 24 minutes)
-        const solarNoon = sunrise + dayLength / 2;
-        const abhijitStart = solarNoon - 0.4; // 24 minutes before
-        const abhijitEnd = solarNoon + 0.4;   // 24 minutes after
-        calculatedAbhijit = `${formatTimeFromHours(abhijitStart)} - ${formatTimeFromHours(abhijitEnd)}`;
-        
-        // Calculate Gulika Kaal (varies by weekday)
-        const weekdayGulikaMult = [6, 5, 4, 3, 2, 1, 0]; // Sunday through Saturday
-        const gulikaStart = sunrise + (dayLength / 8) * weekdayGulikaMult[targetDate.getDay()];
-        const gulikaEnd = gulikaStart + dayLength / 8;
-        calculatedGulikaKaal = `${formatTimeFromHours(gulikaStart)} - ${formatTimeFromHours(gulikaEnd)}`;
-        
-        // Calculate Yama Ganda Kaal (varies by weekday)
-        const weekdayYamaMult = [4, 3, 2, 1, 0, 7, 6]; // Sunday through Saturday
-        const yamaStart = sunrise + (dayLength / 8) * weekdayYamaMult[targetDate.getDay()];
-        const yamaEnd = yamaStart + dayLength / 8;
-        calculatedYamaGanda = `${formatTimeFromHours(yamaStart)} - ${formatTimeFromHours(yamaEnd)}`;
+        // Muhurats already calculated at the beginning using API data
         
         // VERIFIED MOON RASHI - Kanya (Virgo) as shown in screenshots
         calculatedMoonRashi = { name: 'Kanya', element: 'Earth', lord: 'Mercury' };
@@ -926,9 +914,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const currentRashi = getMoonRashi(targetDate, lat);
       
-      // Calculate location-specific timings
-      const sunrise = calculateSunrise(lat, lon, targetDate);
-      const sunset = calculateSunset(lat, lon, targetDate);
+      // Use API-calculated sunrise/sunset times (already calculated above)
       
       // Calculate festivals based on authentic Hindu calendar
       const calculateFestivals = (date: Date, tithi: string) => {
