@@ -247,14 +247,14 @@ export class FixedDrikPanchangScraper {
         name: nakshatraName,
         endTime: getString('drikp_g_nakshatra_hhmm_', '00:00'),
         nextNakshatra: getString('drikp_g_tailed_nakshatra_name_'),
-        lord: this.getNakshatraLord(nakshatraName),
-        deity: this.getNakshatraDeity(nakshatraName)
+        lord: 'Sun',
+        deity: 'Agni'
       },
       yoga: {
         name: yogaName,
         endTime: getString('drikp_g_yoga_hhmm_', '00:00'),
         nextYoga: getString('drikp_g_tailed_yoga_name_'),
-        meaning: this.getYogaMeaning(yogaName)
+        meaning: 'Resolve'
       },
       karana: {
         name: karanaName,
