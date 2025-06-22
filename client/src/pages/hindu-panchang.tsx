@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, Clock, MapPin, Sun, Moon, Star, Sunrise, Sunset, Timer, Compass } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -125,7 +125,7 @@ interface PanchangApiResponse {
 
 export default function HinduPanchang() {
   const [location, setLocation] = useState<LocationData | null>(null);
-  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [locationError, setLocationError] = useState<string | null>(null);
 
   // Get user's precise location using browser geolocation
