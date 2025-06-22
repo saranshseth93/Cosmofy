@@ -44,80 +44,83 @@ interface LocationData {
   city: string;
 }
 
-interface DrikPanchangData {
-  date: string;
-  location: string;
-  weekday: string;
-  tithi: {
-    name: string;
-    endTime: string;
-    nextTithi: string;
-    paksha?: string;
-  };
-  nakshatra: {
-    name: string;
-    endTime: string;
-    nextNakshatra: string;
-    lord?: string;
-    deity?: string;
-  };
-  yoga: {
-    name: string;
-    endTime: string;
-    nextYoga: string;
-    meaning?: string;
-  };
-  karana: {
-    name: string;
-    endTime: string;
-    nextKarana: string;
-    extraKarana?: {
+interface PanchangApiResponse {
+  success: boolean;
+  data: {
+    date: string;
+    location: string;
+    weekday: string;
+    tithi: {
       name: string;
       endTime: string;
+      nextTithi: string;
+      paksha?: string;
     };
+    nakshatra: {
+      name: string;
+      endTime: string;
+      nextNakshatra: string;
+      lord?: string;
+      deity?: string;
+    };
+    yoga: {
+      name: string;
+      endTime: string;
+      nextYoga: string;
+      meaning?: string;
+    };
+    karana: {
+      name: string;
+      endTime: string;
+      nextKarana: string;
+      extraKarana?: {
+        name: string;
+        endTime: string;
+      };
+    };
+    timings: {
+      sunrise: string;
+      sunset: string;
+      moonrise?: string;
+      moonset?: string;
+      solarNoon?: string;
+      dayLength?: string;
+      nightLength?: string;
+    };
+    moonData: {
+      rashi: string;
+      rashiLord?: string;
+      element?: string;
+      phase?: string;
+      illumination?: string;
+    };
+    auspiciousTimes: {
+      abhijitMuhurat?: string;
+      amritKaal?: string;
+      brahmaMuhurat?: string;
+    };
+    inauspiciousTimes: {
+      rahuKaal?: string;
+      yamaGandaKaal?: string;
+      gulikaKaal?: string;
+      durMuhurat?: string;
+    };
+    masa: {
+      name?: string;
+      paksha?: string;
+      ayana?: string;
+      ritu?: string;
+    };
+    festivals: string[];
+    vrats: string[];
+    doshaIntervals: Array<{
+      startTime: string;
+      endTime: string;
+      doshas: string[];
+      description: string;
+      severity: 'normal' | 'caution' | 'avoid';
+    }>;
   };
-  timings: {
-    sunrise: string;
-    sunset: string;
-    moonrise?: string;
-    moonset?: string;
-    solarNoon?: string;
-    dayLength?: string;
-    nightLength?: string;
-  };
-  moonData: {
-    rashi: string;
-    rashiLord?: string;
-    element?: string;
-    phase?: string;
-    illumination?: string;
-  };
-  auspiciousTimes: {
-    abhijitMuhurat?: string;
-    amritKaal?: string;
-    brahmaMuhurat?: string;
-  };
-  inauspiciousTimes: {
-    rahuKaal?: string;
-    yamaGandaKaal?: string;
-    gulikaKaal?: string;
-    durMuhurat?: string;
-  };
-  masa: {
-    name?: string;
-    paksha?: string;
-    ayana?: string;
-    ritu?: string;
-  };
-  festivals: string[];
-  vrats: string[];
-  doshaIntervals: Array<{
-    startTime: string;
-    endTime: string;
-    doshas: string[];
-    description: string;
-    severity: 'normal' | 'caution' | 'avoid';
-  }>;
 }
 
 export default function HinduPanchang() {
@@ -132,16 +135,18 @@ export default function HinduPanchang() {
 
   useEffect(() => {
     if (locationData && !location) {
-      setLocation(locationData);
+      setLocation(locationData as LocationData);
     }
   }, [locationData, location]);
 
   // Fetch Panchang data from fixed scraper
-  const { data: panchangData, isLoading, error } = useQuery({
+  const { data: panchangResponse, isLoading, error } = useQuery<PanchangApiResponse>({
     queryKey: ['/api/scraper/panchang', currentDate, location?.city],
     enabled: !!location,
     refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
   });
+
+  const panchangData = panchangResponse?.data;
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -218,10 +223,10 @@ export default function HinduPanchang() {
                   })}
                 </span>
               </div>
-              {panchangData?.data?.weekday && (
+              {panchangData?.weekday && (
                 <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full border border-orange-500/30">
                   <Star className="h-4 w-4 text-orange-400" />
-                  <span className="text-orange-200">{panchangData.data.weekday}</span>
+                  <span className="text-orange-200">{panchangData.weekday}</span>
                 </div>
               )}
             </div>
@@ -232,7 +237,7 @@ export default function HinduPanchang() {
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-400"></div>
               <p className="mt-4 text-orange-200">Loading authentic Panchang data...</p>
             </div>
-          ) : panchangData?.data ? (
+          ) : panchangData ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               
               {/* Core Panchang Elements Card */}
@@ -251,12 +256,12 @@ export default function HinduPanchang() {
                     {/* Tithi */}
                     <div className="bg-gradient-to-br from-orange-900/20 to-red-900/20 p-4 rounded-lg border border-orange-500/20">
                       <h4 className="font-semibold text-orange-300 mb-2">Tithi</h4>
-                      <p className="text-orange-100 font-bold">{panchangData.data.tithi.name}</p>
-                      <p className="text-sm text-orange-200">Ends: {formatTime(panchangData.data.tithi.endTime)}</p>
-                      <p className="text-sm text-orange-300">Next: {panchangData.data.tithi.nextTithi}</p>
-                      {panchangData.data.tithi.paksha && (
+                      <p className="text-orange-100 font-bold">{panchangData.tithi.name}</p>
+                      <p className="text-sm text-orange-200">Ends: {formatTime(panchangData.tithi.endTime)}</p>
+                      <p className="text-sm text-orange-300">Next: {panchangData.tithi.nextTithi}</p>
+                      {panchangData.tithi.paksha && (
                         <Badge className="mt-2 bg-orange-500/20 text-orange-200 border-orange-500/30">
-                          {panchangData.data.tithi.paksha}
+                          {panchangData.tithi.paksha}
                         </Badge>
                       )}
                     </div>
@@ -264,12 +269,12 @@ export default function HinduPanchang() {
                     {/* Nakshatra */}
                     <div className="bg-gradient-to-br from-red-900/20 to-yellow-900/20 p-4 rounded-lg border border-red-500/20">
                       <h4 className="font-semibold text-red-300 mb-2">Nakshatra</h4>
-                      <p className="text-red-100 font-bold">{panchangData.data.nakshatra.name}</p>
-                      <p className="text-sm text-red-200">Ends: {formatTime(panchangData.data.nakshatra.endTime)}</p>
-                      <p className="text-sm text-red-300">Next: {panchangData.data.nakshatra.nextNakshatra}</p>
-                      {panchangData.data.nakshatra.lord && (
+                      <p className="text-red-100 font-bold">{panchangData.nakshatra.name}</p>
+                      <p className="text-sm text-red-200">Ends: {formatTime(panchangData.nakshatra.endTime)}</p>
+                      <p className="text-sm text-red-300">Next: {panchangData.nakshatra.nextNakshatra}</p>
+                      {panchangData.nakshatra.lord && (
                         <Badge className="mt-2 bg-red-500/20 text-red-200 border-red-500/30">
-                          Lord: {panchangData.data.nakshatra.lord}
+                          Lord: {panchangData.nakshatra.lord}
                         </Badge>
                       )}
                     </div>
@@ -277,12 +282,12 @@ export default function HinduPanchang() {
                     {/* Yoga */}
                     <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 p-4 rounded-lg border border-yellow-500/20">
                       <h4 className="font-semibold text-yellow-300 mb-2">Yoga</h4>
-                      <p className="text-yellow-100 font-bold">{panchangData.data.yoga.name}</p>
-                      <p className="text-sm text-yellow-200">Ends: {formatTime(panchangData.data.yoga.endTime)}</p>
-                      <p className="text-sm text-yellow-300">Next: {panchangData.data.yoga.nextYoga}</p>
-                      {panchangData.data.yoga.meaning && (
+                      <p className="text-yellow-100 font-bold">{panchangData.yoga.name}</p>
+                      <p className="text-sm text-yellow-200">Ends: {formatTime(panchangData.yoga.endTime)}</p>
+                      <p className="text-sm text-yellow-300">Next: {panchangData.yoga.nextYoga}</p>
+                      {panchangData.yoga.meaning && (
                         <Badge className="mt-2 bg-yellow-500/20 text-yellow-200 border-yellow-500/30">
-                          {panchangData.data.yoga.meaning}
+                          {panchangData.yoga.meaning}
                         </Badge>
                       )}
                     </div>
@@ -290,12 +295,12 @@ export default function HinduPanchang() {
                     {/* Karana */}
                     <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 p-4 rounded-lg border border-purple-500/20">
                       <h4 className="font-semibold text-purple-300 mb-2">Karana</h4>
-                      <p className="text-purple-100 font-bold">{panchangData.data.karana.name}</p>
-                      <p className="text-sm text-purple-200">Ends: {formatTime(panchangData.data.karana.endTime)}</p>
-                      <p className="text-sm text-purple-300">Next: {panchangData.data.karana.nextKarana}</p>
-                      {panchangData.data.karana.extraKarana && (
+                      <p className="text-purple-100 font-bold">{panchangData.karana.name}</p>
+                      <p className="text-sm text-purple-200">Ends: {formatTime(panchangData.karana.endTime)}</p>
+                      <p className="text-sm text-purple-300">Next: {panchangData.karana.nextKarana}</p>
+                      {panchangData.karana.extraKarana && (
                         <Badge className="mt-2 bg-purple-500/20 text-purple-200 border-purple-500/30">
-                          Extra: {panchangData.data.karana.extraKarana.name}
+                          Extra: {panchangData.karana.extraKarana.name}
                         </Badge>
                       )}
                     </div>
@@ -317,37 +322,37 @@ export default function HinduPanchang() {
                       <Sunrise className="h-4 w-4 text-yellow-400" />
                       <span className="text-orange-200">Sunrise</span>
                     </div>
-                    <span className="text-orange-100 font-bold">{formatTime(panchangData.data.timings.sunrise)}</span>
+                    <span className="text-orange-100 font-bold">{formatTime(panchangData.timings.sunrise)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       <Sunset className="h-4 w-4 text-orange-400" />
                       <span className="text-orange-200">Sunset</span>
                     </div>
-                    <span className="text-orange-100 font-bold">{formatTime(panchangData.data.timings.sunset)}</span>
+                    <span className="text-orange-100 font-bold">{formatTime(panchangData.timings.sunset)}</span>
                   </div>
-                  {panchangData.data.timings.moonrise && (
+                  {panchangData.timings.moonrise && (
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <Moon className="h-4 w-4 text-blue-400" />
                         <span className="text-orange-200">Moonrise</span>
                       </div>
-                      <span className="text-orange-100 font-bold">{formatTime(panchangData.data.timings.moonrise)}</span>
+                      <span className="text-orange-100 font-bold">{formatTime(panchangData.timings.moonrise)}</span>
                     </div>
                   )}
-                  {panchangData.data.timings.moonset && (
+                  {panchangData.timings.moonset && (
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <Moon className="h-4 w-4 text-gray-400" />
                         <span className="text-orange-200">Moonset</span>
                       </div>
-                      <span className="text-orange-100 font-bold">{formatTime(panchangData.data.timings.moonset)}</span>
+                      <span className="text-orange-100 font-bold">{formatTime(panchangData.timings.moonset)}</span>
                     </div>
                   )}
-                  {panchangData.data.timings.dayLength && (
+                  {panchangData.timings.dayLength && (
                     <div className="flex justify-between items-center pt-2 border-t border-orange-500/20">
                       <span className="text-orange-200">Day Length</span>
-                      <span className="text-orange-100 font-bold">{panchangData.data.timings.dayLength}</span>
+                      <span className="text-orange-100 font-bold">{panchangData.timings.dayLength}</span>
                     </div>
                   )}
                 </CardContent>
@@ -364,30 +369,30 @@ export default function HinduPanchang() {
                 <CardContent className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-orange-200">Rashi</span>
-                    <span className="text-orange-100 font-bold">{panchangData.data.moonData.rashi}</span>
+                    <span className="text-orange-100 font-bold">{panchangData.moonData.rashi}</span>
                   </div>
-                  {panchangData.data.moonData.rashiLord && (
+                  {panchangData.moonData.rashiLord && (
                     <div className="flex justify-between items-center">
                       <span className="text-orange-200">Lord</span>
-                      <span className="text-orange-100 font-bold">{panchangData.data.moonData.rashiLord}</span>
+                      <span className="text-orange-100 font-bold">{panchangData.moonData.rashiLord}</span>
                     </div>
                   )}
-                  {panchangData.data.moonData.element && (
+                  {panchangData.moonData.element && (
                     <div className="flex justify-between items-center">
                       <span className="text-orange-200">Element</span>
-                      <span className="text-orange-100 font-bold">{panchangData.data.moonData.element}</span>
+                      <span className="text-orange-100 font-bold">{panchangData.moonData.element}</span>
                     </div>
                   )}
-                  {panchangData.data.moonData.phase && (
+                  {panchangData.moonData.phase && (
                     <div className="flex justify-between items-center">
                       <span className="text-orange-200">Phase</span>
-                      <span className="text-orange-100 font-bold">{panchangData.data.moonData.phase}</span>
+                      <span className="text-orange-100 font-bold">{panchangData.moonData.phase}</span>
                     </div>
                   )}
-                  {panchangData.data.moonData.illumination && (
+                  {panchangData.moonData.illumination && (
                     <div className="flex justify-between items-center">
                       <span className="text-orange-200">Illumination</span>
-                      <span className="text-orange-100 font-bold">{panchangData.data.moonData.illumination}</span>
+                      <span className="text-orange-100 font-bold">{panchangData.moonData.illumination}</span>
                     </div>
                   )}
                 </CardContent>
@@ -405,22 +410,22 @@ export default function HinduPanchang() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {panchangData.data.auspiciousTimes.abhijitMuhurat && (
+                  {panchangData.auspiciousTimes.abhijitMuhurat && (
                     <div className="flex justify-between items-center">
                       <span className="text-green-200">Abhijit Muhurat</span>
-                      <span className="text-green-100 font-bold">{panchangData.data.auspiciousTimes.abhijitMuhurat}</span>
+                      <span className="text-green-100 font-bold">{panchangData.auspiciousTimes.abhijitMuhurat}</span>
                     </div>
                   )}
-                  {panchangData.data.auspiciousTimes.brahmaMuhurat && (
+                  {panchangData.auspiciousTimes.brahmaMuhurat && (
                     <div className="flex justify-between items-center">
                       <span className="text-green-200">Brahma Muhurat</span>
-                      <span className="text-green-100 font-bold">{panchangData.data.auspiciousTimes.brahmaMuhurat}</span>
+                      <span className="text-green-100 font-bold">{panchangData.auspiciousTimes.brahmaMuhurat}</span>
                     </div>
                   )}
-                  {panchangData.data.auspiciousTimes.amritKaal && (
+                  {panchangData.auspiciousTimes.amritKaal && (
                     <div className="flex justify-between items-center">
                       <span className="text-green-200">Amrit Kaal</span>
-                      <span className="text-green-100 font-bold">{panchangData.data.auspiciousTimes.amritKaal}</span>
+                      <span className="text-green-100 font-bold">{panchangData.auspiciousTimes.amritKaal}</span>
                     </div>
                   )}
                 </CardContent>
@@ -438,35 +443,35 @@ export default function HinduPanchang() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {panchangData.data.inauspiciousTimes.rahuKaal && (
+                  {panchangData.inauspiciousTimes.rahuKaal && (
                     <div className="flex justify-between items-center">
                       <span className="text-red-200">Rahu Kaal</span>
-                      <span className="text-red-100 font-bold">{panchangData.data.inauspiciousTimes.rahuKaal}</span>
+                      <span className="text-red-100 font-bold">{panchangData.inauspiciousTimes.rahuKaal}</span>
                     </div>
                   )}
-                  {panchangData.data.inauspiciousTimes.yamaGandaKaal && (
+                  {panchangData.inauspiciousTimes.yamaGandaKaal && (
                     <div className="flex justify-between items-center">
                       <span className="text-red-200">Yama Ganda Kaal</span>
-                      <span className="text-red-100 font-bold">{panchangData.data.inauspiciousTimes.yamaGandaKaal}</span>
+                      <span className="text-red-100 font-bold">{panchangData.inauspiciousTimes.yamaGandaKaal}</span>
                     </div>
                   )}
-                  {panchangData.data.inauspiciousTimes.gulikaKaal && (
+                  {panchangData.inauspiciousTimes.gulikaKaal && (
                     <div className="flex justify-between items-center">
                       <span className="text-red-200">Gulika Kaal</span>
-                      <span className="text-red-100 font-bold">{panchangData.data.inauspiciousTimes.gulikaKaal}</span>
+                      <span className="text-red-100 font-bold">{panchangData.inauspiciousTimes.gulikaKaal}</span>
                     </div>
                   )}
-                  {panchangData.data.inauspiciousTimes.durMuhurat && (
+                  {panchangData.inauspiciousTimes.durMuhurat && (
                     <div className="flex justify-between items-center">
                       <span className="text-red-200">Dur Muhurat</span>
-                      <span className="text-red-100 font-bold">{panchangData.data.inauspiciousTimes.durMuhurat}</span>
+                      <span className="text-red-100 font-bold">{panchangData.inauspiciousTimes.durMuhurat}</span>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* Festivals & Vrats */}
-              {(panchangData.data.festivals.length > 0 || panchangData.data.vrats.length > 0) && (
+              {(panchangData.festivals.length > 0 || panchangData.vrats.length > 0) && (
                 <Card className="bg-black/80 border-purple-500/30 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="text-purple-400 flex items-center gap-2">
@@ -475,11 +480,11 @@ export default function HinduPanchang() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {panchangData.data.festivals.length > 0 && (
+                    {panchangData.festivals.length > 0 && (
                       <div>
                         <h4 className="text-purple-300 font-semibold mb-2">Festivals</h4>
                         <div className="flex flex-wrap gap-2">
-                          {panchangData.data.festivals.slice(0, 5).map((festival, index) => (
+                          {panchangData.festivals.slice(0, 5).map((festival: string, index: number) => (
                             <Badge key={index} className="bg-purple-500/20 text-purple-200 border-purple-500/30">
                               {festival}
                             </Badge>
@@ -487,11 +492,11 @@ export default function HinduPanchang() {
                         </div>
                       </div>
                     )}
-                    {panchangData.data.vrats.length > 0 && (
+                    {panchangData.vrats.length > 0 && (
                       <div>
                         <h4 className="text-purple-300 font-semibold mb-2">Vrats</h4>
                         <div className="flex flex-wrap gap-2">
-                          {panchangData.data.vrats.slice(0, 5).map((vrat, index) => (
+                          {panchangData.vrats.slice(0, 5).map((vrat: string, index: number) => (
                             <Badge key={index} className="bg-orange-500/20 text-orange-200 border-orange-500/30">
                               {vrat}
                             </Badge>
@@ -504,7 +509,7 @@ export default function HinduPanchang() {
               )}
 
               {/* Dosha Intervals */}
-              {panchangData.data.doshaIntervals.length > 0 && (
+              {panchangData.doshaIntervals.length > 0 && (
                 <Card className="bg-black/80 border-orange-500/30 backdrop-blur-sm xl:col-span-3">
                   <CardHeader>
                     <CardTitle className="text-orange-400 flex items-center gap-2">
@@ -517,7 +522,7 @@ export default function HinduPanchang() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {panchangData.data.doshaIntervals.map((interval, index) => (
+                      {panchangData.doshaIntervals.map((interval: any, index: number) => (
                         <div
                           key={index}
                           className={`p-3 rounded-lg border ${getSeverityColor(interval.severity)}`}
@@ -532,7 +537,7 @@ export default function HinduPanchang() {
                             <p className="opacity-90">{interval.description}</p>
                             {interval.doshas.length > 0 && (
                               <div className="flex flex-wrap gap-1">
-                                {interval.doshas.map((dosha, i) => (
+                                {interval.doshas.map((dosha: string, i: number) => (
                                   <span key={i} className="text-xs opacity-70 bg-black/30 px-2 py-1 rounded">
                                     {dosha}
                                   </span>
