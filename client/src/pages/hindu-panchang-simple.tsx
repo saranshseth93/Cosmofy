@@ -116,7 +116,7 @@ interface PanchangData {
 
 export default function HinduPanchangSimplePage() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [userCoords, setUserCoords] = useState<{lat: number, lon: number} | null>(null);
+  const [userCoords, setUserCoords] = useState<{lat: number, lon: number}>({ lat: 28.6139, lon: 77.209 }); // Default to Delhi for instant loading
   const [locationError, setLocationError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -137,9 +137,9 @@ export default function HinduPanchangSimplePage() {
       try {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, { 
-            timeout: 15000, 
-            enableHighAccuracy: true,
-            maximumAge: 300000
+            timeout: 5000, 
+            enableHighAccuracy: false,
+            maximumAge: 600000
           });
         });
         setUserCoords({
@@ -147,8 +147,8 @@ export default function HinduPanchangSimplePage() {
           lon: position.coords.longitude
         });
       } catch (error) {
-        setLocationError("Location access denied");
-        setUserCoords({ lat: 19.0760, lon: 72.8777 });
+        setLocationError("Location access denied - using Delhi coordinates");
+        // Keep the default Delhi coordinates for data consistency
       }
     };
 
@@ -156,24 +156,46 @@ export default function HinduPanchangSimplePage() {
   }, []);
 
   const { data: locationData } = useQuery<LocationData>({
-    queryKey: ['/api/location', userCoords?.lat, userCoords?.lon],
-    queryFn: () => fetch(`/api/location?lat=${userCoords?.lat}&lon=${userCoords?.lon}`).then(res => res.json()),
-    enabled: !!userCoords,
+    queryKey: ['/api/location', userCoords.lat, userCoords.lon],
+    queryFn: async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      try {
+        const response = await fetch(`/api/location?lat=${userCoords.lat}&lon=${userCoords.lon}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response.json();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    },
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   const { data: panchangData, isLoading: panchangLoading, error: panchangError } = useQuery<PanchangData>({
-    queryKey: ['/api/panchang', userCoords?.lat, userCoords?.lon],
+    queryKey: ['/api/panchang', userCoords.lat, userCoords.lon],
     queryFn: async () => {
-      const response = await fetch(`/api/panchang?lat=${userCoords?.lat}&lon=${userCoords?.lon}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch Panchang data');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      try {
+        const response = await fetch(`/api/panchang?lat=${userCoords.lat}&lon=${userCoords.lon}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+          throw new Error('Failed to fetch Panchang data');
+        }
+        return response.json();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
       }
-      return response.json();
     },
-    enabled: !!userCoords,
     staleTime: 60 * 60 * 1000,
-    retry: false,
+    retry: 1,
   });
 
   const formatTime = (date: Date) => {
