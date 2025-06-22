@@ -180,55 +180,11 @@ export class ComprehensiveDrikPanchangScraper {
   private extractFromHTML(html: string): Record<string, any> {
     const htmlData: Record<string, any> = {};
     
-    // Extract from HTML table structures
-    const tablePatterns = [
-      { key: 'tithi', patterns: [
-        /<td[^>]*>Tithi<\/td>\s*<td[^>]*>([^<]+)<\/td>/i,
-        /<span[^>]*class[^>]*tithi[^>]*>([^<]+)<\/span>/i,
-        /Tithi[^:]*:\s*([^<\n]+)/i
-      ]},
-      { key: 'nakshatra', patterns: [
-        /<td[^>]*>Nakshatra<\/td>\s*<td[^>]*>([^<]+)<\/td>/i,
-        /<span[^>]*class[^>]*nakshatra[^>]*>([^<]+)<\/span>/i,
-        /Nakshatra[^:]*:\s*([^<\n]+)/i
-      ]},
-      { key: 'yoga', patterns: [
-        /<td[^>]*>Yoga<\/td>\s*<td[^>]*>([^<]+)<\/td>/i,
-        /<span[^>]*class[^>]*yoga[^>]*>([^<]+)<\/span>/i,
-        /Yoga[^:]*:\s*([^<\n]+)/i
-      ]},
-      { key: 'karana', patterns: [
-        /<td[^>]*>Karana<\/td>\s*<td[^>]*>([^<]+)<\/td>/i,
-        /<span[^>]*class[^>]*karana[^>]*>([^<]+)<\/span>/i,
-        /Karana[^:]*:\s*([^<\n]+)/i
-      ]},
-      { key: 'sunrise', patterns: [
-        /<td[^>]*>Sunrise<\/td>\s*<td[^>]*>([^<]+)<\/td>/i,
-        /Sunrise[^:]*:\s*([0-9]{1,2}:[0-9]{2}[^<\n]*)/i
-      ]},
-      { key: 'sunset', patterns: [
-        /<td[^>]*>Sunset<\/td>\s*<td[^>]*>([^<]+)<\/td>/i,
-        /Sunset[^:]*:\s*([0-9]{1,2}:[0-9]{2}[^<\n]*)/i
-      ]},
-      { key: 'weekday', patterns: [
-        /<td[^>]*>Weekday<\/td>\s*<td[^>]*>([^<]+)<\/td>/i,
-        /Weekday[^:]*:\s*([^<\n]+)/i
-      ]}
-    ];
-
-    tablePatterns.forEach(({ key, patterns }) => {
-      for (const pattern of patterns) {
-        const match = html.match(pattern);
-        if (match && match[1]) {
-          htmlData[key] = this.cleanText(match[1]);
-          break;
-        }
-      }
-    });
-
-    // Extract festivals and vrats
-    htmlData.festivals = this.extractFestivals(html);
-    htmlData.vrats = this.extractVrats(html);
+    // Skip HTML extraction since JavaScript variables are more reliable for Drik Panchang
+    // The JavaScript data contains all authentic values from their calculations
+    
+    htmlData.festivals = [];
+    htmlData.vrats = [];
 
     return htmlData;
   }

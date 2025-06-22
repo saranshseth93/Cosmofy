@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, MapPin, Sun, Moon, Star, Sunrise, Sunset } from 'lucide-react';
+import { Calendar, Clock, MapPin, Sun, Moon, Star, Sunrise, Sunset, Timer, Compass } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Navigation } from '@/components/navigation';
 import { CosmicCursor } from '@/components/cosmic-cursor';
 import { Footer } from '@/components/footer';
-// Animated Hindu Background Component - Similar to CodePen effect
+
+// Animated Hindu Background Component
 const DivineBackground = () => (
   <div className="absolute inset-0 overflow-hidden">
     <div 
@@ -43,916 +44,540 @@ interface LocationData {
   city: string;
 }
 
-interface PanchangData {
+interface DrikPanchangData {
   date: string;
+  location: string;
+  weekday: string;
   tithi: {
     name: string;
-    deity: string;
-    type?: string;
-    number?: number;
-    start?: string;
-    end?: string;
-    nextTithi?: string;
-    meaning?: string;
-    special?: string;
-    significance: string;
     endTime: string;
+    nextTithi: string;
+    paksha?: string;
   };
   nakshatra: {
     name: string;
-    lord?: string;
-    deity: string;
-    number?: number;
-    start?: string;
-    end?: string;
-    nextNakshatra?: string;
-    meaning?: string;
-    special?: string;
-    summary?: string;
-    words?: string;
-    qualities: string;
     endTime: string;
+    nextNakshatra: string;
+    lord?: string;
+    deity?: string;
   };
   yoga: {
     name: string;
-    number?: number;
-    start?: string;
-    end?: string;
-    meaning: string;
-    special?: string;
-    nextYoga?: string;
     endTime: string;
+    nextYoga: string;
+    meaning?: string;
   };
   karana: {
     name: string;
-    lord?: string;
-    deity?: string;
-    type?: string;
-    number?: number;
-    start?: string;
-    end?: string;
-    special?: string;
-    nextKarana?: string;
-    meaning: string;
     endTime: string;
-  };
-  rashi: {
-    name: string;
-    element: string;
-    lord: string;
-  };
-  sunrise: string;
-  sunset: string;
-  moonrise: string;
-  moonset: string;
-  shubhMuhurat: {
-    abhijitMuhurat: string;
-    brahmaRahukaal: string;
-    gulikaKaal: string;
-    yamaGandaKaal: string;
-  };
-  advancedDetails?: {
-    solarNoon: string;
-    nextFullMoon: string;
-    nextNewMoon: string;
-    masa: {
-      amantaName: string;
-      purnimaName: string;
-      adhikMaasa: boolean;
-      ayana: string;
-      moonPhase: string;
-      paksha: string;
-      ritu: string;
+    nextKarana: string;
+    extraKarana?: {
+      name: string;
+      endTime: string;
     };
-    vaara: string;
-    dishaShool: string;
   };
-  auspiciousTimes?: Array<{
-    name: string;
-    time: string;
-    description: string;
-  }>;
-  inauspiciousTimes?: Array<{
-    name: string;
-    time: string;
-    description: string;
-  }>;
+  timings: {
+    sunrise: string;
+    sunset: string;
+    moonrise?: string;
+    moonset?: string;
+    solarNoon?: string;
+    dayLength?: string;
+    nightLength?: string;
+  };
+  moonData: {
+    rashi: string;
+    rashiLord?: string;
+    element?: string;
+    phase?: string;
+    illumination?: string;
+  };
+  auspiciousTimes: {
+    abhijitMuhurat?: string;
+    amritKaal?: string;
+    brahmaMuhurat?: string;
+  };
+  inauspiciousTimes: {
+    rahuKaal?: string;
+    yamaGandaKaal?: string;
+    gulikaKaal?: string;
+    durMuhurat?: string;
+  };
+  masa: {
+    name?: string;
+    paksha?: string;
+    ayana?: string;
+    ritu?: string;
+  };
   festivals: string[];
-  vratsAndOccasions: string[];
+  vrats: string[];
+  doshaIntervals: Array<{
+    startTime: string;
+    endTime: string;
+    doshas: string[];
+    description: string;
+    severity: 'normal' | 'caution' | 'avoid';
+  }>;
 }
 
-export default function HinduPanchangPage() {
-  const [currentTime, setCurrentTime] = useState(new Date());
+export default function HinduPanchang() {
+  const [location, setLocation] = useState<LocationData | null>(null);
+  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Update time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Get user location with browser geolocation
-  const [userCoords, setUserCoords] = useState<{lat: number, lon: number} | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [locationStatus, setLocationStatus] = useState<'requesting' | 'granted' | 'denied' | 'default'>('requesting');
-
-  useEffect(() => {
-    const requestLocation = async () => {
-      if (!navigator.geolocation) {
-        setLocationError("Geolocation not supported by this browser");
-        setLocationStatus('default');
-        setUserCoords({ lat: 19.0760, lon: 72.8777 });
-        return;
-      }
-
-      try {
-        setLocationStatus('requesting');
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            resolve,
-            reject,
-            { 
-              timeout: 15000, 
-              enableHighAccuracy: true,
-              maximumAge: 300000 // 5 minutes cache
-            }
-          );
-        });
-        
-        console.log("User location obtained:", position.coords.latitude, position.coords.longitude);
-        const coords = {
-          lat: position.coords.latitude,
-          lon: position.coords.longitude
-        };
-        setUserCoords(coords);
-        setLocationStatus('granted');
-        setLocationError(null);
-        console.log("Setting user coordinates for API calls:", coords);
-        
-      } catch (error: any) {
-        console.log("Geolocation error:", error.message);
-        setLocationError(error.message);
-        setLocationStatus('denied');
-        // Use default coordinates as fallback
-        setUserCoords({ lat: 19.0760, lon: 72.8777 });
-      }
-    };
-
-    requestLocation();
-  }, []);
-
-  // Get location details using coordinates
-  const { data: locationData } = useQuery<LocationData>({
-    queryKey: ['/api/location', userCoords?.lat, userCoords?.lon],
-    queryFn: () => fetch(`/api/location?lat=${userCoords?.lat}&lon=${userCoords?.lon}`).then(res => res.json()),
-    enabled: !!userCoords,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+  // Get user location
+  const { data: locationData } = useQuery({
+    queryKey: ['/api/location'],
+    enabled: !location
   });
 
-  // Get Panchang data using coordinates
-  const { data: panchangData, isLoading: panchangLoading, error: panchangError } = useQuery<PanchangData>({
-    queryKey: ['/api/panchang', userCoords?.lat, userCoords?.lon],
-    queryFn: async () => {
-      const response = await fetch(`/api/panchang?lat=${userCoords?.lat}&lon=${userCoords?.lon}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch Panchang data');
-      }
-      return response.json();
-    },
-    enabled: !!userCoords,
-    staleTime: 60 * 60 * 1000, // 1 hour
-    retry: false,
+  useEffect(() => {
+    if (locationData && !location) {
+      setLocation(locationData);
+    }
+  }, [locationData, location]);
+
+  // Fetch Panchang data from comprehensive scraper
+  const { data: panchangData, isLoading, error } = useQuery({
+    queryKey: ['/api/scraper/panchang', currentDate, location?.city],
+    enabled: !!location,
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
   });
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'avoid': return 'bg-red-500/20 text-red-300 border-red-500/30';
+      case 'caution': return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
+      default: return 'bg-green-500/20 text-green-300 border-green-500/30';
+    }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-IN', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  const formatTime = (time: string) => {
+    if (!time || time === '00:00') return 'Not available';
+    return time;
   };
 
-  if (panchangLoading) {
+  if (error) {
     return (
-      <>
-        <Navigation />
+      <div className="min-h-screen bg-black text-white relative overflow-hidden">
+        <DivineBackground />
         <CosmicCursor />
-        <div className="min-h-screen relative pt-24">
-          {/* Divine Hindu Background */}
-          <DivineBackground />
-          
-          {/* Light Overlay - allows background to show through */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/50 sm:bg-gradient-to-b sm:from-black/45 sm:via-black/35 sm:to-black/45 md:bg-gradient-to-b md:from-black/40 md:via-black/30 md:to-black/40" />
-          
-          {/* Content Container */}
-          <div className="relative z-10">
-            <div className="container mx-auto px-4 py-8">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-                <p className="mt-4 text-muted-foreground">Loading Panchang data...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  if (panchangError) {
-    return (
-      <>
         <Navigation />
-        <CosmicCursor />
-        <div className="min-h-screen relative pt-24">
-          {/* Divine Hindu Background */}
-          <DivineBackground />
-          
-          {/* Light Overlay - allows background to show through */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/50 sm:bg-gradient-to-b sm:from-black/45 sm:via-black/35 sm:to-black/45 md:bg-gradient-to-b md:from-black/40 md:via-black/30 md:to-black/40" />
-          
-          {/* Content Container */}
-          <div className="relative z-10">
-            <div className="container mx-auto px-4 py-8">
-              <div className="text-center">
-                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6 max-w-md mx-auto">
-                  <h2 className="text-xl font-semibold text-red-400 mb-4">Panchang Data Unavailable</h2>
-                  <p className="text-gray-300 mb-4">
-                    Unable to fetch authentic Vedic calendar data from the astrology API service.
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    This feature requires ASTROLOGY_USER_ID and ASTROLOGY_API_KEY environment variables to access live Panchang calculations.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        
+        <div className="relative z-10 min-h-screen flex items-center justify-center">
+          <Card className="bg-black/80 border-orange-500/30 backdrop-blur-sm max-w-md mx-4">
+            <CardHeader>
+              <CardTitle className="text-orange-400">Panchang Data Unavailable</CardTitle>
+              <CardDescription className="text-orange-200">
+                Unable to fetch authentic Panchang data from Drik Panchang. Please check your connection or try again later.
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
-      </>
+        
+        <Footer />
+      </div>
     );
   }
 
   return (
-    <>
-      <Navigation />
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      <DivineBackground />
       <CosmicCursor />
-      <div className="min-h-screen relative pt-24">
-        {/* Divine Hindu Background */}
-        <DivineBackground />
-        
-        {/* Light Overlay for text readability */}
-        <div className="absolute inset-0 bg-black/20" />
-        
-        {/* Content Container */}
-        <div className="relative z-10">
-          <div className="container mx-auto px-4 py-8 space-y-8">
-          {/* Location Chip */}
-          <div className="flex justify-center">
-            {locationStatus === 'requesting' && (
-              <div className="bg-black/50 backdrop-blur-md rounded-full px-6 py-3 border border-yellow-500/40 shadow-lg">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-yellow-400 animate-pulse" />
-                  <span className="text-yellow-200 font-medium text-sm">Requesting location...</span>
-                </div>
-              </div>
-            )}
-            {locationData && locationStatus !== 'requesting' && (
-              <div className="flex items-center gap-3">
-                <div className={`bg-black/50 backdrop-blur-md rounded-full px-6 py-3 border shadow-lg ${
-                  locationStatus === 'granted' 
-                    ? 'border-green-500/40' 
-                    : 'border-orange-500/40'
-                }`}>
-                  <div className="flex items-center gap-2">
-                    <MapPin className={`h-4 w-4 ${
-                      locationStatus === 'granted' ? 'text-green-400' : 'text-orange-400'
-                    }`} />
-                    <span className={`font-medium text-sm ${
-                      locationStatus === 'granted' ? 'text-green-200' : 'text-orange-200'
-                    }`}>
-                      {locationData.city}
-                    </span>
-                  </div>
-                </div>
-                {locationStatus === 'denied' && (
-                  <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-2 border border-orange-500/30">
-                    <span className="text-orange-300 text-xs font-medium">Default location</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Header */}
-          <div className="text-center space-y-6">
-            <div className="inline-block bg-black/40 backdrop-blur-md rounded-2xl px-8 py-6 border border-white/20 shadow-xl">
-              <h2 className="text-2xl md:text-3xl font-semibold text-orange-200 drop-shadow-md">
+      <Navigation />
+      
+      <div className="relative z-10 min-h-screen">
+        {/* Header Section */}
+        <div className="container mx-auto px-4 pt-24 pb-8">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-orange-400 via-red-500 to-yellow-500 bg-clip-text text-transparent">
                 Hindu Panchang
-              </h2>
-            </div>
-            
-            {/* Educational Description */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl px-6 py-6 border border-white/10 max-w-4xl mx-auto space-y-4">
-              <p className="text-lg text-white/95 drop-shadow-sm font-medium">Ancient Hindu Calendar System</p>
-              
-              <div className="grid md:grid-cols-2 gap-6 text-left">
-                <div className="space-y-3">
-                  <h3 className="text-orange-200 font-semibold text-base">What is Panchang?</h3>
-                  <p className="text-white/85 text-sm leading-relaxed">
-                    Panchang (meaning "five limbs") is the traditional Hindu calendar that combines astronomy, astrology, and spirituality. 
-                    It tracks celestial movements to determine auspicious times for daily activities, festivals, and life events. 
-                    Used for over 5,000 years, it remains central to Hindu religious and cultural practices.
-                  </p>
-                  
-                  <h3 className="text-orange-200 font-semibold text-base pt-2">The Five Elements</h3>
-                  <ul className="text-white/85 text-sm space-y-1">
-                    <li><strong>Tithi:</strong> Lunar day phase (1-30)</li>
-                    <li><strong>Nakshatra:</strong> Moon's position among 27 star clusters</li>
-                    <li><strong>Yoga:</strong> Sun-Moon angular relationship</li>
-                    <li><strong>Karana:</strong> Half of a Tithi period</li>
-                    <li><strong>Vaara:</strong> Day of the week</li>
-                  </ul>
-                </div>
-                
-                <div className="space-y-3">
-                  <h3 className="text-orange-200 font-semibold text-base">How is it Calculated?</h3>
-                  <p className="text-white/85 text-sm leading-relaxed">
-                    Panchang calculations are based on precise astronomical observations of the Sun, Moon, and planetary positions. 
-                    Ancient Indian astronomers developed sophisticated mathematical formulas considering Earth's rotation, lunar cycles, 
-                    and celestial mechanics. Modern calculations use location-specific coordinates for accuracy.
-                  </p>
-                  
-                  <h3 className="text-orange-200 font-semibold text-base pt-2">Practical Applications</h3>
-                  <ul className="text-white/85 text-sm space-y-1">
-                    <li><strong>Muhurat:</strong> Finding auspicious timing for events</li>
-                    <li><strong>Festivals:</strong> Determining religious celebration dates</li>
-                    <li><strong>Agriculture:</strong> Traditional farming and harvesting times</li>
-                    <li><strong>Life Events:</strong> Weddings, naming ceremonies, travel</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div className="pt-2 border-t border-white/10">
-                <p className="text-white/75 text-xs text-center">
-                  This Panchang is calculated using your precise location coordinates for accurate local timings and celestial positions.
-                </p>
-              </div>
-            </div>
+              </span>
+            </h1>
+            <p className="text-lg text-orange-200 max-w-3xl mx-auto leading-relaxed">
+              Experience authentic Vedic calendar data extracted directly from Drik Panchang. 
+              Discover the sacred timekeeping system that guides auspicious activities and spiritual practices.
+            </p>
           </div>
 
-          {/* Current Date and Time */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-l-4 border-l-orange-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Calendar className="h-5 w-5 text-orange-500" />
-                  Today's Date
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold text-orange-500">
-                  {formatDate(currentTime)}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {locationData?.timezone || 'Local Time'}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-red-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Clock className="h-5 w-5 text-red-500" />
-                  Current Time
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold text-red-500">
-                  {formatTime(currentTime)}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Hindu Standard Time
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {panchangData && (
-            <>
-              {/* Main Panchang Elements */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border-orange-500/30">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-orange-400">
-                      <Moon className="h-5 w-5" />
-                      Tithi
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">{panchangData.tithi.name}</h3>
-                        {panchangData.tithi.number && (
-                          <Badge variant="secondary" className="text-xs">
-                            #{panchangData.tithi.number}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Deity:</strong> {panchangData.tithi.deity}
-                        </p>
-                        {panchangData.tithi.type && (
-                          <p className="text-sm text-muted-foreground">
-                            <strong>Type:</strong> {panchangData.tithi.type}
-                          </p>
-                        )}
-                        {panchangData.tithi.meaning && (
-                          <p className="text-xs text-muted-foreground">
-                            <strong>Meaning:</strong> {panchangData.tithi.meaning}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Significance:</strong> {panchangData.tithi.significance}
-                        </p>
-                        {panchangData.tithi.special && (
-                          <p className="text-xs text-orange-400">
-                            <strong>Special:</strong> {panchangData.tithi.special}
-                          </p>
-                        )}
-                        {panchangData.tithi.start && panchangData.tithi.end && (
-                          <div className="text-xs text-muted-foreground">
-                            <p><strong>Start:</strong> {panchangData.tithi.start}</p>
-                            <p><strong>End:</strong> {panchangData.tithi.end}</p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        <Badge variant="outline" className="text-xs">
-                          Ends: {panchangData.tithi.endTime}
-                        </Badge>
-                        {panchangData.tithi.nextTithi && (
-                          <Badge variant="outline" className="text-xs bg-orange-500/10">
-                            Next: {panchangData.tithi.nextTithi}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border-blue-500/30">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-blue-400">
-                      <Star className="h-5 w-5" />
-                      Nakshatra
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">{panchangData.nakshatra.name}</h3>
-                        {panchangData.nakshatra.number && (
-                          <Badge variant="secondary" className="text-xs">
-                            #{panchangData.nakshatra.number}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Deity:</strong> {panchangData.nakshatra.deity}
-                        </p>
-                        {panchangData.nakshatra.lord && (
-                          <p className="text-sm text-muted-foreground">
-                            <strong>Lord:</strong> {panchangData.nakshatra.lord}
-                          </p>
-                        )}
-                        {panchangData.nakshatra.meaning && (
-                          <p className="text-xs text-muted-foreground">
-                            <strong>Meaning:</strong> {panchangData.nakshatra.meaning}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Qualities:</strong> {panchangData.nakshatra.qualities}
-                        </p>
-                        {panchangData.nakshatra.summary && (
-                          <p className="text-xs text-blue-400">
-                            <strong>Summary:</strong> {panchangData.nakshatra.summary}
-                          </p>
-                        )}
-                        {panchangData.nakshatra.words && (
-                          <p className="text-xs text-muted-foreground">
-                            <strong>Words:</strong> {panchangData.nakshatra.words}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        <Badge variant="outline" className="text-xs">
-                          Ends: {panchangData.nakshatra.endTime}
-                        </Badge>
-                        {panchangData.nakshatra.nextNakshatra && (
-                          <Badge variant="outline" className="text-xs bg-blue-500/10">
-                            Next: {panchangData.nakshatra.nextNakshatra}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-green-900/20 to-teal-900/20 border-green-500/30">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-400">
-                      <Sun className="h-5 w-5" />
-                      Yoga
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">{panchangData.yoga.name}</h3>
-                        {panchangData.yoga.number && (
-                          <Badge variant="secondary" className="text-xs">
-                            #{panchangData.yoga.number}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Meaning:</strong> {panchangData.yoga.meaning}
-                        </p>
-                        {panchangData.yoga.special && (
-                          <p className="text-xs text-green-400">
-                            <strong>Special:</strong> {panchangData.yoga.special}
-                          </p>
-                        )}
-                        {panchangData.yoga.start && panchangData.yoga.end && (
-                          <div className="text-xs text-muted-foreground">
-                            <p><strong>Start:</strong> {panchangData.yoga.start}</p>
-                            <p><strong>End:</strong> {panchangData.yoga.end}</p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        <Badge variant="outline" className="text-xs">
-                          Ends: {panchangData.yoga.endTime}
-                        </Badge>
-                        {panchangData.yoga.nextYoga && (
-                          <Badge variant="outline" className="text-xs bg-green-500/10">
-                            Next: {panchangData.yoga.nextYoga}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border-yellow-500/30">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-yellow-400">
-                      <Calendar className="h-5 w-5" />
-                      Karana
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">{panchangData.karana.name}</h3>
-                        {panchangData.karana.number && (
-                          <Badge variant="secondary" className="text-xs">
-                            #{panchangData.karana.number}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        {panchangData.karana.lord && (
-                          <p className="text-sm text-muted-foreground">
-                            <strong>Lord:</strong> {panchangData.karana.lord}
-                          </p>
-                        )}
-                        {panchangData.karana.deity && (
-                          <p className="text-sm text-muted-foreground">
-                            <strong>Deity:</strong> {panchangData.karana.deity}
-                          </p>
-                        )}
-                        {panchangData.karana.type && (
-                          <p className="text-sm text-muted-foreground">
-                            <strong>Type:</strong> {panchangData.karana.type}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Meaning:</strong> {panchangData.karana.meaning}
-                        </p>
-                        {panchangData.karana.special && (
-                          <p className="text-xs text-yellow-400">
-                            <strong>Special:</strong> {panchangData.karana.special}
-                          </p>
-                        )}
-                        {panchangData.karana.start && panchangData.karana.end && (
-                          <div className="text-xs text-muted-foreground">
-                            <p><strong>Start:</strong> {panchangData.karana.start}</p>
-                            <p><strong>End:</strong> {panchangData.karana.end}</p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        <Badge variant="outline" className="text-xs">
-                          Ends: {panchangData.karana.endTime}
-                        </Badge>
-                        {panchangData.karana.nextKarana && (
-                          <Badge variant="outline" className="text-xs bg-yellow-500/10">
-                            Next: {panchangData.karana.nextKarana}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+          {/* Location and Date */}
+          {location && (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+              <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full border border-orange-500/30">
+                <MapPin className="h-4 w-4 text-orange-400" />
+                <span className="text-orange-200">{location.city}</span>
               </div>
-
-              {/* Sun and Moon Timings */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="border-l-4 border-l-yellow-500">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Sunrise className="h-5 w-5 text-yellow-500" />
-                      Sunrise
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-yellow-500">
-                      {panchangData.sunrise}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-l-4 border-l-orange-500">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Sunset className="h-5 w-5 text-orange-500" />
-                      Sunset
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-500">
-                      {panchangData.sunset}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-l-4 border-l-blue-400">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Moon className="h-5 w-5 text-blue-400" />
-                      Moonrise
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-blue-400">
-                      {panchangData.moonrise}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-l-4 border-l-purple-400">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Moon className="h-5 w-5 text-purple-400" />
-                      Moonset
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-purple-400">
-                      {panchangData.moonset}
-                    </div>
-                  </CardContent>
-                </Card>
+              <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full border border-orange-500/30">
+                <Calendar className="h-4 w-4 text-orange-400" />
+                <span className="text-orange-200">
+                  {new Date(currentDate).toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
               </div>
+              {panchangData?.data?.weekday && (
+                <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full border border-orange-500/30">
+                  <Star className="h-4 w-4 text-orange-400" />
+                  <span className="text-orange-200">{panchangData.data.weekday}</span>
+                </div>
+              )}
+            </div>
+          )}
 
-              {/* Auspicious Timings */}
-              <Card>
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-400"></div>
+              <p className="mt-4 text-orange-200">Loading authentic Panchang data...</p>
+            </div>
+          ) : panchangData?.data ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              
+              {/* Core Panchang Elements Card */}
+              <Card className="bg-black/80 border-orange-500/30 backdrop-blur-sm lg:col-span-2 xl:col-span-3">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-green-500" />
-                    Shubh Muhurat & Timings
+                  <CardTitle className="text-orange-400 flex items-center gap-2">
+                    <Star className="h-5 w-5" />
+                    Panch Ang (Five Elements)
                   </CardTitle>
-                  <CardDescription>
-                    Auspicious and inauspicious timings for the day
+                  <CardDescription className="text-orange-200">
+                    The five fundamental elements of Vedic calendar
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-green-400">Abhijit Muhurat</h4>
-                      <Badge variant="outline" className="bg-green-500/10 text-green-400">
-                        {panchangData.shubhMuhurat.abhijitMuhurat}
-                      </Badge>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Tithi */}
+                    <div className="bg-gradient-to-br from-orange-900/20 to-red-900/20 p-4 rounded-lg border border-orange-500/20">
+                      <h4 className="font-semibold text-orange-300 mb-2">Tithi</h4>
+                      <p className="text-orange-100 font-bold">{panchangData.data.tithi.name}</p>
+                      <p className="text-sm text-orange-200">Ends: {formatTime(panchangData.data.tithi.endTime)}</p>
+                      <p className="text-sm text-orange-300">Next: {panchangData.data.tithi.nextTithi}</p>
+                      {panchangData.data.tithi.paksha && (
+                        <Badge className="mt-2 bg-orange-500/20 text-orange-200 border-orange-500/30">
+                          {panchangData.data.tithi.paksha}
+                        </Badge>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-red-400">Rahu Kaal</h4>
-                      <Badge variant="outline" className="bg-red-500/10 text-red-400">
-                        {panchangData.shubhMuhurat.brahmaRahukaal}
-                      </Badge>
+
+                    {/* Nakshatra */}
+                    <div className="bg-gradient-to-br from-red-900/20 to-yellow-900/20 p-4 rounded-lg border border-red-500/20">
+                      <h4 className="font-semibold text-red-300 mb-2">Nakshatra</h4>
+                      <p className="text-red-100 font-bold">{panchangData.data.nakshatra.name}</p>
+                      <p className="text-sm text-red-200">Ends: {formatTime(panchangData.data.nakshatra.endTime)}</p>
+                      <p className="text-sm text-red-300">Next: {panchangData.data.nakshatra.nextNakshatra}</p>
+                      {panchangData.data.nakshatra.lord && (
+                        <Badge className="mt-2 bg-red-500/20 text-red-200 border-red-500/30">
+                          Lord: {panchangData.data.nakshatra.lord}
+                        </Badge>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-orange-400">Gulika Kaal</h4>
-                      <Badge variant="outline" className="bg-orange-500/10 text-orange-400">
-                        {panchangData.shubhMuhurat.gulikaKaal}
-                      </Badge>
+
+                    {/* Yoga */}
+                    <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 p-4 rounded-lg border border-yellow-500/20">
+                      <h4 className="font-semibold text-yellow-300 mb-2">Yoga</h4>
+                      <p className="text-yellow-100 font-bold">{panchangData.data.yoga.name}</p>
+                      <p className="text-sm text-yellow-200">Ends: {formatTime(panchangData.data.yoga.endTime)}</p>
+                      <p className="text-sm text-yellow-300">Next: {panchangData.data.yoga.nextYoga}</p>
+                      {panchangData.data.yoga.meaning && (
+                        <Badge className="mt-2 bg-yellow-500/20 text-yellow-200 border-yellow-500/30">
+                          {panchangData.data.yoga.meaning}
+                        </Badge>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-purple-400">Yama Ganda</h4>
-                      <Badge variant="outline" className="bg-purple-500/10 text-purple-400">
-                        {panchangData.shubhMuhurat.yamaGandaKaal}
-                      </Badge>
+
+                    {/* Karana */}
+                    <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 p-4 rounded-lg border border-purple-500/20">
+                      <h4 className="font-semibold text-purple-300 mb-2">Karana</h4>
+                      <p className="text-purple-100 font-bold">{panchangData.data.karana.name}</p>
+                      <p className="text-sm text-purple-200">Ends: {formatTime(panchangData.data.karana.endTime)}</p>
+                      <p className="text-sm text-purple-300">Next: {panchangData.data.karana.nextKarana}</p>
+                      {panchangData.data.karana.extraKarana && (
+                        <Badge className="mt-2 bg-purple-500/20 text-purple-200 border-purple-500/30">
+                          Extra: {panchangData.data.karana.extraKarana.name}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Rashi Information */}
-              <Card className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border-indigo-500/30">
+              {/* Sun & Moon Timings */}
+              <Card className="bg-black/80 border-orange-500/30 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-indigo-400">
-                    <Star className="h-5 w-5" />
-                    Moon Rashi
+                  <CardTitle className="text-orange-400 flex items-center gap-2">
+                    <Sun className="h-5 w-5" />
+                    Sun & Moon Timings
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <h3 className="text-xl font-semibold">{panchangData.rashi.name}</h3>
-                    <div className="flex gap-4">
-                      <Badge variant="outline" className="bg-indigo-500/10">
-                        Element: {panchangData.rashi.element}
-                      </Badge>
-                      <Badge variant="outline" className="bg-purple-500/10">
-                        Lord: {panchangData.rashi.lord}
-                      </Badge>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Sunrise className="h-4 w-4 text-yellow-400" />
+                      <span className="text-orange-200">Sunrise</span>
                     </div>
+                    <span className="text-orange-100 font-bold">{formatTime(panchangData.data.timings.sunrise)}</span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Sunset className="h-4 w-4 text-orange-400" />
+                      <span className="text-orange-200">Sunset</span>
+                    </div>
+                    <span className="text-orange-100 font-bold">{formatTime(panchangData.data.timings.sunset)}</span>
+                  </div>
+                  {panchangData.data.timings.moonrise && (
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Moon className="h-4 w-4 text-blue-400" />
+                        <span className="text-orange-200">Moonrise</span>
+                      </div>
+                      <span className="text-orange-100 font-bold">{formatTime(panchangData.data.timings.moonrise)}</span>
+                    </div>
+                  )}
+                  {panchangData.data.timings.moonset && (
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Moon className="h-4 w-4 text-gray-400" />
+                        <span className="text-orange-200">Moonset</span>
+                      </div>
+                      <span className="text-orange-100 font-bold">{formatTime(panchangData.data.timings.moonset)}</span>
+                    </div>
+                  )}
+                  {panchangData.data.timings.dayLength && (
+                    <div className="flex justify-between items-center pt-2 border-t border-orange-500/20">
+                      <span className="text-orange-200">Day Length</span>
+                      <span className="text-orange-100 font-bold">{panchangData.data.timings.dayLength}</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Detailed Auspicious and Inauspicious Times */}
-              {(panchangData.auspiciousTimes || panchangData.inauspiciousTimes) && (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {panchangData.auspiciousTimes && panchangData.auspiciousTimes.length > 0 && (
-                    <Card className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-500/30">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-green-400">
-                          <Clock className="h-5 w-5" />
-                          Auspicious Times
-                        </CardTitle>
-                        <CardDescription>
-                          Favorable periods for important activities
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {panchangData.auspiciousTimes.map((time, index) => (
-                            <div key={index} className="border-l-2 border-green-500 pl-3">
-                              <h4 className="font-semibold text-green-400">{time.name}</h4>
-                              <Badge variant="outline" className="bg-green-500/10 text-green-400 mb-1">
-                                {time.time}
-                              </Badge>
-                              <p className="text-xs text-muted-foreground">{time.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {panchangData.inauspiciousTimes && panchangData.inauspiciousTimes.length > 0 && (
-                    <Card className="bg-gradient-to-br from-red-900/20 to-rose-900/20 border-red-500/30">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-red-400">
-                          <Clock className="h-5 w-5" />
-                          Inauspicious Times
-                        </CardTitle>
-                        <CardDescription>
-                          Periods to avoid for important activities
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {panchangData.inauspiciousTimes.map((time, index) => (
-                            <div key={index} className="border-l-2 border-red-500 pl-3">
-                              <h4 className="font-semibold text-red-400">{time.name}</h4>
-                              <Badge variant="outline" className="bg-red-500/10 text-red-400 mb-1">
-                                {time.time}
-                              </Badge>
-                              <p className="text-xs text-muted-foreground">{time.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              )}
-
-              {/* Advanced Panchang Details */}
-              {panchangData.advancedDetails && (
-                <Card className="bg-gradient-to-br from-violet-900/20 to-purple-900/20 border-violet-500/30">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-violet-400">
-                      <Star className="h-5 w-5" />
-                      Advanced Panchang Details
-                    </CardTitle>
-                    <CardDescription>
-                      Detailed astronomical and calendar information
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-violet-400">Calendar Info</h4>
-                        <div className="space-y-1 text-sm">
-                          <p><strong>Vaara:</strong> {panchangData.advancedDetails.vaara}</p>
-                          <p><strong>Masa (Amanta):</strong> {panchangData.advancedDetails.masa.amantaName}</p>
-                          <p><strong>Masa (Purnima):</strong> {panchangData.advancedDetails.masa.purnimaName}</p>
-                          <p><strong>Paksha:</strong> {panchangData.advancedDetails.masa.paksha}</p>
-                          <p><strong>Ritu:</strong> {panchangData.advancedDetails.masa.ritu}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-violet-400">Astronomical</h4>
-                        <div className="space-y-1 text-sm">
-                          <p><strong>Solar Noon:</strong> {panchangData.advancedDetails.solarNoon}</p>
-                          <p><strong>Ayana:</strong> {panchangData.advancedDetails.masa.ayana}</p>
-                          <p><strong>Moon Phase:</strong> {panchangData.advancedDetails.masa.moonPhase}</p>
-                          <p><strong>Next Full Moon:</strong> {panchangData.advancedDetails.nextFullMoon}</p>
-                          <p><strong>Next New Moon:</strong> {panchangData.advancedDetails.nextNewMoon}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-violet-400">Direction</h4>
-                        <div className="space-y-1 text-sm">
-                          <p><strong>Disha Shool:</strong> {panchangData.advancedDetails.dishaShool}</p>
-                          <Badge variant="outline" className="bg-violet-500/10 text-violet-400">
-                            Avoid travel in this direction
-                          </Badge>
-                        </div>
-                      </div>
+              {/* Moon Data */}
+              <Card className="bg-black/80 border-orange-500/30 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-orange-400 flex items-center gap-2">
+                    <Moon className="h-5 w-5" />
+                    Moon Position
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-orange-200">Rashi</span>
+                    <span className="text-orange-100 font-bold">{panchangData.data.moonData.rashi}</span>
+                  </div>
+                  {panchangData.data.moonData.rashiLord && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-200">Lord</span>
+                      <span className="text-orange-100 font-bold">{panchangData.data.moonData.rashiLord}</span>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  )}
+                  {panchangData.data.moonData.element && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-200">Element</span>
+                      <span className="text-orange-100 font-bold">{panchangData.data.moonData.element}</span>
+                    </div>
+                  )}
+                  {panchangData.data.moonData.phase && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-200">Phase</span>
+                      <span className="text-orange-100 font-bold">{panchangData.data.moonData.phase}</span>
+                    </div>
+                  )}
+                  {panchangData.data.moonData.illumination && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-200">Illumination</span>
+                      <span className="text-orange-100 font-bold">{panchangData.data.moonData.illumination}</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-              {/* Festivals and Occasions */}
-              {(panchangData.festivals.length > 0 || panchangData.vratsAndOccasions.length > 0) && (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {panchangData.festivals.length > 0 && (
-                    <Card className="bg-gradient-to-br from-pink-900/20 to-red-900/20 border-pink-500/30">
-                      <CardHeader>
-                        <CardTitle className="text-pink-400">Festivals Today</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {panchangData.festivals.map((festival, index) => (
-                            <Badge key={index} variant="outline" className="mr-2 mb-2 bg-pink-500/10">
+              {/* Auspicious Times */}
+              <Card className="bg-black/80 border-green-500/30 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-green-400 flex items-center gap-2">
+                    <Timer className="h-5 w-5" />
+                    Auspicious Times
+                  </CardTitle>
+                  <CardDescription className="text-green-200">
+                    Favorable periods for important activities
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {panchangData.data.auspiciousTimes.abhijitMuhurat && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-green-200">Abhijit Muhurat</span>
+                      <span className="text-green-100 font-bold">{panchangData.data.auspiciousTimes.abhijitMuhurat}</span>
+                    </div>
+                  )}
+                  {panchangData.data.auspiciousTimes.brahmaMuhurat && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-green-200">Brahma Muhurat</span>
+                      <span className="text-green-100 font-bold">{panchangData.data.auspiciousTimes.brahmaMuhurat}</span>
+                    </div>
+                  )}
+                  {panchangData.data.auspiciousTimes.amritKaal && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-green-200">Amrit Kaal</span>
+                      <span className="text-green-100 font-bold">{panchangData.data.auspiciousTimes.amritKaal}</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Inauspicious Times */}
+              <Card className="bg-black/80 border-red-500/30 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-red-400 flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Inauspicious Times
+                  </CardTitle>
+                  <CardDescription className="text-red-200">
+                    Periods to avoid important activities
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {panchangData.data.inauspiciousTimes.rahuKaal && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-red-200">Rahu Kaal</span>
+                      <span className="text-red-100 font-bold">{panchangData.data.inauspiciousTimes.rahuKaal}</span>
+                    </div>
+                  )}
+                  {panchangData.data.inauspiciousTimes.yamaGandaKaal && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-red-200">Yama Ganda Kaal</span>
+                      <span className="text-red-100 font-bold">{panchangData.data.inauspiciousTimes.yamaGandaKaal}</span>
+                    </div>
+                  )}
+                  {panchangData.data.inauspiciousTimes.gulikaKaal && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-red-200">Gulika Kaal</span>
+                      <span className="text-red-100 font-bold">{panchangData.data.inauspiciousTimes.gulikaKaal}</span>
+                    </div>
+                  )}
+                  {panchangData.data.inauspiciousTimes.durMuhurat && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-red-200">Dur Muhurat</span>
+                      <span className="text-red-100 font-bold">{panchangData.data.inauspiciousTimes.durMuhurat}</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Festivals & Vrats */}
+              {(panchangData.data.festivals.length > 0 || panchangData.data.vrats.length > 0) && (
+                <Card className="bg-black/80 border-purple-500/30 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="text-purple-400 flex items-center gap-2">
+                      <Compass className="h-5 w-5" />
+                      Festivals & Vrats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {panchangData.data.festivals.length > 0 && (
+                      <div>
+                        <h4 className="text-purple-300 font-semibold mb-2">Festivals</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {panchangData.data.festivals.slice(0, 5).map((festival, index) => (
+                            <Badge key={index} className="bg-purple-500/20 text-purple-200 border-purple-500/30">
                               {festival}
                             </Badge>
                           ))}
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {panchangData.vratsAndOccasions.length > 0 && (
-                    <Card className="bg-gradient-to-br from-teal-900/20 to-green-900/20 border-teal-500/30">
-                      <CardHeader>
-                        <CardTitle className="text-teal-400">Vrats & Occasions</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {panchangData.vratsAndOccasions.map((vrat, index) => (
-                            <Badge key={index} variant="outline" className="mr-2 mb-2 bg-teal-500/10">
+                      </div>
+                    )}
+                    {panchangData.data.vrats.length > 0 && (
+                      <div>
+                        <h4 className="text-purple-300 font-semibold mb-2">Vrats</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {panchangData.data.vrats.slice(0, 5).map((vrat, index) => (
+                            <Badge key={index} className="bg-orange-500/20 text-orange-200 border-orange-500/30">
                               {vrat}
                             </Badge>
                           ))}
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               )}
-            </>
+
+              {/* Dosha Intervals */}
+              {panchangData.data.doshaIntervals.length > 0 && (
+                <Card className="bg-black/80 border-orange-500/30 backdrop-blur-sm xl:col-span-3">
+                  <CardHeader>
+                    <CardTitle className="text-orange-400 flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      Daily Time Periods
+                    </CardTitle>
+                    <CardDescription className="text-orange-200">
+                      Detailed time periods with their effects throughout the day
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {panchangData.data.doshaIntervals.map((interval, index) => (
+                        <div
+                          key={index}
+                          className={`p-3 rounded-lg border ${getSeverityColor(interval.severity)}`}
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-semibold">{interval.startTime} - {interval.endTime}</span>
+                            <Badge className={`text-xs ${getSeverityColor(interval.severity)}`}>
+                              {interval.severity}
+                            </Badge>
+                          </div>
+                          <div className="text-sm space-y-1">
+                            <p className="opacity-90">{interval.description}</p>
+                            {interval.doshas.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {interval.doshas.map((dosha, i) => (
+                                  <span key={i} className="text-xs opacity-70 bg-black/30 px-2 py-1 rounded">
+                                    {dosha}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Card className="bg-black/80 border-orange-500/30 backdrop-blur-sm max-w-md mx-auto">
+                <CardContent className="pt-6">
+                  <p className="text-orange-200">
+                    Please allow location access to view your personalized Panchang data.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           )}
-          </div>
+
+          {/* Educational Information */}
+          <Card className="bg-black/80 border-orange-500/30 backdrop-blur-sm mt-8">
+            <CardHeader>
+              <CardTitle className="text-orange-400">About Hindu Panchang</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-orange-200 leading-relaxed">
+                The Hindu Panchang is an ancient Vedic calendar system that provides comprehensive astronomical and astrological information. 
+                It consists of five main elements (Panch Ang): Tithi (lunar day), Nakshatra (constellation), Yoga (auspicious combination), 
+                Karana (half lunar day), and Var (weekday). This sacred timekeeping system guides Hindu festivals, rituals, and auspicious 
+                activities based on celestial movements and their spiritual significance.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
+      
       <Footer />
-    </>
+    </div>
   );
 }
