@@ -166,15 +166,44 @@ export class FixedDrikPanchangScraper {
       }
     }
 
-    console.log('Fixed JS Data extracted:', {
-      keys: Object.keys(jsData).length,
-      tithi: jsData.drikp_g_tithi_name_,
-      nakshatra: jsData.drikp_g_nakshatra_name_,
-      yoga: jsData.drikp_g_yoga_name_,
-      karana: jsData.drikp_g_karana_name_,
-      sunrise: jsData.drikp_g_sunrise_hhmm_,
-      sunset: jsData.drikp_g_sunset_hhmm_
+    // Comprehensive logging of all scraped data
+    console.log('\n=== COMPLETE AUTHENTIC SCRAPED DATA FROM DRIK PANCHANG ===');
+    console.log('Total keys extracted:', Object.keys(jsData).length);
+    console.log('\n--- Core Panchang Elements ---');
+    console.log('Tithi:', jsData.drikp_g_tithi_name_, '| Ends:', jsData.drikp_g_tithi_hhmm_, '| Next:', jsData.drikp_g_tailed_tithi_name_);
+    console.log('Nakshatra:', jsData.drikp_g_nakshatra_name_, '| Ends:', jsData.drikp_g_nakshatra_hhmm_, '| Next:', jsData.drikp_g_tailed_nakshatra_name_);
+    console.log('Yoga:', jsData.drikp_g_yoga_name_, '| Ends:', jsData.drikp_g_yoga_hhmm_, '| Next:', jsData.drikp_g_tailed_yoga_name_);
+    console.log('Karana:', jsData.drikp_g_karana_name_, '| Ends:', jsData.drikp_g_karana_hhmm_, '| Next:', jsData.drikp_g_tailed_karana_name_);
+    
+    console.log('\n--- Sun & Moon Timings ---');
+    console.log('Sunrise:', jsData.drikp_g_sunrise_hhmm_);
+    console.log('Sunset:', jsData.drikp_g_sunset_hhmm_);
+    console.log('Moonrise:', jsData.drikp_g_moonrise_hhmm_);
+    console.log('Moonset:', jsData.drikp_g_moonset_hhmm_);
+    
+    console.log('\n--- Additional Authentic Data ---');
+    console.log('Weekday:', jsData.drikp_g_weekday_name_);
+    console.log('Paksha:', jsData.drikp_g_paksha_name_);
+    console.log('Masa:', jsData.drikp_g_masa_name_);
+    console.log('Rashi:', jsData.drikp_g_rashi_name_);
+    console.log('Ayana:', jsData.drikp_g_ayana_name_);
+    console.log('Ritu:', jsData.drikp_g_ritu_name_);
+    
+    console.log('\n--- Muhurat & Dosha Times ---');
+    console.log('Rahu Kaal:', jsData.drikp_g_rahu_kaal_hhmm_);
+    console.log('Gulika Kaal:', jsData.drikp_g_gulika_kaal_hhmm_);
+    console.log('Yamaganda Kaal:', jsData.drikp_g_yamaganda_kaal_hhmm_);
+    console.log('Abhijit Muhurat:', jsData.drikp_g_abhijit_muhurat_hhmm_);
+    console.log('Brahma Muhurat:', jsData.drikp_g_brahma_muhurat_hhmm_);
+    console.log('Amrit Kaal:', jsData.drikp_g_amrit_kaal_hhmm_);
+    
+    console.log('\n--- ALL AVAILABLE KEYS WITH VALUES ---');
+    Object.keys(jsData).sort().forEach(key => {
+      if (jsData[key] !== undefined && jsData[key] !== null && jsData[key] !== '') {
+        console.log(`${key}:`, jsData[key]);
+      }
     });
+    console.log('=== END AUTHENTIC SCRAPED DATA ===\n');
 
     return jsData;
   }
@@ -232,43 +261,103 @@ export class FixedDrikPanchangScraper {
       timings: {
         sunrise: sunriseTime,
         sunset: sunsetTime,
-        moonrise: this.calculateMoonrise(sunriseTime),
-        moonset: this.calculateMoonset(sunriseTime),
-        solarNoon: this.calculateSolarNoon(sunriseTime, sunsetTime),
-        dayLength: this.calculateDayLength(sunriseTime, sunsetTime),
-        nightLength: this.calculateNightLength(sunriseTime, sunsetTime)
+        moonrise: getString('drikp_g_moonrise_hhmm_'),
+        moonset: getString('drikp_g_moonset_hhmm_'),
+        solarNoon: getString('drikp_g_solar_noon_hhmm_'),
+        dayLength: getString('drikp_g_day_length_'),
+        nightLength: getString('drikp_g_night_length_')
       },
       moonData: {
-        rashi: this.getMoonRashi(nakshatraName),
-        rashiLord: this.getRashiLord(this.getMoonRashi(nakshatraName)),
-        element: this.getRashiElement(this.getMoonRashi(nakshatraName)),
-        phase: this.getMoonPhase(date),
-        illumination: this.getMoonIllumination(date)
+        rashi: getString('drikp_g_rashi_name_'),
+        rashiLord: getString('drikp_g_rashi_lord_'),
+        element: getString('drikp_g_rashi_element_'),
+        phase: getString('drikp_g_moon_phase_'),
+        illumination: getString('drikp_g_moon_illumination_')
       },
 
       auspiciousTimes: {
-        abhijitMuhurat: this.calculateAbhijitMuhurat(sunriseTime, sunsetTime),
-        amritKaal: this.calculateAmritKaal(sunriseTime),
-        brahmaMuhurat: this.calculateBrahmaMuhurat(sunriseTime)
+        abhijitMuhurat: getString('drikp_g_abhijit_muhurat_hhmm_'),
+        amritKaal: getString('drikp_g_amrit_kaal_hhmm_'),
+        brahmaMuhurat: getString('drikp_g_brahma_muhurat_hhmm_')
       },
       inauspiciousTimes: {
-        rahuKaal: this.calculateRahuKaal(sunriseTime, new Date(date).getDay()),
-        yamaGandaKaal: this.calculateYamaGandaKaal(sunriseTime, new Date(date).getDay()),
-        gulikaKaal: this.calculateGulikaKaal(sunriseTime, new Date(date).getDay()),
-        durMuhurat: this.calculateDurMuhurat(sunriseTime, sunsetTime)
+        rahuKaal: getString('drikp_g_rahu_kaal_hhmm_'),
+        yamaGandaKaal: getString('drikp_g_yamaganda_kaal_hhmm_'),
+        gulikaKaal: getString('drikp_g_gulika_kaal_hhmm_'),
+        durMuhurat: getString('drikp_g_dur_muhurat_hhmm_')
       },
 
       masa: {
-        name: this.getCurrentMasa(date),
-        paksha: this.getTithiPaksha(tithiName),
-        ayana: this.getCurrentAyana(date),
-        ritu: this.getCurrentRitu(date)
+        name: getString('drikp_g_masa_name_'),
+        paksha: getString('drikp_g_paksha_name_'),
+        ayana: getString('drikp_g_ayana_name_'),
+        ritu: getString('drikp_g_ritu_name_')
       },
-      festivals: this.getDefaultFestivals(date),
-      vrats: this.getDefaultVrats(date),
+      festivals: this.extractFestivals(jsData),
+      vrats: this.extractVrats(jsData),
 
       doshaIntervals: this.parseDoshaIntervals(Array.isArray(jsData.drikp_g_dosha_intervals_) ? jsData.drikp_g_dosha_intervals_ : [])
     };
+  }
+
+  private extractFestivals(jsData: Record<string, any>): string[] {
+    const festivals = [];
+    
+    // Extract festival data from scraped keys
+    Object.keys(jsData).forEach(key => {
+      if (key.includes('festival') && jsData[key]) {
+        festivals.push(jsData[key]);
+      }
+    });
+    
+    // Check for specific festival keys that might exist
+    const festivalKeys = [
+      'drikp_g_festivals_',
+      'drikp_g_festival_list_',
+      'drikp_g_today_festivals_'
+    ];
+    
+    festivalKeys.forEach(key => {
+      if (jsData[key]) {
+        if (Array.isArray(jsData[key])) {
+          festivals.push(...jsData[key]);
+        } else if (typeof jsData[key] === 'string') {
+          festivals.push(jsData[key]);
+        }
+      }
+    });
+    
+    return festivals.filter(f => f && f.trim() !== '');
+  }
+
+  private extractVrats(jsData: Record<string, any>): string[] {
+    const vrats = [];
+    
+    // Extract vrat data from scraped keys
+    Object.keys(jsData).forEach(key => {
+      if (key.includes('vrat') && jsData[key]) {
+        vrats.push(jsData[key]);
+      }
+    });
+    
+    // Check for specific vrat keys that might exist
+    const vratKeys = [
+      'drikp_g_vrats_',
+      'drikp_g_vrat_list_',
+      'drikp_g_today_vrats_'
+    ];
+    
+    vratKeys.forEach(key => {
+      if (jsData[key]) {
+        if (Array.isArray(jsData[key])) {
+          vrats.push(...jsData[key]);
+        } else if (typeof jsData[key] === 'string') {
+          vrats.push(jsData[key]);
+        }
+      }
+    });
+    
+    return vrats.filter(v => v && v.trim() !== '');
   }
 
   private parseDoshaIntervals(intervals: any[]): Array<{startTime: string, endTime: string, doshas: string[], description: string, severity: 'normal' | 'caution' | 'avoid'}> {
