@@ -87,24 +87,23 @@ export class MhahPanchangService {
     try {
       const targetDate = new Date(date);
       
-      // Get Panchang data using mhah-panchang
-      const panchangResult = this.panchang.calculate({
-        date: targetDate,
-        latitude,
-        longitude,
-        timezone: this.getTimezone(latitude, longitude)
-      });
+      // Get basic Panchang data using calculate method
+      const basicResult = this.panchang.calculate(targetDate);
+      
+      // Get calendar data with location for more detailed calculations
+      const calendarResult = this.panchang.calendar(targetDate, latitude, longitude);
 
-      console.log('Mhah Panchang authentic calculation result:', JSON.stringify(panchangResult, null, 2));
+      console.log('Mhah Panchang Basic Result:', JSON.stringify(basicResult, null, 2));
+      console.log('Mhah Panchang Calendar Result:', JSON.stringify(calendarResult, null, 2));
 
-      return this.formatPanchangData(panchangResult, date, city);
+      return this.formatPanchangData(basicResult, calendarResult, date, city);
     } catch (error) {
       console.error('Mhah Panchang calculation error:', error);
       throw new Error(`Authentic Panchang calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  private formatPanchangData(result: any, date: string, city: string): PanchangData {
+  private formatPanchangData(basicResult: any, calendarResult: any, date: string, city: string): PanchangData {
     const formatTime = (timeObj: any): string => {
       if (!timeObj) return 'Not available';
       if (typeof timeObj === 'string') return timeObj;
