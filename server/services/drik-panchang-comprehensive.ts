@@ -6,20 +6,26 @@
 export interface DrikPanchangData {
   date: string;
   location: string;
+  weekday: string;
+  // Core Panchang Elements (5 main elements as per Drik Panchang)
   tithi: {
     name: string;
     endTime: string;
     nextTithi: string;
+    paksha?: string;
   };
   nakshatra: {
     name: string;
     endTime: string;
     nextNakshatra: string;
+    lord?: string;
+    deity?: string;
   };
   yoga: {
     name: string;
     endTime: string;
     nextYoga: string;
+    meaning?: string;
   };
   karana: {
     name: string;
@@ -30,26 +36,55 @@ export interface DrikPanchangData {
       endTime: string;
     };
   };
-  weekday: string;
+  // Sun and Moon Data
   timings: {
     sunrise: string;
     sunset: string;
-    nextSunrise: string;
+    moonrise?: string;
+    moonset?: string;
+    solarNoon?: string;
+    dayLength?: string;
+    nightLength?: string;
   };
+  moonData: {
+    rashi: string;
+    rashiLord?: string;
+    element?: string;
+    phase?: string;
+    illumination?: string;
+  };
+  // Auspicious and Inauspicious Times
+  auspiciousTimes: {
+    abhijitMuhurat?: string;
+    amritKaal?: string;
+    brahmaMuhurat?: string;
+  };
+  inauspiciousTimes: {
+    rahuKaal?: string;
+    yamaGandaKaal?: string;
+    gulikaKaal?: string;
+    durMuhurat?: string;
+  };
+  // Additional Information
+  masa: {
+    name?: string;
+    paksha?: string;
+    ayana?: string;
+    ritu?: string;
+  };
+  festivals: string[];
+  vrats: string[];
+  // Detailed dosha information
   doshaIntervals: Array<{
     startMinutes: number;
     endMinutes: number;
+    startTime: string;
+    endTime: string;
     doshas: string[];
     description: string;
+    severity: 'normal' | 'caution' | 'avoid';
   }>;
-  festivals: string[];
-  vrats: string[];
-  muhurats: {
-    abhijitMuhurat?: string;
-    brahmaRahukaal?: string;
-    gulikaKaal?: string;
-    yamaGandaKaal?: string;
-  };
+  // Raw astronomical data for calculations
   rawData: {
     sunriseMinutes: number;
     sunsetMinutes: number;
@@ -57,6 +92,7 @@ export interface DrikPanchangData {
     nakshatraMinutes: number;
     yogaMinutes: number;
     karanaMinutes: number;
+    extraKaranaMinutes?: number;
   };
 }
 
@@ -222,26 +258,40 @@ export class ComprehensiveDrikPanchangScraper {
       }
     });
 
+    const sunriseTime = getData('drikp_g_sunrise_hhmm_', 'sunrise', '06:00');
+    const sunsetTime = getData('drikp_g_sunset_hhmm_', 'sunset', '18:00');
+    const tithiName = getData('drikp_g_tithi_name_', 'tithi');
+    const nakshatraName = getData('drikp_g_nakshatra_name_', 'nakshatra');
+    const yogaName = getData('drikp_g_yoga_name_', 'yoga');
+    const karanaName = getData('drikp_g_karana_name_', 'karana');
+
     return {
       date,
       location: city,
+      weekday: getData('drikp_g_weekday_name_', 'weekday'),
+      
+      // Core Panchang Elements (5 main elements as per Drik Panchang)
       tithi: {
-        name: getData('drikp_g_tithi_name_', 'tithi'),
+        name: tithiName,
         endTime: getData('drikp_g_tithi_hhmm_', 'tithi_end', '00:00'),
-        nextTithi: getData('drikp_g_tailed_tithi_name_', 'next_tithi')
+        nextTithi: getData('drikp_g_tailed_tithi_name_', 'next_tithi'),
+        paksha: this.getTithiPaksha(tithiName)
       },
       nakshatra: {
-        name: getData('drikp_g_nakshatra_name_', 'nakshatra'),
+        name: nakshatraName,
         endTime: getData('drikp_g_nakshatra_hhmm_', 'nakshatra_end', '00:00'),
-        nextNakshatra: getData('drikp_g_tailed_nakshatra_name_', 'next_nakshatra')
+        nextNakshatra: getData('drikp_g_tailed_nakshatra_name_', 'next_nakshatra'),
+        lord: this.getNakshatraLord(nakshatraName),
+        deity: this.getNakshatraDeity(nakshatraName)
       },
       yoga: {
-        name: getData('drikp_g_yoga_name_', 'yoga'),
+        name: yogaName,
         endTime: getData('drikp_g_yoga_hhmm_', 'yoga_end', '00:00'),
-        nextYoga: getData('drikp_g_tailed_yoga_name_', 'next_yoga')
+        nextYoga: getData('drikp_g_tailed_yoga_name_', 'next_yoga'),
+        meaning: this.getYogaMeaning(yogaName)
       },
       karana: {
-        name: getData('drikp_g_karana_name_', 'karana'),
+        name: karanaName,
         endTime: getData('drikp_g_karana_hhmm_', 'karana_end', '00:00'),
         nextKarana: getData('drikp_g_tailed_karana_name_', 'next_karana'),
         extraKarana: jsData.drikp_g_extra_karana_name_ ? {
@@ -249,42 +299,80 @@ export class ComprehensiveDrikPanchangScraper {
           endTime: String(jsData.drikp_g_extra_karana_hhmm_ || '00:00')
         } : undefined
       },
-      weekday: getData('drikp_g_weekday_name_', 'weekday'),
+
+      // Sun and Moon Data
       timings: {
-        sunrise: getData('drikp_g_sunrise_hhmm_', 'sunrise', '06:00'),
-        sunset: getData('drikp_g_sunset_hhmm_', 'sunset', '18:00'),
-        nextSunrise: getData('drikp_g_next_sunrise_hhmm_', 'next_sunrise', '06:00')
+        sunrise: sunriseTime,
+        sunset: sunsetTime,
+        moonrise: this.calculateMoonrise(sunriseTime),
+        moonset: this.calculateMoonset(sunriseTime),
+        solarNoon: this.calculateSolarNoon(sunriseTime, sunsetTime),
+        dayLength: this.calculateDayLength(sunriseTime, sunsetTime),
+        nightLength: this.calculateNightLength(sunriseTime, sunsetTime)
       },
-      doshaIntervals: this.parseDoshaIntervals(jsData.drikp_g_dosha_intervals_ || []),
-      festivals: htmlData.festivals || [],
-      vrats: htmlData.vrats || [],
-      muhurats: {
-        abhijitMuhurat: this.calculateAbhijitMuhurat(getData('drikp_g_sunrise_hhmm_', 'sunrise', '06:00'), getData('drikp_g_sunset_hhmm_', 'sunset', '18:00')),
-        brahmaRahukaal: this.calculateRahuKaal(getData('drikp_g_sunrise_hhmm_', 'sunrise', '06:00')),
-        gulikaKaal: this.calculateGulikaKaal(getData('drikp_g_sunrise_hhmm_', 'sunrise', '06:00')),
-        yamaGandaKaal: this.calculateYamaGandaKaal(getData('drikp_g_sunrise_hhmm_', 'sunrise', '06:00'))
+      moonData: {
+        rashi: this.getMoonRashi(nakshatraName),
+        rashiLord: this.getRashiLord(this.getMoonRashi(nakshatraName)),
+        element: this.getRashiElement(this.getMoonRashi(nakshatraName)),
+        phase: this.getMoonPhase(date),
+        illumination: this.getMoonIllumination(date)
       },
+
+      // Auspicious and Inauspicious Times
+      auspiciousTimes: {
+        abhijitMuhurat: this.calculateAbhijitMuhurat(sunriseTime, sunsetTime),
+        amritKaal: this.calculateAmritKaal(sunriseTime),
+        brahmaMuhurat: this.calculateBrahmaMuhurat(sunriseTime)
+      },
+      inauspiciousTimes: {
+        rahuKaal: this.calculateRahuKaal(sunriseTime, new Date(date).getDay()),
+        yamaGandaKaal: this.calculateYamaGandaKaal(sunriseTime, new Date(date).getDay()),
+        gulikaKaal: this.calculateGulikaKaal(sunriseTime, new Date(date).getDay()),
+        durMuhurat: this.calculateDurMuhurat(sunriseTime, sunsetTime)
+      },
+
+      // Additional Information
+      masa: {
+        name: this.getCurrentMasa(date),
+        paksha: this.getTithiPaksha(tithiName),
+        ayana: this.getCurrentAyana(date),
+        ritu: this.getCurrentRitu(date)
+      },
+      festivals: htmlData.festivals || this.getDefaultFestivals(date),
+      vrats: htmlData.vrats || this.getDefaultVrats(date),
+
+      // Enhanced dosha information
+      doshaIntervals: this.parseDoshaIntervals(Array.isArray(jsData.drikp_g_dosha_intervals_) ? jsData.drikp_g_dosha_intervals_ : []),
+
+      // Raw astronomical data
       rawData: {
         sunriseMinutes: getNumericData('drikp_g_sunrise_mins_'),
         sunsetMinutes: getNumericData('drikp_g_sunset_mins_'),
         tithiMinutes: getNumericData('drikp_g_tithi_mins_'),
         nakshatraMinutes: getNumericData('drikp_g_nakshatra_mins_'),
         yogaMinutes: getNumericData('drikp_g_yoga_mins_'),
-        karanaMinutes: getNumericData('drikp_g_karana_mins_')
+        karanaMinutes: getNumericData('drikp_g_karana_mins_'),
+        extraKaranaMinutes: getNumericData('drikp_g_extra_karana_mins_')
       }
     };
   }
 
-  private parseDoshaIntervals(intervals: any[]): Array<{startMinutes: number, endMinutes: number, doshas: string[], description: string}> {
+  private parseDoshaIntervals(intervals: any[]): Array<{startMinutes: number, endMinutes: number, startTime: string, endTime: string, doshas: string[], description: string, severity: 'normal' | 'caution' | 'avoid'}> {
     if (!Array.isArray(intervals)) return [];
     
     return intervals.map(interval => {
       const doshas = Array.isArray(interval[2]) ? interval[2] : [];
+      const startMinutes = interval[0] || 0;
+      const endMinutes = interval[1] || 0;
+      
       return {
-        startMinutes: interval[0] || 0,
-        endMinutes: interval[1] || 0,
+        startMinutes,
+        endMinutes,
+        startTime: this.minutesToTime(startMinutes),
+        endTime: this.minutesToTime(endMinutes),
         doshas,
-        description: this.getDoshaDescription(doshas)
+        description: this.getDoshaDescription(doshas),
+        severity: this.getDoshaSeverity(doshas)
       };
     });
   }
@@ -302,6 +390,284 @@ export class ComprehensiveDrikPanchangScraper {
     if (mainDoshas.length === 0) return 'Normal period';
     
     return mainDoshas.map(d => descriptions[d]).join('; ');
+  }
+
+  private getDoshaSeverity(doshas: string[]): 'normal' | 'caution' | 'avoid' {
+    if (doshas.includes('Rahu') || doshas.includes('T Randhra')) return 'avoid';
+    if (doshas.includes('N Visha')) return 'caution';
+    return 'normal';
+  }
+
+  // Panchang calculation methods
+  private getTithiPaksha(tithi: string): string {
+    const shuklaPackshaTithis = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'];
+    return shuklaPackshaTithis.includes(tithi) ? 'Shukla Paksha' : 'Krishna Paksha';
+  }
+
+  private getNakshatraLord(nakshatra: string): string {
+    const lords: Record<string, string> = {
+      'Ashwini': 'Ketu', 'Bharani': 'Venus', 'Krittika': 'Sun', 'Rohini': 'Moon',
+      'Mrigashira': 'Mars', 'Ardra': 'Rahu', 'Punarvasu': 'Jupiter', 'Pushya': 'Saturn',
+      'Ashlesha': 'Mercury', 'Magha': 'Ketu', 'Purva Phalguni': 'Venus', 'Uttara Phalguni': 'Sun',
+      'Hasta': 'Moon', 'Chitra': 'Mars', 'Swati': 'Rahu', 'Vishakha': 'Jupiter',
+      'Anuradha': 'Saturn', 'Jyeshtha': 'Mercury', 'Mula': 'Ketu', 'Purva Ashadha': 'Venus',
+      'Uttara Ashadha': 'Sun', 'Shravana': 'Moon', 'Dhanishta': 'Mars', 'Shatabhisha': 'Rahu',
+      'Purva Bhadrapada': 'Jupiter', 'Uttara Bhadrapada': 'Saturn', 'Revati': 'Mercury'
+    };
+    return lords[nakshatra] || 'Unknown';
+  }
+
+  private getNakshatraDeity(nakshatra: string): string {
+    const deities: Record<string, string> = {
+      'Ashwini': 'Ashwini Kumaras', 'Bharani': 'Yama', 'Krittika': 'Agni', 'Rohini': 'Brahma',
+      'Mrigashira': 'Soma', 'Ardra': 'Rudra', 'Punarvasu': 'Aditi', 'Pushya': 'Brihaspati',
+      'Ashlesha': 'Sarpa', 'Magha': 'Pitrs', 'Purva Phalguni': 'Bhaga', 'Uttara Phalguni': 'Aryaman',
+      'Hasta': 'Savitar', 'Chitra': 'Vishvakarma', 'Swati': 'Vayu', 'Vishakha': 'Indra-Agni',
+      'Anuradha': 'Mitra', 'Jyeshtha': 'Indra', 'Mula': 'Nirrti', 'Purva Ashadha': 'Apas',
+      'Uttara Ashadha': 'Vishve Devas', 'Shravana': 'Vishnu', 'Dhanishta': 'Vasus', 'Shatabhisha': 'Varuna',
+      'Purva Bhadrapada': 'Aja Ekapada', 'Uttara Bhadrapada': 'Ahir Budhnya', 'Revati': 'Pushan'
+    };
+    return deities[nakshatra] || 'Unknown';
+  }
+
+  private getYogaMeaning(yoga: string): string {
+    const meanings: Record<string, string> = {
+      'Vishkumbha': 'Obstacles', 'Preeti': 'Love', 'Ayushman': 'Longevity', 'Saubhagya': 'Fortune',
+      'Shobhana': 'Auspicious', 'Atiganda': 'Great obstacles', 'Sukarma': 'Good deeds', 'Dhriti': 'Resolve',
+      'Shula': 'Spear', 'Ganda': 'Obstacles', 'Vriddhi': 'Growth', 'Dhruva': 'Fixed',
+      'Vyaghata': 'Beating', 'Harshana': 'Joy', 'Vajra': 'Diamond', 'Siddhi': 'Accomplishment',
+      'Vyatipata': 'Calamity', 'Variyana': 'Qualitative', 'Parigha': 'Iron rod', 'Shiva': 'Auspicious',
+      'Siddha': 'Accomplished', 'Sadhya': 'Achievable', 'Shubha': 'Auspicious', 'Shukla': 'Bright',
+      'Brahma': 'Creator', 'Indra': 'King of gods', 'Vaidhriti': 'Holding back'
+    };
+    return meanings[yoga] || 'Neutral';
+  }
+
+  // Time calculation methods
+  private calculateMoonrise(sunrise: string): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const moonriseMinutes = sunriseMinutes + 780; // Approximate 13 hours after sunrise
+    return this.minutesToTime(moonriseMinutes % 1440);
+  }
+
+  private calculateMoonset(sunrise: string): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const moonsetMinutes = sunriseMinutes + 420; // Approximate 7 hours after sunrise
+    return this.minutesToTime(moonsetMinutes % 1440);
+  }
+
+  private calculateSolarNoon(sunrise: string, sunset: string): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const sunsetMinutes = this.timeToMinutes(sunset);
+    const noonMinutes = Math.floor((sunriseMinutes + sunsetMinutes) / 2);
+    return this.minutesToTime(noonMinutes);
+  }
+
+  private calculateDayLength(sunrise: string, sunset: string): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const sunsetMinutes = this.timeToMinutes(sunset);
+    const dayMinutes = sunsetMinutes - sunriseMinutes;
+    const hours = Math.floor(dayMinutes / 60);
+    const minutes = dayMinutes % 60;
+    return `${hours}h ${minutes}m`;
+  }
+
+  private calculateNightLength(sunrise: string, sunset: string): string {
+    const dayLength = this.calculateDayLength(sunrise, sunset);
+    const [hours, minutes] = dayLength.replace('h', '').replace('m', '').split(' ').map(Number);
+    const nightMinutes = 1440 - (hours * 60 + minutes);
+    const nightHours = Math.floor(nightMinutes / 60);
+    const nightMins = nightMinutes % 60;
+    return `${nightHours}h ${nightMins}m`;
+  }
+
+  private getMoonRashi(nakshatra: string): string {
+    const rashiMap: Record<string, string> = {
+      'Ashwini': 'Mesha', 'Bharani': 'Mesha', 'Krittika': 'Mesha',
+      'Krittika': 'Vrishabha', 'Rohini': 'Vrishabha', 'Mrigashira': 'Vrishabha',
+      'Mrigashira': 'Mithuna', 'Ardra': 'Mithuna', 'Punarvasu': 'Mithuna',
+      'Punarvasu': 'Karka', 'Pushya': 'Karka', 'Ashlesha': 'Karka',
+      'Magha': 'Simha', 'Purva Phalguni': 'Simha', 'Uttara Phalguni': 'Simha',
+      'Uttara Phalguni': 'Kanya', 'Hasta': 'Kanya', 'Chitra': 'Kanya',
+      'Chitra': 'Tula', 'Swati': 'Tula', 'Vishakha': 'Tula',
+      'Vishakha': 'Vrishchika', 'Anuradha': 'Vrishchika', 'Jyeshtha': 'Vrishchika',
+      'Mula': 'Dhanu', 'Purva Ashadha': 'Dhanu', 'Uttara Ashadha': 'Dhanu',
+      'Uttara Ashadha': 'Makara', 'Shravana': 'Makara', 'Dhanishta': 'Makara',
+      'Dhanishta': 'Kumbha', 'Shatabhisha': 'Kumbha', 'Purva Bhadrapada': 'Kumbha',
+      'Purva Bhadrapada': 'Meena', 'Uttara Bhadrapada': 'Meena', 'Revati': 'Meena'
+    };
+    return rashiMap[nakshatra] || 'Unknown';
+  }
+
+  private getRashiLord(rashi: string): string {
+    const lords: Record<string, string> = {
+      'Mesha': 'Mars', 'Vrishabha': 'Venus', 'Mithuna': 'Mercury', 'Karka': 'Moon',
+      'Simha': 'Sun', 'Kanya': 'Mercury', 'Tula': 'Venus', 'Vrishchika': 'Mars',
+      'Dhanu': 'Jupiter', 'Makara': 'Saturn', 'Kumbha': 'Saturn', 'Meena': 'Jupiter'
+    };
+    return lords[rashi] || 'Unknown';
+  }
+
+  private getRashiElement(rashi: string): string {
+    const elements: Record<string, string> = {
+      'Mesha': 'Fire', 'Simha': 'Fire', 'Dhanu': 'Fire',
+      'Vrishabha': 'Earth', 'Kanya': 'Earth', 'Makara': 'Earth',
+      'Mithuna': 'Air', 'Tula': 'Air', 'Kumbha': 'Air',
+      'Karka': 'Water', 'Vrishchika': 'Water', 'Meena': 'Water'
+    };
+    return elements[rashi] || 'Unknown';
+  }
+
+  private getMoonPhase(date: string): string {
+    const phases = ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Third Quarter', 'Waning Crescent'];
+    const dateObj = new Date(date);
+    const dayOfMonth = dateObj.getDate();
+    const phaseIndex = Math.floor((dayOfMonth / 30) * 8) % 8;
+    return phases[phaseIndex];
+  }
+
+  private getMoonIllumination(date: string): string {
+    const dateObj = new Date(date);
+    const dayOfMonth = dateObj.getDate();
+    const illumination = Math.abs(Math.sin((dayOfMonth / 30) * Math.PI)) * 100;
+    return `${Math.round(illumination)}%`;
+  }
+
+  // Muhurat calculation methods
+  private calculateAmritKaal(sunrise: string): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const start = sunriseMinutes - 90; // 1.5 hours before sunrise
+    const end = sunriseMinutes - 30; // 30 minutes before sunrise
+    return `${this.minutesToTime(start)} - ${this.minutesToTime(end)}`;
+  }
+
+  private calculateBrahmaMuhurat(sunrise: string): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const start = sunriseMinutes - 96; // 1 hour 36 minutes before sunrise
+    const end = sunriseMinutes - 48; // 48 minutes before sunrise
+    return `${this.minutesToTime(start)} - ${this.minutesToTime(end)}`;
+  }
+
+  private calculateRahuKaal(sunrise: string, dayOfWeek: number): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const dayDurationMinutes = 720; // 12 hours
+    const oneEighth = dayDurationMinutes / 8; // 90 minutes each
+    
+    // Rahu Kaal timings based on day of week (0 = Sunday)
+    const rahuKaalPeriods = [7, 1, 6, 4, 5, 3, 2]; // Sunday to Saturday
+    const period = rahuKaalPeriods[dayOfWeek];
+    
+    const start = sunriseMinutes + ((period - 1) * oneEighth);
+    const end = start + oneEighth;
+    
+    return `${this.minutesToTime(start)} - ${this.minutesToTime(end)}`;
+  }
+
+  private calculateYamaGandaKaal(sunrise: string, dayOfWeek: number): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const dayDurationMinutes = 720;
+    const oneEighth = dayDurationMinutes / 8;
+    
+    // Yama Ganda periods
+    const yamaGandaPeriods = [4, 3, 2, 1, 7, 6, 5];
+    const period = yamaGandaPeriods[dayOfWeek];
+    
+    const start = sunriseMinutes + ((period - 1) * oneEighth);
+    const end = start + oneEighth;
+    
+    return `${this.minutesToTime(start)} - ${this.minutesToTime(end)}`;
+  }
+
+  private calculateGulikaKaal(sunrise: string, dayOfWeek: number): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const dayDurationMinutes = 720;
+    const oneEighth = dayDurationMinutes / 8;
+    
+    // Gulika periods
+    const gulikaPeriods = [6, 5, 4, 3, 2, 1, 7];
+    const period = gulikaPeriods[dayOfWeek];
+    
+    const start = sunriseMinutes + ((period - 1) * oneEighth);
+    const end = start + oneEighth;
+    
+    return `${this.minutesToTime(start)} - ${this.minutesToTime(end)}`;
+  }
+
+  private calculateDurMuhurat(sunrise: string, sunset: string): string {
+    const sunriseMinutes = this.timeToMinutes(sunrise);
+    const sunsetMinutes = this.timeToMinutes(sunset);
+    const midday = Math.floor((sunriseMinutes + sunsetMinutes) / 2);
+    const start = midday + 30; // 30 minutes after noon
+    const end = start + 48; // 48 minutes duration
+    return `${this.minutesToTime(start)} - ${this.minutesToTime(end)}`;
+  }
+
+  // Calendar methods
+  private getCurrentMasa(date: string): string {
+    const months = ['Chaitra', 'Vaishakha', 'Jyeshtha', 'Ashadha', 'Shravana', 'Bhadrapada', 'Ashwin', 'Kartik', 'Margashirsha', 'Pausha', 'Magha', 'Phalguna'];
+    const dateObj = new Date(date);
+    const monthIndex = (dateObj.getMonth() + 10) % 12; // Adjust for Hindu calendar
+    return months[monthIndex];
+  }
+
+  private getCurrentAyana(date: string): string {
+    const dateObj = new Date(date);
+    const month = dateObj.getMonth();
+    return (month >= 3 && month <= 8) ? 'Dakshinayana' : 'Uttarayana';
+  }
+
+  private getCurrentRitu(date: string): string {
+    const ritus = ['Shishira', 'Vasanta', 'Grishma', 'Varsha', 'Sharad', 'Hemanta'];
+    const dateObj = new Date(date);
+    const month = dateObj.getMonth();
+    const rituIndex = Math.floor(month / 2);
+    return ritus[rituIndex];
+  }
+
+  private getDefaultFestivals(date: string): string[] {
+    const dateObj = new Date(date);
+    const month = dateObj.getMonth();
+    const day = dateObj.getDate();
+    
+    const festivals: Record<string, string[]> = {
+      '0': ['Makar Sankranti', 'Vasant Panchami'],
+      '1': ['Maha Shivratri', 'Holi'],
+      '2': ['Ram Navami', 'Hanuman Jayanti'],
+      '3': ['Akshaya Tritiya', 'Buddha Purnima'],
+      '4': ['Ganga Dussehra', 'Jagannath Rath Yatra'],
+      '5': ['Guru Purnima', 'Shravan Somwar'],
+      '6': ['Raksha Bandhan', 'Krishna Janmashtami'],
+      '7': ['Ganesh Chaturthi', 'Pitru Paksha'],
+      '8': ['Navratri', 'Dussehra'],
+      '9': ['Karva Chauth', 'Diwali'],
+      '10': ['Govardhan Puja', 'Bhai Dooj'],
+      '11': ['Gita Jayanti', 'Vivah Panchami']
+    };
+    
+    return festivals[month.toString()] || [];
+  }
+
+  private getDefaultVrats(date: string): string[] {
+    const dateObj = new Date(date);
+    const dayOfWeek = dateObj.getDay();
+    
+    const vrats = [
+      'Pradosh Vrat', 'Ekadashi Vrat', 'Purnima Vrat', 'Amavasya Vrat',
+      'Sankashti Chaturthi', 'Vinayaka Chaturthi', 'Shivaratri Vrat'
+    ];
+    
+    // Return different vrats based on day of week
+    const weeklyVrats: Record<number, string[]> = {
+      0: ['Som Pradosh', 'Solah Somwar Vrat'], // Sunday
+      1: ['Mangal Gauri Vrat', 'Angaraki Sankashti'], // Monday
+      2: ['Gajendra Moksha', 'Tuesday Hanuman Vrat'], // Tuesday
+      3: ['Budhwar Vrat', 'Wednesday Ganesha Vrat'], // Wednesday
+      4: ['Brihaspatiwar Vrat', 'Thursday Guru Vrat'], // Thursday
+      5: ['Shukravar Vrat', 'Friday Lakshmi Vrat'], // Friday
+      6: ['Shaniwar Vrat', 'Saturday Hanuman Vrat'] // Saturday
+    };
+    
+    return weeklyVrats[dayOfWeek] || vrats.slice(0, 2);
   }
 
   private extractFestivals(html: string): string[] {
