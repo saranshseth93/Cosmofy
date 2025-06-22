@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Debug Test</title>
+</head>
+<body>
+    <h1>Testing Frontend Loading</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        // Test if the main app loads
+        fetch('http://localhost:5000/')
+            .then(response => response.text())
+            .then(html => {
+                if (html.includes('<div id="root">')) {
+                    document.getElementById('test-results').innerHTML += '<p>✓ HTML loads correctly</p>';
+                    
+                    // Test if main.tsx loads
+                    fetch('http://localhost:5000/src/main.tsx')
+                        .then(response => response.text())
+                        .then(code => {
+                            if (code.includes('createRoot')) {
+                                document.getElementById('test-results').innerHTML += '<p>✓ React entry point loads</p>';
+                            } else {
+                                document.getElementById('test-results').innerHTML += '<p>✗ React entry point failed</p>';
+                            }
+                        })
+                        .catch(error => {
+                            document.getElementById('test-results').innerHTML += '<p>✗ main.tsx load error: ' + error + '</p>';
+                        });
+                } else {
+                    document.getElementById('test-results').innerHTML += '<p>✗ HTML structure missing</p>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('test-results').innerHTML += '<p>✗ Server connection failed: ' + error + '</p>';
+            });
+    </script>
+</body>
+</html>
