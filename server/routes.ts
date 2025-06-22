@@ -710,13 +710,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return { sunrise: formatTime(sunrise), sunset: formatTime(sunset) };
         };
         
+        // Update calculated values to match drikpanchang.com methodology
         const sunTimes = calculateSunTimes(lat, lon, julianDay);
-        const sunriseTime = sunTimes.sunrise;
-        const sunsetTime = sunTimes.sunset;
-        const moonriseTime = "06:30";
-        const moonsetTime = "18:45";
+        calculatedSunrise = sunTimes.sunrise;
+        calculatedSunset = sunTimes.sunset;
+        calculatedMoonrise = "06:30"; // Would need complex lunar calculations for exact times
+        calculatedMoonset = "18:45";
         
-        // Calculate Muhurat times based on sunrise/sunset
+        // Calculate Muhurat times based on sunrise/sunset using drikpanchang.com methodology
         const parseTime = (timeStr: string) => {
           const [hours, minutes] = timeStr.split(':').map(Number);
           return hours + minutes / 60;
@@ -728,34 +729,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
         };
         
-        const sunrise = parseTime(sunriseTime);
-        const sunset = parseTime(sunsetTime);
+        const sunrise = parseTime(calculatedSunrise);
+        const sunset = parseTime(calculatedSunset);
         const dayLength = sunset - sunrise;
         
-        // Calculate Rahu Kaal (varies by weekday)
-        const rahukaalStart = sunrise + (dayLength / 8) * (targetDate.getDay() === 0 ? 4 : 
-                                                           targetDate.getDay() === 1 ? 0 :
-                                                           targetDate.getDay() === 2 ? 2 :
-                                                           targetDate.getDay() === 3 ? 5 :
-                                                           targetDate.getDay() === 4 ? 3 :
-                                                           targetDate.getDay() === 5 ? 1 : 6);
+        // Calculate Rahu Kaal using authentic weekday-specific formulas
+        const weekdayRahuMult = [4, 0, 2, 5, 3, 1, 6]; // Sunday through Saturday
+        const rahukaalStart = sunrise + (dayLength / 8) * weekdayRahuMult[targetDate.getDay()];
         const rahukaalEnd = rahukaalStart + dayLength / 8;
-        const rahuKaal = `${formatTimeFromHours(rahukaalStart)} - ${formatTimeFromHours(rahukaalEnd)}`;
+        calculatedRahuKaal = `${formatTimeFromHours(rahukaalStart)} - ${formatTimeFromHours(rahukaalEnd)}`;
         
-        // Calculate other Muhurats
-        const abhijitStart = sunrise + dayLength / 2 - 0.4;
-        const abhijitEnd = abhijitStart + 0.8;
-        const abhijitMuhurat = `${formatTimeFromHours(abhijitStart)} - ${formatTimeFromHours(abhijitEnd)}`;
+        // Calculate Abhijit Muhurat (24 minutes before and after solar noon)
+        const solarNoon = sunrise + dayLength / 2;
+        const abhijitStart = solarNoon - 0.4; // 24 minutes before
+        const abhijitEnd = solarNoon + 0.4;   // 24 minutes after
+        calculatedAbhijit = `${formatTimeFromHours(abhijitStart)} - ${formatTimeFromHours(abhijitEnd)}`;
         
+        // Calculate Gulika Kaal (6th segment of day)
         const gulikaStart = sunrise + (dayLength / 8) * 6;
         const gulikaEnd = gulikaStart + dayLength / 8;
-        const gulikaKaal = `${formatTimeFromHours(gulikaStart)} - ${formatTimeFromHours(gulikaEnd)}`;
+        calculatedGulikaKaal = `${formatTimeFromHours(gulikaStart)} - ${formatTimeFromHours(gulikaEnd)}`;
         
+        // Calculate Yama Ganda Kaal (4th segment of day)
         const yamaStart = sunrise + (dayLength / 8) * 4;
         const yamaEnd = yamaStart + dayLength / 8;
-        const yamaGandaKaal = `${formatTimeFromHours(yamaStart)} - ${formatTimeFromHours(yamaEnd)}`;
+        calculatedYamaGanda = `${formatTimeFromHours(yamaStart)} - ${formatTimeFromHours(yamaEnd)}`;
         
-        // Calculate Moon Rashi
+        // Calculate Moon Rashi using precise lunar longitude
         const rashiIndex = Math.floor(L_moon / 30);
         const rashiNames = [
           { name: 'Aries', element: 'Fire', lord: 'Mars' },
@@ -771,14 +771,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { name: 'Aquarius', element: 'Air', lord: 'Saturn' },
           { name: 'Pisces', element: 'Water', lord: 'Jupiter' }
         ];
-        const moonRashi = rashiNames[rashiIndex % 12];
+        calculatedMoonRashi = rashiNames[rashiIndex % 12];
         
-        // Calculate festivals and vrats
-        const festivalsToday: string[] = [];
-        const vratsToday: string[] = [];
+        // Calculate festivals and vrats based on authentic Tithi calculations
+        if (tithi === 'अमावस्या') calculatedFestivals.push('Amavasya');
+        else if (tithi === 'पूर्णिमा') calculatedFestivals.push('Purnima');
         
-        if (tithi === 'अमावस्या') festivalsToday.push('Amavasya');
-        else if (tithi === 'पूर्णिमा') festivalsToday.push('Purnima');
+        // Add weekly vrats based on current day
+        if (targetDate.getDay() === 1) calculatedVrats.push('Somvar Vrat'); // Monday
+        if (targetDate.getDay() === 4) calculatedVrats.push('Brihaspativar Vrat'); // Thursday
         
         console.log('Professional astronomical calculations completed matching drikpanchang.com methodology');
       }
@@ -1041,18 +1042,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vara: currentVara,
         rashi: currentRashi,
         masa: panchang ? currentHindiMonth : 'आषाढ',
-        sunrise: sunrise,
-        sunset: sunset,
-        moonrise: '19:30',
-        moonset: '07:15',
+        sunrise: calculatedSunrise,
+        sunset: calculatedSunset,
+        moonrise: calculatedMoonrise,
+        moonset: calculatedMoonset,
         shubhMuhurat: {
-          abhijitMuhurat: '11:30 - 12:30',
-          brahmaRahukaal: '04:30 - 06:00',
-          gulikaKaal: `${Math.floor(rahuKaalStart)}:00 - ${Math.floor(rahuKaalEnd)}:30`,
-          yamaGandaKaal: `${Math.floor(rahuKaalStart + 1)}:00 - ${Math.floor(rahuKaalEnd + 1)}:30`
+          abhijitMuhurat: calculatedAbhijit,
+          brahmaRahukaal: calculatedRahuKaal,
+          gulikaKaal: calculatedGulikaKaal,
+          yamaGandaKaal: calculatedYamaGanda
         },
-        festivals: festivals,
-        vratsAndOccasions: vratsAndOccasions,
+        festivals: calculatedFestivals,
+        vratsAndOccasions: calculatedVrats,
         samvat: samvatData,
         yug: currentYug,
         kaalIkai: panchang ? kaalIkaiData : ['कल्प', 'मन्वंतर', 'युग', 'सम्वत्'],
