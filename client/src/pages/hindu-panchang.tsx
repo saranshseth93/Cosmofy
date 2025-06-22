@@ -136,7 +136,7 @@ export default function HinduPanchang() {
     }
   }, [locationData, location]);
 
-  // Fetch Panchang data from comprehensive scraper
+  // Fetch Panchang data from fixed scraper
   const { data: panchangData, isLoading, error } = useQuery({
     queryKey: ['/api/scraper/panchang', currentDate, location?.city],
     enabled: !!location,
