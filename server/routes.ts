@@ -443,6 +443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // FIRST: Get accurate sunrise/sunset times from API
       console.log('Fetching accurate astronomical data from APIs');
+      console.log(`Request coordinates: lat=${lat}, lon=${lon}, date=${targetDate.toISOString().split('T')[0]}`);
       
       // Get sunrise/sunset from reliable API
       try {
