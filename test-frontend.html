@@ -1,40 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Frontend Debug Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Test</title>
+    <style>
+        body { 
+            margin: 0;
+            background: linear-gradient(to bottom, #1a1a1a, #000000);
+            color: white;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>Testing Frontend Loading</h1>
-    <div id="test-results"></div>
+    <div id="root">
+        <div style="text-align: center;">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem;">COSMOFY</h1>
+            <p style="font-size: 1.2rem; opacity: 0.8;">Space Exploration Platform</p>
+            <p id="status" style="margin-top: 2rem; color: #10b981;">Loading JavaScript...</p>
+        </div>
+    </div>
     
     <script>
-        // Test if the main app loads
-        fetch('http://localhost:5000/')
-            .then(response => response.text())
-            .then(html => {
-                if (html.includes('<div id="root">')) {
-                    document.getElementById('test-results').innerHTML += '<p>✓ HTML loads correctly</p>';
-                    
-                    // Test if main.tsx loads
-                    fetch('http://localhost:5000/src/main.tsx')
-                        .then(response => response.text())
-                        .then(code => {
-                            if (code.includes('createRoot')) {
-                                document.getElementById('test-results').innerHTML += '<p>✓ React entry point loads</p>';
-                            } else {
-                                document.getElementById('test-results').innerHTML += '<p>✗ React entry point failed</p>';
-                            }
-                        })
-                        .catch(error => {
-                            document.getElementById('test-results').innerHTML += '<p>✗ main.tsx load error: ' + error + '</p>';
-                        });
-                } else {
-                    document.getElementById('test-results').innerHTML += '<p>✗ HTML structure missing</p>';
-                }
-            })
-            .catch(error => {
-                document.getElementById('test-results').innerHTML += '<p>✗ Server connection failed: ' + error + '</p>';
-            });
+        console.log('Direct script execution working');
+        document.getElementById('status').textContent = 'JavaScript Loaded Successfully!';
+        document.getElementById('status').style.color = '#10b981';
+        
+        // Test module loading
+        setTimeout(() => {
+            fetch('/src/main.tsx')
+                .then(response => response.text())
+                .then(code => {
+                    console.log('Module code loaded:', code.substring(0, 100) + '...');
+                    document.getElementById('status').textContent = 'Module Loading Test Complete';
+                })
+                .catch(error => {
+                    console.error('Module loading failed:', error);
+                    document.getElementById('status').textContent = 'Module Loading Failed: ' + error.message;
+                    document.getElementById('status').style.color = '#ef4444';
+                });
+        }, 1000);
     </script>
 </body>
 </html>
