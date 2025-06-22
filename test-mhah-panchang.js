@@ -1,4 +1,4 @@
-const { MhahPanchang } = require('mhah-panchang');
+import { MhahPanchang } from 'mhah-panchang';
 
 console.log('Testing mhah-panchang package...');
 
