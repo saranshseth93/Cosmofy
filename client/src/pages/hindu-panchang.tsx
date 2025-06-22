@@ -121,6 +121,7 @@ export default function HinduPanchangPage() {
 
   // Update time every second
   useEffect(() => {
+    console.log('🕐 Starting Hindu Panchang page initialization...');
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -217,12 +218,7 @@ export default function HinduPanchangPage() {
     enabled: !!userCoords,
     staleTime: 60 * 60 * 1000, // 1 hour
     retry: false,
-    onError: (error) => {
-      console.error('🚨 Panchang query error:', error);
-    },
-    onSuccess: (data) => {
-      console.log('🎉 Panchang query successful:', data);
-    }
+
   });
 
   const formatTime = (date: Date) => {
