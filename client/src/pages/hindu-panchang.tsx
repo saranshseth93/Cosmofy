@@ -189,15 +189,40 @@ export default function HinduPanchangPage() {
   const { data: panchangData, isLoading: panchangLoading, error: panchangError } = useQuery<PanchangData>({
     queryKey: ['/api/panchang', userCoords?.lat, userCoords?.lon],
     queryFn: async () => {
-      const response = await fetch(`/api/panchang?lat=${userCoords?.lat}&lon=${userCoords?.lon}`);
+      console.log('🔮 Fetching Panchang data for coordinates:', userCoords);
+      const url = `/api/panchang?lat=${userCoords?.lat}&lon=${userCoords?.lon}`;
+      console.log('🔗 API URL:', url);
+      
+      const response = await fetch(url);
+      console.log('📡 Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch Panchang data');
+        console.error('❌ API Error:', response.status, response.statusText);
+        throw new Error(`Failed to fetch Panchang data: ${response.status}`);
       }
-      return response.json();
+      
+      const data = await response.json();
+      console.log('✅ Panchang data received:', data);
+      console.log('📊 Data structure verification:');
+      console.log('- Tithi:', data.tithi);
+      console.log('- Nakshatra:', data.nakshatra);
+      console.log('- Yoga:', data.yoga);
+      console.log('- Karana:', data.karana);
+      console.log('- Location:', data.location);
+      console.log('- Verification:', data.verification);
+      console.log('- Source:', data.source);
+      
+      return data;
     },
     enabled: !!userCoords,
     staleTime: 60 * 60 * 1000, // 1 hour
     retry: false,
+    onError: (error) => {
+      console.error('🚨 Panchang query error:', error);
+    },
+    onSuccess: (data) => {
+      console.log('🎉 Panchang query successful:', data);
+    }
   });
 
   const formatTime = (date: Date) => {
