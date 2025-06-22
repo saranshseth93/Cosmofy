@@ -446,20 +446,40 @@ export default function HinduPanchangPage() {
                         <p className="text-sm text-muted-foreground">
                           <strong>Deity:</strong> {panchangData.tithi.deity}
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Paksh:</strong> {panchangData.tithi.paksh}
-                        </p>
+                        {panchangData.tithi.type && (
+                          <p className="text-sm text-muted-foreground">
+                            <strong>Type:</strong> {panchangData.tithi.type}
+                          </p>
+                        )}
+                        {panchangData.tithi.meaning && (
+                          <p className="text-xs text-muted-foreground">
+                            <strong>Meaning:</strong> {panchangData.tithi.meaning}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           <strong>Significance:</strong> {panchangData.tithi.significance}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Sanskrit:</strong> {panchangData.tithi.sanskrit}
-                        </p>
+                        {panchangData.tithi.special && (
+                          <p className="text-xs text-orange-400">
+                            <strong>Special:</strong> {panchangData.tithi.special}
+                          </p>
+                        )}
+                        {panchangData.tithi.start && panchangData.tithi.end && (
+                          <div className="text-xs text-muted-foreground">
+                            <p><strong>Start:</strong> {panchangData.tithi.start}</p>
+                            <p><strong>End:</strong> {panchangData.tithi.end}</p>
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-1">
                         <Badge variant="outline" className="text-xs">
                           Ends: {panchangData.tithi.endTime}
                         </Badge>
+                        {panchangData.tithi.nextTithi && (
+                          <Badge variant="outline" className="text-xs bg-orange-500/10">
+                            Next: {panchangData.tithi.nextTithi}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </CardContent>

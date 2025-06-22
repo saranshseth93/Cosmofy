@@ -211,16 +211,6 @@ Changelog:
     - Added proper seasonal visibility checking based on constellation's best viewing months
     - Improved sky conditions API with lunar cycle calculations and optimal viewing times
     - Enhanced astronomical accuracy for all 88 constellations with hemisphere-specific calculations
-  * Comprehensive Hindu Panchang enhancement with panchangJS library integration (June 22, 2025):
-    - Successfully integrated panchangJS library as primary calculation method with authentic Sanskrit output
-    - Fixed interface mismatches with streamlined frontend component for proper data display
-    - Implemented comprehensive data verification system cross-checking library calculations against traditional sources
-    - Added complete Samvat systems (17 calendar types), Kaal Ikai elements, and advanced Vedic calendar information
-    - Enhanced page with detailed sections: Moon details, extended Panchang elements, advanced calendar systems
-    - Added comprehensive Muhurat information with descriptions for auspicious/inauspicious times
-    - Bilingual Sanskrit/English headers throughout with authentic calculations: द्वादशी, स्वाति, ध्रुव, बव
-    - Console logging shows complete data verification with proper Sanskrit text output
-    - Maintained design structure while significantly expanding educational content and Vedic authenticity
   * Complete data authenticity cleanup (June 21, 2025):
     - Eliminated all synthetic/fallback data generators across the entire codebase
     - Removed generateDefaultStars, generateDefaultDSOs, and all random coordinate generators
