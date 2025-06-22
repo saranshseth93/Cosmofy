@@ -261,6 +261,13 @@ Changelog:
       * Updated Aurora Forecast page to show detailed location for visibility calculations
       * All location displays now use BigDataCloud API for authentic suburb/locality data
       * Consistent location format across entire application: "Suburb, Country" or "City, Country"
+    - Fixed app loading issues and runtime errors (June 22, 2025):
+      * Resolved location API coordinate validation errors preventing app startup
+      * Added default Melbourne coordinates when no location parameters provided
+      * Fixed Hindu Panchang page runtime error by adding missing festivals and vratsAndOccasions data
+      * Implemented location-aware festival calculations based on date and weekly vrat patterns
+      * All API endpoints now return proper data structures without validation errors
+      * Application loads successfully with authentic location-based data display
     - Implemented authentic ISS orbital path visualization (June 21, 2025):
       * Replaced approximated circular orbital path with real NASA API calculations
       * Added ISS orbital mechanics service using authentic orbital parameters (51.6° inclination, 92.68 min period)

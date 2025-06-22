@@ -612,11 +612,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Location Route
   app.get("/api/location", async (req, res) => {
     try {
-      const lat = parseFloat(req.query.lat as string);
-      const lon = parseFloat(req.query.lon as string);
+      let lat = parseFloat(req.query.lat as string);
+      let lon = parseFloat(req.query.lon as string);
       
+      // If no coordinates provided, use default location (Melbourne)
       if (isNaN(lat) || isNaN(lon)) {
-        return res.status(400).json({ error: "Invalid coordinates" });
+        lat = -37.8136;
+        lon = 144.9631;
       }
       
       // Use BigDataCloud reverse geocoding for suburb-level accuracy
