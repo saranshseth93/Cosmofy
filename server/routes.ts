@@ -428,6 +428,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const panchangModule = await import('panchang');
         panchang = panchangModule.default || panchangModule;
         
+        console.log('\n=== COMPREHENSIVE PANCHANGJS DATA EXPLORATION ===');
+        console.log('panchangJS Module loaded successfully:', !!panchang);
+        console.log('panchang object type:', typeof panchang);
+        console.log('Available methods:', Object.getOwnPropertyNames(panchang).filter(name => typeof panchang[name] === 'function'));
+        
         // Get comprehensive authentic data from panchangJS library
         const tithiData = panchang.getTithiya();
         const pakshData = panchang.getAllPaksh();
@@ -436,6 +441,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const kaalIkai = panchang.getKaalIkai();
         kaalIkaiData = kaalIkai;
         samvatData = panchang.getSamvat(targetDate.getFullYear());
+        
+        console.log('\n📋 STATIC DATA ARRAYS FROM PANCHANGJS:');
+        console.log('All Tithis available:', JSON.stringify(tithiData, null, 2));
+        console.log('All Paksh types:', JSON.stringify(pakshData, null, 2));
+        console.log('All Yugs:', JSON.stringify(yugData, null, 2));
+        console.log('All Months:', JSON.stringify(monthsData, null, 2));
+        console.log('Kaal Ikai elements:', JSON.stringify(kaalIkai, null, 2));
+        console.log('Samvat systems for', targetDate.getFullYear(), ':', JSON.stringify(samvatData, null, 2));
         
         // Calculate current Tithi based on lunar cycle
         const julianDay = Math.floor(targetDate.getTime() / 86400000) + 2440588;
@@ -478,8 +491,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const varaNames = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
         currentVara = varaNames[targetDate.getDay()];
         
+        console.log('=== COMPREHENSIVE PANCHANGJS DATA LOGGING ===');
         console.log('Using panchangJS library for comprehensive authentic calculations');
-        console.log('Panchang Data Details:');
+        
+        console.log('\n📅 RAW PANCHANGJS OBJECTS:');
+        console.log('Full Tithi Object:', JSON.stringify(currentTithi, null, 2));
+        console.log('Full Nakshatra Object:', JSON.stringify(currentNakshatra, null, 2));
+        console.log('Full Yoga Object:', JSON.stringify(currentYoga, null, 2));
+        console.log('Full Karana Object:', JSON.stringify(currentKarana, null, 2));
+        console.log('Full Date Object:', targetDate);
+        console.log('Full Samvat Data:', JSON.stringify(samvatData, null, 2));
+        console.log('Full Kaal Ikai Data:', JSON.stringify(kaalIkaiData, null, 2));
+        
+        console.log('\n🌙 TITHI PROPERTIES AVAILABLE:');
+        if (currentTithi && typeof currentTithi === 'object') {
+          console.log('All Tithi Properties:', Object.keys(currentTithi));
+          Object.entries(currentTithi).forEach(([key, value]) => {
+            console.log(`  ${key}:`, value);
+          });
+        }
+        
+        console.log('\n⭐ NAKSHATRA PROPERTIES AVAILABLE:');
+        if (currentNakshatra && typeof currentNakshatra === 'object') {
+          console.log('All Nakshatra Properties:', Object.keys(currentNakshatra));
+          Object.entries(currentNakshatra).forEach(([key, value]) => {
+            console.log(`  ${key}:`, value);
+          });
+        }
+        
+        console.log('\n🔗 YOGA PROPERTIES AVAILABLE:');
+        if (currentYoga && typeof currentYoga === 'object') {
+          console.log('All Yoga Properties:', Object.keys(currentYoga));
+          Object.entries(currentYoga).forEach(([key, value]) => {
+            console.log(`  ${key}:`, value);
+          });
+        }
+        
+        console.log('\n⏰ KARANA PROPERTIES AVAILABLE:');
+        if (currentKarana && typeof currentKarana === 'object') {
+          console.log('All Karana Properties:', Object.keys(currentKarana));
+          Object.entries(currentKarana).forEach(([key, value]) => {
+            console.log(`  ${key}:`, value);
+          });
+        }
+        
+        console.log('\n📆 BASIC EXTRACTED VALUES:');
         console.log('- Tithi:', tithi, '(Index:', currentTithiIndex, ')');
         console.log('- Paksh:', paksh);
         console.log('- Nakshatra:', nakshatra);
@@ -491,6 +547,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('- Location:', cityName, 'at', lat, lon);
         console.log('- Samvat Systems:', Array.isArray(samvatData) ? samvatData.length : 'single', 'calendars');
         console.log('- Kaal Ikai:', kaalIkaiData);
+        
+        console.log('\n🌅 TIMING CALCULATIONS:');
+        console.log('- Sunrise Time:', sunriseTime);
+        console.log('- Sunset Time:', sunsetTime);
+        console.log('- Moonrise Time:', moonriseTime);
+        console.log('- Moonset Time:', moonsetTime);
+        console.log('- Abhijit Muhurat:', abhijitMuhurat);
+        console.log('- Rahu Kaal:', rahuKaal);
+        console.log('- Gulika Kaal:', gulikaKaal);
+        console.log('- Yama Ganda Kaal:', yamaGandaKaal);
+        
+        console.log('\n🏺 RASHI & FESTIVAL DATA:');
+        console.log('- Moon Rashi Object:', JSON.stringify(moonRashi, null, 2));
+        console.log('- Festivals Today:', JSON.stringify(festivalsToday, null, 2));
+        console.log('- Vrats Today:', JSON.stringify(vratsToday, null, 2));
       } catch (error) {
         console.log('panchangJS library error, using astronomical calculations as backup');
         
