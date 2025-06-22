@@ -18,8 +18,7 @@ import CosmicEvents from "@/pages/cosmic-events";
 import MarsRover from "@/pages/mars-rover";
 import ConstellationStoryteller from "@/pages/constellation-storyteller";
 import SatelliteTracker from "@/pages/satellite-tracker";
-// Temporarily comment out problematic import
-// import HinduPanchang from "@/pages/hindu-panchang-simple";
+import HinduPanchang from "@/pages/hindu-panchang-fallback";
 import NotFound from "@/pages/404";
 
 function Router() {
@@ -42,8 +41,7 @@ function Router() {
       <Route path="/constellation-storyteller" component={ConstellationStoryteller} />
       <Route path="/satellite-tracker" component={SatelliteTracker} />
       <Route path="/satellites" component={SatelliteTracker} />
-      {/* <Route path="/panchang" component={HinduPanchang} /> */}
-      <Route path="/panchang" component={NotFound} />
+      <Route path="/panchang" component={HinduPanchang} />
       <Route component={NotFound} />
     </Switch>
   );
