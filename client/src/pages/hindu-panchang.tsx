@@ -239,7 +239,7 @@ export default function HinduPanchang() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
               <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full border border-orange-500/30">
                 <MapPin className="h-4 w-4 text-orange-400" />
-                <span className="text-orange-200">{location.display}</span>
+                <span className="text-orange-200">{location.city}</span>
               </div>
               <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full border border-orange-500/30">
                 <Calendar className="h-4 w-4 text-orange-400" />
