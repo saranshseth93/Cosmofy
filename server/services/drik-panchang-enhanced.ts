@@ -76,9 +76,9 @@ export class EnhancedDrikPanchangScraper {
   }
 
   private extractPanchangDataFromJS(html: string, date: string, city: string): DrikPanchangData {
-    // Extract the JavaScript variables containing Panchang data
-    const jsDataRegex = /drikp_g_PanchangamChart\.([\w_]+)_\s*=\s*([^;]+);/g;
-    const jsData: Record<string, string | number | any[]> = {};
+    // Extract the JavaScript variables containing Panchang data - improved regex
+    const jsDataRegex = /drikp_g_PanchangamChart\.(drikp_g_[\w_]+)\s*=\s*([^;]+);/g;
+    const jsData: Record<string, any> = {};
     
     let match;
     while ((match = jsDataRegex.exec(html)) !== null) {
@@ -87,7 +87,7 @@ export class EnhancedDrikPanchangScraper {
       
       // Parse different value types
       if (value.startsWith("'") && value.endsWith("'")) {
-        // String value
+        // String value with single quotes
         value = value.slice(1, -1);
       } else if (value.startsWith('"') && value.endsWith('"')) {
         // String value with double quotes
@@ -98,62 +98,71 @@ export class EnhancedDrikPanchangScraper {
           value = JSON.parse(value);
         } catch (e) {
           console.warn(`Failed to parse array for ${key}:`, value);
+          value = [];
         }
       } else if (!isNaN(Number(value))) {
         // Numeric value
         value = Number(value);
       } else if (value === 'true' || value === 'false') {
-        // Boolean value as string for consistency
-        value = value;
+        // Boolean value
+        value = value === 'true';
       }
       
       jsData[key] = value;
     }
 
     console.log('Extracted JS data keys:', Object.keys(jsData));
+    console.log('Sample extracted values:', {
+      tithi_name: jsData.drikp_g_tithi_name_,
+      nakshatra_name: jsData.drikp_g_nakshatra_name_,
+      yoga_name: jsData.drikp_g_yoga_name_,
+      karana_name: jsData.drikp_g_karana_name_,
+      sunrise_hhmm: jsData.drikp_g_sunrise_hhmm_,
+      sunset_hhmm: jsData.drikp_g_sunset_hhmm_
+    });
 
     // Build the Panchang data structure from extracted JavaScript variables
     return {
       date,
       location: city,
       tithi: {
-        name: jsData.drikp_g_tithi_name_ || 'Unknown',
-        endTime: jsData.drikp_g_tithi_hhmm_ || '00:00',
-        nextTithi: jsData.drikp_g_tailed_tithi_name_ || 'Unknown'
+        name: String(jsData.drikp_g_tithi_name_ || 'Unknown'),
+        endTime: String(jsData.drikp_g_tithi_hhmm_ || '00:00'),
+        nextTithi: String(jsData.drikp_g_tailed_tithi_name_ || 'Unknown')
       },
       nakshatra: {
-        name: jsData.drikp_g_nakshatra_name_ || 'Unknown',
-        endTime: jsData.drikp_g_nakshatra_hhmm_ || '00:00',
-        nextNakshatra: jsData.drikp_g_tailed_nakshatra_name_ || 'Unknown'
+        name: String(jsData.drikp_g_nakshatra_name_ || 'Unknown'),
+        endTime: String(jsData.drikp_g_nakshatra_hhmm_ || '00:00'),
+        nextNakshatra: String(jsData.drikp_g_tailed_nakshatra_name_ || 'Unknown')
       },
       yoga: {
-        name: jsData.drikp_g_yoga_name_ || 'Unknown',
-        endTime: jsData.drikp_g_yoga_hhmm_ || '00:00',
-        nextYoga: jsData.drikp_g_tailed_yoga_name_ || 'Unknown'
+        name: String(jsData.drikp_g_yoga_name_ || 'Unknown'),
+        endTime: String(jsData.drikp_g_yoga_hhmm_ || '00:00'),
+        nextYoga: String(jsData.drikp_g_tailed_yoga_name_ || 'Unknown')
       },
       karana: {
-        name: jsData.drikp_g_karana_name_ || 'Unknown',
-        endTime: jsData.drikp_g_karana_hhmm_ || '00:00',
-        nextKarana: jsData.drikp_g_tailed_karana_name_ || 'Unknown',
+        name: String(jsData.drikp_g_karana_name_ || 'Unknown'),
+        endTime: String(jsData.drikp_g_karana_hhmm_ || '00:00'),
+        nextKarana: String(jsData.drikp_g_tailed_karana_name_ || 'Unknown'),
         extraKarana: jsData.drikp_g_extra_karana_name_ ? {
-          name: jsData.drikp_g_extra_karana_name_,
-          endTime: jsData.drikp_g_extra_karana_hhmm_ || '00:00'
+          name: String(jsData.drikp_g_extra_karana_name_),
+          endTime: String(jsData.drikp_g_extra_karana_hhmm_ || '00:00')
         } : undefined
       },
-      weekday: jsData.drikp_g_weekday_name_ || 'Unknown',
+      weekday: String(jsData.drikp_g_weekday_name_ || 'Unknown'),
       timings: {
-        sunrise: jsData.drikp_g_sunrise_hhmm_ || '06:00',
-        sunset: jsData.drikp_g_sunset_hhmm_ || '18:00',
-        nextSunrise: jsData.drikp_g_next_sunrise_hhmm_ || '06:00'
+        sunrise: String(jsData.drikp_g_sunrise_hhmm_ || '06:00'),
+        sunset: String(jsData.drikp_g_sunset_hhmm_ || '18:00'),
+        nextSunrise: String(jsData.drikp_g_next_sunrise_hhmm_ || '06:00')
       },
-      doshaIntervals: this.parseDoshaIntervals(jsData.drikp_g_dosha_intervals_ || []),
+      doshaIntervals: this.parseDoshaIntervals(Array.isArray(jsData.drikp_g_dosha_intervals_) ? jsData.drikp_g_dosha_intervals_ : []),
       rawData: {
-        sunriseMinutes: jsData.drikp_g_sunrise_mins_ || 0,
-        sunsetMinutes: jsData.drikp_g_sunset_mins_ || 0,
-        tithiMinutes: jsData.drikp_g_tithi_mins_ || 0,
-        nakshatraMinutes: jsData.drikp_g_nakshatra_mins_ || 0,
-        yogaMinutes: jsData.drikp_g_yoga_mins_ || 0,
-        karanaMinutes: jsData.drikp_g_karana_mins_ || 0
+        sunriseMinutes: Number(jsData.drikp_g_sunrise_mins_) || 0,
+        sunsetMinutes: Number(jsData.drikp_g_sunset_mins_) || 0,
+        tithiMinutes: Number(jsData.drikp_g_tithi_mins_) || 0,
+        nakshatraMinutes: Number(jsData.drikp_g_nakshatra_mins_) || 0,
+        yogaMinutes: Number(jsData.drikp_g_yoga_mins_) || 0,
+        karanaMinutes: Number(jsData.drikp_g_karana_mins_) || 0
       }
     };
   }
