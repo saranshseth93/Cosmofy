@@ -126,18 +126,47 @@ interface PanchangApiResponse {
 export default function HinduPanchang() {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
-  // Get user location
-  const { data: locationData } = useQuery({
-    queryKey: ['/api/location'],
-    enabled: !location
-  });
-
+  // Get user's precise location using browser geolocation
   useEffect(() => {
-    if (locationData && !location) {
-      setLocation(locationData as LocationData);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          try {
+            // Get location details from our API
+            const response = await fetch(`/api/location?lat=${latitude}&lon=${longitude}`);
+            const locationData = await response.json();
+            setLocation(locationData);
+          } catch (error) {
+            console.error('Location API error:', error);
+            setLocationError('Unable to determine location');
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          setLocationError('Location access denied');
+          
+          // Fallback to default location API
+          fetch('/api/location')
+            .then(res => res.json())
+            .then(data => setLocation(data))
+            .catch(() => setLocationError('Location services unavailable'));
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+      );
+    } else {
+      setLocationError('Geolocation not supported');
+      
+      // Fallback to default location API
+      fetch('/api/location')
+        .then(res => res.json())
+        .then(data => setLocation(data))
+        .catch(() => setLocationError('Location services unavailable'));
     }
-  }, [locationData, location]);
+  }, []);
 
   // Fetch Panchang data from fixed scraper
   const { data: panchangResponse, isLoading, error } = useQuery<PanchangApiResponse>({
@@ -206,11 +235,11 @@ export default function HinduPanchang() {
           </div>
 
           {/* Location and Date */}
-          {location && (
+          {location ? (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
               <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full border border-orange-500/30">
                 <MapPin className="h-4 w-4 text-orange-400" />
-                <span className="text-orange-200">{location.city}</span>
+                <span className="text-orange-200">{location.display}</span>
               </div>
               <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full border border-orange-500/30">
                 <Calendar className="h-4 w-4 text-orange-400" />
@@ -229,6 +258,18 @@ export default function HinduPanchang() {
                   <span className="text-orange-200">{panchangData.weekday}</span>
                 </div>
               )}
+            </div>
+          ) : locationError ? (
+            <div className="text-center mb-8">
+              <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg px-4 py-3 max-w-md mx-auto">
+                <p className="text-yellow-200 text-sm">{locationError}</p>
+                <p className="text-yellow-300 text-xs mt-1">Using default location for Panchang calculations</p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center mb-8">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-400"></div>
+              <p className="mt-2 text-orange-200">Detecting your location...</p>
             </div>
           )}
 
