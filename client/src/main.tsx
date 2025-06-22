@@ -1,5 +1,9 @@
-import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./index.css";
-
-createRoot(document.getElementById("root")!).render(<App />);
+// Test basic DOM manipulation
+console.log("Script loading...");
+const root = document.getElementById("root");
+if (root) {
+  root.innerHTML = "<h1>Cosmofy Direct DOM Test</h1>";
+  console.log("DOM updated successfully");
+} else {
+  console.error("Root element not found");
+}
