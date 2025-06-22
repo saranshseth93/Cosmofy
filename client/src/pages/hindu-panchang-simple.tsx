@@ -284,47 +284,135 @@ export default function HinduPanchangSimplePage() {
 
             {panchangData && (
               <>
-                {/* Today's Overall Panchang Summary */}
-                <Card className="bg-gradient-to-br from-amber-900/20 to-orange-900/20 border-amber-500/30">
+                {/* Main Panchang Data - Matching drikpanchang.com hierarchy */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* Left Column - Sunrise, Sunset, Moonrise, Moonset */}
+                  <Card className="bg-gradient-to-br from-amber-900/20 to-orange-900/20 border-amber-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-amber-400">Sun & Moon Timings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-sm text-amber-300">Sunrise</div>
+                          <div className="text-lg font-mono text-amber-200">{panchangData.sunrise}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-amber-300">Sunset</div>
+                          <div className="text-lg font-mono text-amber-200">{panchangData.sunset}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-blue-300">Moonrise</div>
+                          <div className="text-lg font-mono text-blue-200">{panchangData.moonrise}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-blue-300">Moonset</div>
+                          <div className="text-lg font-mono text-blue-200">{panchangData.moonset}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Right Column - Panchang Elements */}
+                  <Card className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border-purple-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-purple-400">Panchang Elements</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-purple-300">Tithi</span>
+                        <span className="text-purple-200 font-semibold">{panchangData.tithi.name}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-blue-300">Nakshatra</span>
+                        <span className="text-blue-200 font-semibold">{panchangData.nakshatra.name}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-green-300">Yoga</span>
+                        <span className="text-green-200 font-semibold">{panchangData.yoga.name}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-orange-300">Karana</span>
+                        <span className="text-orange-200 font-semibold">{panchangData.karana.name}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-300">Vara (Weekday)</span>
+                        <span className="text-slate-200 font-semibold">{panchangData.vara}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Rahu Kaal and Auspicious Times - Matching drikpanchang.com */}
+                <Card className="bg-gradient-to-br from-red-900/20 to-yellow-900/20 border-red-500/30">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-amber-400">
-                      <Calendar className="h-5 w-5" />
-                      Today's Panchang Overview
-                    </CardTitle>
-                    <CardDescription className="text-amber-200">
-                      Complete Hindu calendar system for spiritual and daily life guidance
-                    </CardDescription>
+                    <CardTitle className="text-red-400">Rahu Kaal & Muhurat</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-amber-200 mb-1">{panchangData.tithi.name}</div>
-                        <div className="text-xs text-muted-foreground">Tithi (Lunar Day)</div>
-                        <div className="text-xs text-amber-300">{panchangData.tithi.paksh} Paksh</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm text-red-300">Rahu Kaal</div>
+                        <div className="text-lg font-mono text-red-200">{panchangData.shubhMuhurat.brahmaRahukaal}</div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-200 mb-1">{panchangData.nakshatra.name}</div>
-                        <div className="text-xs text-muted-foreground">Nakshatra (Star)</div>
-                        <div className="text-xs text-blue-300">Lord: {panchangData.nakshatra.lord}</div>
+                      <div>
+                        <div className="text-sm text-yellow-300">Gulika Kaal</div>
+                        <div className="text-lg font-mono text-yellow-200">{panchangData.shubhMuhurat.gulikaKaal}</div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-200 mb-1">{panchangData.yoga.name}</div>
-                        <div className="text-xs text-muted-foreground">Yoga (Union)</div>
-                        <div className="text-xs text-green-300">{panchangData.yoga.type}</div>
+                      <div>
+                        <div className="text-sm text-orange-300">Yama Ganda</div>
+                        <div className="text-lg font-mono text-orange-200">{panchangData.shubhMuhurat.yamaGandaKaal}</div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-200 mb-1">{panchangData.karana.name}</div>
-                        <div className="text-xs text-muted-foreground">Karana (Half-Tithi)</div>
-                        <div className="text-xs text-purple-300">{panchangData.karana.type}</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-slate-200 mb-1">{panchangData.vara}</div>
-                        <div className="text-xs text-muted-foreground">Vara (Weekday)</div>
-                        <div className="text-xs text-slate-300">{panchangData.masa} Month</div>
+                      <div>
+                        <div className="text-sm text-green-300">Abhijit Muhurat</div>
+                        <div className="text-lg font-mono text-green-200">{panchangData.shubhMuhurat.abhijitMuhurat}</div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Moon Sign and Festivals */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border-blue-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-blue-400">Moon Sign (Rashi)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-200 mb-2">{panchangData.rashi.name}</div>
+                        <div className="text-sm text-blue-300">Element: {panchangData.rashi.element}</div>
+                        <div className="text-sm text-blue-300">Lord: {panchangData.rashi.lord}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-green-400">Festivals & Vrats</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {panchangData.festivals.length > 0 && (
+                        <div className="mb-3">
+                          <div className="text-sm text-green-300 mb-1">Festivals:</div>
+                          {panchangData.festivals.map((festival, index) => (
+                            <div key={index} className="text-green-200 text-sm">{festival}</div>
+                          ))}
+                        </div>
+                      )}
+                      {panchangData.vratsAndOccasions.length > 0 && (
+                        <div>
+                          <div className="text-sm text-green-300 mb-1">Vrats:</div>
+                          {panchangData.vratsAndOccasions.map((vrat, index) => (
+                            <div key={index} className="text-green-200 text-sm">{vrat}</div>
+                          ))}
+                        </div>
+                      )}
+                      {panchangData.festivals.length === 0 && panchangData.vratsAndOccasions.length === 0 && (
+                        <div className="text-gray-400 text-sm">No special festivals or vrats today</div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
 
                 {/* Detailed Panchang Elements */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
