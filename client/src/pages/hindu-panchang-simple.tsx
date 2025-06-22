@@ -281,117 +281,206 @@ export default function HinduPanchangSimplePage() {
 
             {panchangData && (
               <>
-                {/* Main Panchang Elements */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Today's Overall Panchang Summary */}
+                <Card className="bg-gradient-to-br from-amber-900/20 to-orange-900/20 border-amber-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-amber-400">
+                      <Calendar className="h-5 w-5" />
+                      Today's Panchang Overview
+                    </CardTitle>
+                    <CardDescription className="text-amber-200">
+                      Complete Hindu calendar system for spiritual and daily life guidance
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-amber-200 mb-1">{panchangData.tithi.name}</div>
+                        <div className="text-xs text-muted-foreground">Tithi (Lunar Day)</div>
+                        <div className="text-xs text-amber-300">{panchangData.tithi.paksh} Paksh</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-200 mb-1">{panchangData.nakshatra.name}</div>
+                        <div className="text-xs text-muted-foreground">Nakshatra (Star)</div>
+                        <div className="text-xs text-blue-300">Lord: {panchangData.nakshatra.lord}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-200 mb-1">{panchangData.yoga.name}</div>
+                        <div className="text-xs text-muted-foreground">Yoga (Union)</div>
+                        <div className="text-xs text-green-300">{panchangData.yoga.type}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-purple-200 mb-1">{panchangData.karana.name}</div>
+                        <div className="text-xs text-muted-foreground">Karana (Half-Tithi)</div>
+                        <div className="text-xs text-purple-300">{panchangData.karana.type}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-slate-200 mb-1">{panchangData.vara}</div>
+                        <div className="text-xs text-muted-foreground">Vara (Weekday)</div>
+                        <div className="text-xs text-slate-300">{panchangData.masa} Month</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Detailed Panchang Elements */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
-                  {/* Tithi Card */}
+                  {/* Tithi Details */}
                   <Card className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border-orange-500/30">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-orange-400">
                         <Moon className="h-5 w-5" />
-                        तिथि / Tithi
+                        Tithi - Lunar Day #{panchangData.tithi.number}
                       </CardTitle>
+                      <CardDescription className="text-orange-200">
+                        Based on the moon's phase and position relative to the sun
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-orange-200">{panchangData.tithi.name}</h3>
-                        <Badge variant="secondary" className="text-xs">#{panchangData.tithi.number}</Badge>
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-orange-200">{panchangData.tithi.name}</span>
+                        <Badge variant="secondary" className="bg-orange-500/20">{panchangData.tithi.paksh} Paksh</Badge>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Deity:</strong> {panchangData.tithi.deity}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Paksh:</strong> {panchangData.tithi.paksh}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Sanskrit:</strong> {panchangData.tithi.sanskrit}
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Ruling Deity:</span>
+                          <span className="text-orange-200">{panchangData.tithi.deity}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Ends At:</span>
+                          <span className="text-orange-200 font-mono">{panchangData.tithi.endTime}</span>
+                        </div>
+                      </div>
+                      <div className="bg-orange-900/20 p-3 rounded-lg">
+                        <p className="text-xs text-orange-300 leading-relaxed">
+                          <strong>Significance:</strong> {panchangData.tithi.significance}
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        Ends: {panchangData.tithi.endTime}
-                      </Badge>
+                      <div className="bg-orange-900/10 p-3 rounded-lg">
+                        <p className="text-xs text-orange-400 leading-relaxed">
+                          <strong>What is Tithi?</strong> A Tithi represents the time taken for the moon to move 12 degrees away from the sun. 
+                          There are 30 Tithis in a lunar month, divided into bright half (Shukla Paksh) and dark half (Krishna Paksh). 
+                          Each Tithi has specific spiritual significance and recommended activities.
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
 
-                  {/* Nakshatra Card */}
+                  {/* Nakshatra Details */}
                   <Card className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border-blue-500/30">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-blue-400">
                         <Star className="h-5 w-5" />
-                        नक्षत्र / Nakshatra
+                        Nakshatra - Lunar Constellation
                       </CardTitle>
+                      <CardDescription className="text-blue-200">
+                        The star constellation where the moon is positioned today
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <h3 className="text-xl font-bold text-blue-200">{panchangData.nakshatra.name}</h3>
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Deity:</strong> {panchangData.nakshatra.deity}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Lord:</strong> {panchangData.nakshatra.lord}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Sanskrit:</strong> {panchangData.nakshatra.sanskrit}
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-blue-200">{panchangData.nakshatra.name}</span>
+                        <Badge variant="outline" className="border-blue-400">Constellation</Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Ruling Deity:</span>
+                          <span className="text-blue-200">{panchangData.nakshatra.deity}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Planetary Lord:</span>
+                          <span className="text-blue-200">{panchangData.nakshatra.lord}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Ends At:</span>
+                          <span className="text-blue-200 font-mono">{panchangData.nakshatra.endTime}</span>
+                        </div>
+                      </div>
+                      <div className="bg-blue-900/20 p-3 rounded-lg">
+                        <p className="text-xs text-blue-300 leading-relaxed">
+                          <strong>Qualities:</strong> {panchangData.nakshatra.qualities}
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        Ends: {panchangData.nakshatra.endTime}
-                      </Badge>
+                      <div className="bg-blue-900/10 p-3 rounded-lg">
+                        <p className="text-xs text-blue-400 leading-relaxed">
+                          <strong>What is Nakshatra?</strong> The sky is divided into 27 Nakshatras (lunar mansions), 
+                          each spanning 13°20' of the zodiac. The moon stays in each Nakshatra for about one day. 
+                          Nakshatras influence personality traits, career choices, and compatibility in relationships.
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
 
-                  {/* Yoga Card */}
+                  {/* Yoga Details */}
                   <Card className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-500/30">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-green-400">
                         <Calendar className="h-5 w-5" />
-                        योग / Yoga
+                        Yoga - Auspicious Combination
                       </CardTitle>
+                      <CardDescription className="text-green-200">
+                        Union of sun and moon positions creating specific energy patterns
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <h3 className="text-xl font-bold text-green-200">{panchangData.yoga.name}</h3>
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Meaning:</strong> {panchangData.yoga.meaning}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Type:</strong> {panchangData.yoga.type}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Sanskrit:</strong> {panchangData.yoga.sanskrit}
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-green-200">{panchangData.yoga.name}</span>
+                        <Badge variant="outline" className="border-green-400">{panchangData.yoga.type}</Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Meaning:</span>
+                          <span className="text-green-200">{panchangData.yoga.meaning}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Ends At:</span>
+                          <span className="text-green-200 font-mono">{panchangData.yoga.endTime}</span>
+                        </div>
+                      </div>
+                      <div className="bg-green-900/10 p-3 rounded-lg">
+                        <p className="text-xs text-green-400 leading-relaxed">
+                          <strong>What is Yoga?</strong> There are 27 Yogas based on the combined movement of sun and moon. 
+                          Each Yoga lasts about 13 hours 20 minutes on average. Yogas determine the overall auspiciousness 
+                          of activities and influence the success of new ventures, ceremonies, and important decisions.
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        Ends: {panchangData.yoga.endTime}
-                      </Badge>
                     </CardContent>
                   </Card>
 
-                  {/* Karana Card */}
+                  {/* Karana Details */}
                   <Card className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-500/30">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-purple-400">
                         <Clock className="h-5 w-5" />
-                        करण / Karana
+                        Karana - Half Lunar Day
                       </CardTitle>
+                      <CardDescription className="text-purple-200">
+                        Each Tithi is divided into two Karanas of about 6 hours each
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <h3 className="text-xl font-bold text-purple-200">{panchangData.karana.name}</h3>
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Meaning:</strong> {panchangData.karana.meaning}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Type:</strong> {panchangData.karana.type}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Sanskrit:</strong> {panchangData.karana.sanskrit}
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-purple-200">{panchangData.karana.name}</span>
+                        <Badge variant="outline" className="border-purple-400">{panchangData.karana.type}</Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Meaning:</span>
+                          <span className="text-purple-200">{panchangData.karana.meaning}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Ends At:</span>
+                          <span className="text-purple-200 font-mono">{panchangData.karana.endTime}</span>
+                        </div>
+                      </div>
+                      <div className="bg-purple-900/10 p-3 rounded-lg">
+                        <p className="text-xs text-purple-400 leading-relaxed">
+                          <strong>What is Karana?</strong> There are 11 Karanas: 7 movable (Chara) and 4 fixed (Sthira). 
+                          Each Karana influences specific activities - some favor travel and movement, others favor 
+                          stability and meditation. Karanas help determine the best timing for daily activities.
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        Ends: {panchangData.karana.endTime}
-                      </Badge>
                     </CardContent>
                   </Card>
                 </div>
@@ -706,54 +795,213 @@ export default function HinduPanchangSimplePage() {
                   </CardContent>
                 </Card>
 
-                {/* Detailed Shubh Muhurat with Descriptions */}
-                <Card className="bg-gradient-to-br from-indigo-900/20 to-blue-900/20 border-indigo-500/30">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-indigo-400">
-                      <Clock className="h-5 w-5" />
-                      विस्तृत मुहूर्त / Detailed Muhurat Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="text-sm font-semibold text-green-300 mb-3">🌟 Auspicious Times</h4>
-                        <div className="space-y-3">
-                          <div className="bg-green-900/20 p-3 rounded-lg border border-green-500/30">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-sm font-medium text-green-300">Abhijit Muhurat</span>
-                              <span className="text-green-200 font-mono">{panchangData.shubhMuhurat.abhijitMuhurat}</span>
-                            </div>
-                            <p className="text-xs text-green-400">
-                              Most auspicious time of the day, ideal for all important activities and new beginnings.
-                            </p>
-                          </div>
+                {/* Comprehensive Timing Analysis */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* Auspicious Times */}
+                  <Card className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-500/30">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-green-400">
+                        <Sun className="h-5 w-5" />
+                        Auspicious Times (Shubh Muhurat)
+                      </CardTitle>
+                      <CardDescription className="text-green-200">
+                        Favorable periods for important activities, ceremonies, and new beginnings
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="bg-green-900/30 p-4 rounded-lg border border-green-500/30">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-lg font-semibold text-green-300">Abhijit Muhurat</span>
+                          <span className="text-green-200 font-mono text-lg">{panchangData.shubhMuhurat.abhijitMuhurat}</span>
+                        </div>
+                        <p className="text-sm text-green-400 leading-relaxed mb-3">
+                          The most auspicious time of the day, occurring around midday. This 48-minute period is considered 
+                          universally favorable for all activities, especially starting new ventures, signing contracts, 
+                          and making important decisions.
+                        </p>
+                        <div className="bg-green-900/20 p-3 rounded">
+                          <p className="text-xs text-green-300">
+                            <strong>Best for:</strong> Business launches, property purchases, job interviews, 
+                            educational activities, travel, and spiritual practices.
+                          </p>
                         </div>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-red-300 mb-3">⚠️ Inauspicious Times</h4>
+                      
+                      <div className="bg-green-900/20 p-3 rounded-lg">
+                        <h4 className="text-sm font-semibold text-green-300 mb-2">Understanding Shubh Muhurat</h4>
+                        <p className="text-xs text-green-400 leading-relaxed">
+                          A Muhurat is an auspicious time period calculated based on planetary positions, lunar phases, 
+                          and stellar alignments. Hindu tradition emphasizes timing activities during favorable periods 
+                          to ensure success, prosperity, and positive outcomes. Even for non-believers, these periods 
+                          represent times of heightened cosmic energy and natural harmony.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Inauspicious Times */}
+                  <Card className="bg-gradient-to-br from-red-900/20 to-orange-900/20 border-red-500/30">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-red-400">
+                        <Clock className="h-5 w-5" />
+                        Inauspicious Times (Ashubh Kaal)
+                      </CardTitle>
+                      <CardDescription className="text-red-200">
+                        Periods to avoid for important activities, ceremonies, and major decisions
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      
+                      <div className="bg-red-900/30 p-4 rounded-lg border border-red-500/30">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-lg font-semibold text-red-300">Rahu Kaal</span>
+                          <span className="text-red-200 font-mono text-lg">{panchangData.shubhMuhurat.brahmaRahukaal}</span>
+                        </div>
+                        <p className="text-sm text-red-400 leading-relaxed mb-2">
+                          Named after the shadow planet Rahu, this 90-minute period occurs daily at different times 
+                          depending on the weekday. Considered highly inauspicious for starting new ventures.
+                        </p>
+                        <div className="bg-red-900/20 p-2 rounded text-xs text-red-300">
+                          <strong>Avoid:</strong> New business ventures, travel, signing contracts, job interviews, 
+                          purchasing property, and important meetings.
+                        </div>
+                      </div>
+
+                      <div className="bg-red-900/30 p-4 rounded-lg border border-red-500/30">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-lg font-semibold text-red-300">Gulika Kaal</span>
+                          <span className="text-red-200 font-mono text-lg">{panchangData.shubhMuhurat.gulikaKaal}</span>
+                        </div>
+                        <p className="text-sm text-red-400 leading-relaxed mb-2">
+                          Ruled by Gulika (Saturn's son), this period brings delays, obstacles, and negative energy. 
+                          Traditional time for reflection rather than action.
+                        </p>
+                        <div className="bg-red-900/20 p-2 rounded text-xs text-red-300">
+                          <strong>Avoid:</strong> Important decisions, financial transactions, and social events.
+                        </div>
+                      </div>
+
+                      <div className="bg-red-900/30 p-4 rounded-lg border border-red-500/30">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-lg font-semibold text-red-300">Yama Ganda</span>
+                          <span className="text-red-200 font-mono text-lg">{panchangData.shubhMuhurat.yamaGandaKaal}</span>
+                        </div>
+                        <p className="text-sm text-red-400 leading-relaxed mb-2">
+                          Associated with Yama (god of death), this period is considered most inauspicious for any activity. 
+                          Time for meditation and introspection.
+                        </p>
+                        <div className="bg-red-900/20 p-2 rounded text-xs text-red-300">
+                          <strong>Avoid:</strong> Travel, ceremonies, medical procedures, and life-changing decisions.
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Complete Vedic Calendar System */}
+                <Card className="bg-gradient-to-br from-slate-900/20 to-gray-900/20 border-slate-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-slate-400">
+                      <Calendar className="h-5 w-5" />
+                      Complete Vedic Calendar System
+                    </CardTitle>
+                    <CardDescription className="text-slate-200">
+                      Comprehensive time-keeping system used for spiritual, agricultural, and social planning
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    
+                    {/* Current Time Periods */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-slate-900/30 p-4 rounded-lg">
+                        <h4 className="text-sm font-semibold text-slate-300 mb-3">Current Era</h4>
                         <div className="space-y-2">
-                          <div className="bg-red-900/20 p-3 rounded-lg border border-red-500/30">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-sm font-medium text-red-300">Rahu Kaal</span>
-                              <span className="text-red-200 font-mono">{panchangData.shubhMuhurat.brahmaRahukaal}</span>
-                            </div>
-                            <p className="text-xs text-red-400">Avoid starting new ventures during this period.</p>
+                          <div className="flex justify-between">
+                            <span className="text-xs text-muted-foreground">Yuga (Era):</span>
+                            <span className="text-slate-200">{panchangData.yug}</span>
                           </div>
-                          <div className="bg-red-900/20 p-3 rounded-lg border border-red-500/30">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-sm font-medium text-red-300">Gulika Kaal</span>
-                              <span className="text-red-200 font-mono">{panchangData.shubhMuhurat.gulikaKaal}</span>
-                            </div>
-                            <p className="text-xs text-red-400">Time ruled by Saturn's son, avoid important decisions.</p>
+                          <div className="flex justify-between">
+                            <span className="text-xs text-muted-foreground">Masa (Month):</span>
+                            <span className="text-slate-200">{panchangData.masa}</span>
                           </div>
-                          <div className="bg-red-900/20 p-3 rounded-lg border border-red-500/30">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-sm font-medium text-red-300">Yama Ganda</span>
-                              <span className="text-red-200 font-mono">{panchangData.shubhMuhurat.yamaGandaKaal}</span>
-                            </div>
-                            <p className="text-xs text-red-400">Death-related period, avoid travel and ceremonies.</p>
+                          <div className="flex justify-between">
+                            <span className="text-xs text-muted-foreground">Vara (Weekday):</span>
+                            <span className="text-slate-200">{panchangData.vara}</span>
                           </div>
+                        </div>
+                        <div className="mt-3 bg-slate-900/20 p-2 rounded text-xs text-slate-400">
+                          We are currently in Kali Yuga, the fourth and final era in the cycle of time, 
+                          characterized by spiritual darkness but also opportunity for rapid spiritual growth.
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900/30 p-4 rounded-lg">
+                        <h4 className="text-sm font-semibold text-slate-300 mb-3">Time Elements (Kaal Ikai)</h4>
+                        <div className="space-y-2">
+                          {panchangData.kaalIkai.map((element, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs border-slate-400">{element}</Badge>
+                              <span className="text-xs text-slate-400">
+                                {index === 0 && "(Cosmic Day)"}
+                                {index === 1 && "(Age of Manu)"}
+                                {index === 2 && "(Yuga Cycle)"}
+                                {index === 3 && "(Year)"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 bg-slate-900/20 p-2 rounded text-xs text-slate-400">
+                          These represent the hierarchical time divisions in Hindu cosmology, 
+                          from the smallest (Samvat/Year) to the largest (Kalpa/Cosmic Day of Brahma).
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900/30 p-4 rounded-lg">
+                        <h4 className="text-sm font-semibold text-slate-300 mb-3">Calendar Systems</h4>
+                        <div className="text-center mb-3">
+                          <div className="text-3xl font-bold text-slate-200">{panchangData.samvat.length}</div>
+                          <div className="text-xs text-muted-foreground">Active Samvat Systems</div>
+                        </div>
+                        <div className="space-y-1 max-h-24 overflow-y-auto">
+                          {panchangData.samvat.slice(0, 8).map((samvat, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs bg-slate-500/20 mr-1 mb-1">
+                              {samvat}
+                            </Badge>
+                          ))}
+                          {panchangData.samvat.length > 8 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{panchangData.samvat.length - 8} more
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="mt-3 bg-slate-900/20 p-2 rounded text-xs text-slate-400">
+                          Different regions and traditions use various calendar systems, 
+                          each with its own epoch and cultural significance.
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* What Each System Means */}
+                    <div className="bg-slate-900/20 p-4 rounded-lg">
+                      <h4 className="text-lg font-semibold text-slate-300 mb-4">Understanding the Panchang System</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <h5 className="font-semibold text-slate-300 mb-2">For Hindu Practitioners:</h5>
+                          <p className="text-slate-400 leading-relaxed">
+                            The Panchang is your daily spiritual compass, guiding you through optimal times for prayers, 
+                            rituals, fasting, and life events. Each element carries deep spiritual significance connected 
+                            to cosmic energies, planetary influences, and divine timing that affects your karma and spiritual progress.
+                          </p>
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-slate-300 mb-2">For Everyone Else:</h5>
+                          <p className="text-slate-400 leading-relaxed">
+                            Think of the Panchang as an ancient astronomical calendar that tracks celestial cycles 
+                            affecting Earth. Many modern studies suggest lunar phases influence human behavior, tides, 
+                            and natural rhythms. This system helps align daily activities with natural cosmic patterns 
+                            for optimal results and well-being.
+                          </p>
                         </div>
                       </div>
                     </div>
