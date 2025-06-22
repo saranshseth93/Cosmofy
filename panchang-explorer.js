@@ -1,5 +1,5 @@
 // Comprehensive panchangJS Library Explorer
-const panchang = require('panchang');
+import panchang from 'panchang';
 
 console.log('=== COMPREHENSIVE PANCHANGJS LIBRARY EXPLORATION ===\n');
 
