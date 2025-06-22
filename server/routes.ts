@@ -397,21 +397,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const timezoneOffset = Math.round(lon / 15);
       const localOffset = timezoneOffset > 12 ? timezoneOffset - 24 : timezoneOffset;
       
-      // Get city name from coordinates
-      let cityName = 'Delhi';
-      try {
-        const geocodeResponse = await fetch(
-          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
-        );
-        if (geocodeResponse.ok) {
-          const locationData = await geocodeResponse.json();
-          cityName = locationData.city || locationData.locality || locationData.principalSubdivision || 'Delhi';
-        }
-      } catch (error) {
-        console.log('Geocoding failed, using Delhi as default');
-      }
+      // Simple city lookup based on coordinates (no external API calls)
+      const getCityFromCoordinates = (lat: number, lon: number): string => {
+        // Major world cities for reference
+        if (lat > 28 && lat < 29 && lon > 77 && lon < 78) return 'Delhi';
+        if (lat > 19 && lat < 20 && lon > 72 && lon < 73) return 'Mumbai';
+        if (lat > -38 && lat < -37 && lon > 144 && lon < 145) return 'Melbourne';
+        if (lat > -34 && lat < -33 && lon > 151 && lon < 152) return 'Sydney';
+        if (lat > 40 && lat < 41 && lon > -74 && lon < -73) return 'New York';
+        if (lat > 51 && lat < 52 && lon > -1 && lon < 0) return 'London';
+        
+        // Default based on hemisphere
+        if (lat > 0) return 'Northern Location';
+        return 'Southern Location';
+      };
+      
+      const cityName = getCityFromCoordinates(lat, lon);
       
       // Authentic astronomical calculations for Panchang elements
+      // No external website dependencies - pure mathematical calculations
       const calculateTithi = (date: Date) => {
         const julianDay = Math.floor(date.getTime() / 86400000) + 2440588;
         const moonPhase = ((julianDay - 2451550.1) / 29.530588853) % 1;
