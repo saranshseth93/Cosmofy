@@ -119,6 +119,17 @@ export default function HinduPanchangSimplePage() {
   const [userCoords, setUserCoords] = useState<{lat: number, lon: number}>({ lat: 28.6139, lon: 77.209 }); // Default to Delhi for instant loading
   const [locationError, setLocationError] = useState<string | null>(null);
 
+  // Handle unhandled promise rejections
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.warn('Unhandled promise rejection:', event.reason);
+      event.preventDefault();
+    };
+    
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+  }, []);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -157,18 +168,11 @@ export default function HinduPanchangSimplePage() {
   const { data: locationData } = useQuery<LocationData>({
     queryKey: ['/api/location', userCoords.lat, userCoords.lon],
     queryFn: async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-      try {
-        const response = await fetch(`/api/location?lat=${userCoords.lat}&lon=${userCoords.lon}`, {
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        return response.json();
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
+      const response = await fetch(`/api/location?lat=${userCoords.lat}&lon=${userCoords.lon}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch location data');
       }
+      return response.json();
     },
     staleTime: 5 * 60 * 1000,
     retry: 1,
@@ -177,21 +181,11 @@ export default function HinduPanchangSimplePage() {
   const { data: panchangData, isLoading: panchangLoading, error: panchangError } = useQuery<PanchangData>({
     queryKey: ['/api/panchang', userCoords.lat, userCoords.lon],
     queryFn: async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-      try {
-        const response = await fetch(`/api/panchang?lat=${userCoords.lat}&lon=${userCoords.lon}`, {
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        if (!response.ok) {
-          throw new Error('Failed to fetch Panchang data');
-        }
-        return response.json();
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
+      const response = await fetch(`/api/panchang?lat=${userCoords.lat}&lon=${userCoords.lon}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch Panchang data');
       }
+      return response.json();
     },
     staleTime: 60 * 60 * 1000,
     retry: 1,
