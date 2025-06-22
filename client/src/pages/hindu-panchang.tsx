@@ -168,9 +168,9 @@ export default function HinduPanchang() {
     }
   }, []);
 
-  // Fetch Panchang data from fixed scraper
+  // Fetch authentic Panchang data using astronomical calculations
   const { data: panchangResponse, isLoading, error } = useQuery<PanchangApiResponse>({
-    queryKey: ['/api/scraper/panchang', currentDate, location?.city],
+    queryKey: ['/api/panchang', currentDate, location?.latitude, location?.longitude, location?.city],
     enabled: !!location,
     refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
   });

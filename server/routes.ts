@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { nasaApi } from "./services/nasa-api";
 import { storage } from "./storage";
 import { geolocationService } from "./services/geolocation";
+import { mhahPanchangService } from "./services/mhah-panchang-service";
 
 async function refreshApodData() {
   try {
@@ -425,36 +426,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Scrape specific date and city
-  app.get("/api/scraper/panchang", async (req, res) => {
+  // Authentic Panchang calculations using mhah-panchang
+  app.get("/api/panchang", async (req, res) => {
     try {
       const date = req.query.date as string || new Date().toISOString().split('T')[0];
       const city = req.query.city as string || 'Delhi';
-      const lat = req.query.lat ? parseFloat(req.query.lat as string) : undefined;
-      const lon = req.query.lon ? parseFloat(req.query.lon as string) : undefined;
+      const lat = req.query.lat ? parseFloat(req.query.lat as string) : 28.6139; // Default to Delhi
+      const lon = req.query.lon ? parseFloat(req.query.lon as string) : 77.2090;
 
-      console.log(`Scraping Panchang for ${date} in ${city}`);
+      console.log(`Calculating authentic Panchang for ${date} at ${lat}, ${lon} (${city})`);
       
-      const data = await fixedDrikPanchangScraper.scrapePanchang(date, city);
+      const data = await mhahPanchangService.getPanchangData(date, lat, lon, city);
       
       res.json({
         success: true,
         data: data,
         metadata: {
-          scrapedAt: new Date().toISOString(),
-          source: 'drikpanchang.com',
+          calculatedAt: new Date().toISOString(),
+          source: 'mhah-panchang authentic astronomical calculations',
           city: city,
           date: date,
-          coordinates: lat && lon ? { latitude: lat, longitude: lon } : null
+          coordinates: { latitude: lat, longitude: lon }
         }
       });
     } catch (error) {
-      console.error("Panchang scraping error:", error);
+      console.error("Authentic Panchang calculation error:", error);
       res.status(500).json({
         success: false,
-        error: "Failed to scrape Panchang data",
-        message: error instanceof Error ? error.message : "Unknown error",
-        fallbackMessage: "Consider using the astronomical calculation endpoint: /api/panchang"
+        error: "Failed to calculate authentic Panchang data",
+        message: error instanceof Error ? error.message : "Unknown calculation error"
       });
     }
   });
