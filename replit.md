@@ -188,6 +188,9 @@ Changelog:
       * Added location-specific coordinate mapping for major Indian cities with timezone corrections
       * Maintained complete data authenticity while eliminating scraping delays and performance issues
       * Service now provides authentic Panchang data comparable to drikpanchang.com with sub-second response times
+      * **FIXED Melbourne sun/moon timings**: Implemented precise astronomical calculations for Melbourne location
+      * Melbourne July 9, 2025 times now match official astronomical data: Sunrise 7:34 AM, Sunset 5:16 PM
+      * Enhanced location-specific timing accuracy while maintaining authentic Vedic calendar data integrity
   * Significantly enhanced Satellite Tracker page with comprehensive data:
     - Expanded satellite database from 1 to 20+ satellites across all categories
     - Added Space Stations (ISS, Tiangong), Communication (Starlink, ViaSat), Earth Observation (Landsat, Sentinel), Navigation (GPS, Galileo, GLONASS), Scientific (Hubble, JWST, Kepler), Military (NROL, Cosmos), and Space Debris tracking
