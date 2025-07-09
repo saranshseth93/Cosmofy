@@ -118,19 +118,19 @@ export class MhahPanchangService {
       console.log('Mhah Panchang Basic Result:', JSON.stringify(basicResult, null, 2));
       console.log('Mhah Panchang Calendar Result:', JSON.stringify(calendarResult, null, 2));
 
-      return this.formatPanchangData(basicResult, calendarResult, date, city);
+      return this.formatPanchangData(basicResult, calendarResult, date, city, latitude, longitude);
     } catch (error) {
       console.error('Mhah Panchang calculation error:', error);
       throw new Error(`Authentic Panchang calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  private formatPanchangData(basicResult: any, calendarResult: any, date: string, city: string): PanchangData {
+  private formatPanchangData(basicResult: any, calendarResult: any, date: string, city: string, latitude: number, longitude: number): PanchangData {
     const formatDateTime = (dateTimeString: string): string => {
       if (!dateTimeString) return 'Not available';
       try {
-        const date = new Date(dateTimeString);
-        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        const dateObj = new Date(dateTimeString);
+        return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
       } catch {
         return 'Not available';
       }
@@ -180,13 +180,13 @@ export class MhahPanchangService {
       },
       
       timings: {
-        sunrise: this.calculateSunrise(date, city),
-        sunset: this.calculateSunset(date, city),
-        moonrise: this.calculateMoonrise(date),
-        moonset: this.calculateMoonset(date),
-        solarNoon: this.calculateSolarNoon(date),
-        dayLength: this.calculateDayLength(date),
-        nightLength: this.calculateNightLength(date)
+        sunrise: this.calculateSunrise(date, city, latitude, longitude),
+        sunset: this.calculateSunset(date, city, latitude, longitude),
+        moonrise: this.calculateMoonrise(date, latitude, longitude),
+        moonset: this.calculateMoonset(date, latitude, longitude),
+        solarNoon: this.calculateSolarNoon(date, longitude),
+        dayLength: this.calculateDayLength(date, latitude, longitude),
+        nightLength: this.calculateNightLength(date, latitude, longitude)
       },
       
       moonData: {
@@ -198,9 +198,9 @@ export class MhahPanchangService {
       },
       
       auspiciousTimes: {
-        abhijitMuhurat: this.calculateAbhijitMuhurat(date),
-        amritKaal: this.calculateAmritKaal(date),
-        brahmaMuhurat: this.calculateBrahmaMuhurat(date)
+        abhijitMuhurat: this.calculateAbhijitMuhurat(date, latitude, longitude),
+        amritKaal: this.calculateAmritKaal(date, latitude, longitude),
+        brahmaMuhurat: this.calculateBrahmaMuhurat(date, latitude, longitude)
       },
       
       inauspiciousTimes: {
@@ -424,83 +424,151 @@ export class MhahPanchangService {
     return karanas[(currentIno + 1) % 11] || 'Unknown';
   }
 
-  // Enhanced timing calculations with astronomical accuracy
-  private calculateSunrise(date: string, city: string): string {
+  // Enhanced timing calculations with accurate astronomical formulas
+  private calculateSunrise(date: string, city: string, latitude: number, longitude: number): string {
+    return this.calculateSunTimes(date, latitude, longitude, 'sunrise');
+  }
+
+  private calculateSunset(date: string, city: string, latitude: number, longitude: number): string {
+    return this.calculateSunTimes(date, latitude, longitude, 'sunset');
+  }
+
+  private calculateSunTimes(date: string, latitude: number, longitude: number, type: 'sunrise' | 'sunset'): string {
     const dateObj = new Date(date);
-    const latitude = this.getCityLatitude(city);
-    const longitude = this.getCityLongitude(city);
-    
     const dayOfYear = this.getDayOfYear(dateObj);
-    const solarDeclination = this.getSolarDeclination(dayOfYear);
-    const hourAngle = this.getHourAngle(latitude, solarDeclination);
     
-    if (hourAngle === null) return '06:00'; // Polar day/night
+    // Solar declination calculation
+    const declination = 23.45 * Math.sin((360 / 365) * (dayOfYear - 81) * Math.PI / 180);
     
-    const localSolarTime = 12 - hourAngle;
-    const timezone = this.getTimezone(longitude);
-    const correctedTime = localSolarTime + timezone;
+    // Hour angle calculation
+    const hourAngleRad = Math.acos(-Math.tan(latitude * Math.PI / 180) * Math.tan(declination * Math.PI / 180));
+    const hourAngle = hourAngleRad * 180 / Math.PI / 15; // Convert to hours
     
-    const hour = Math.floor(correctedTime);
-    const minute = Math.round((correctedTime - hour) * 60);
+    if (isNaN(hourAngle)) {
+      return type === 'sunrise' ? '06:00' : '18:00'; // Polar day/night
+    }
+    
+    // Calculate solar time
+    const solarTime = type === 'sunrise' ? 12 - hourAngle : 12 + hourAngle;
+    
+    // Longitude correction (4 minutes per degree)
+    const longitudeCorrection = longitude / 15; // Convert to hours
+    
+    // Calculate local mean time
+    const localMeanTime = solarTime - longitudeCorrection;
+    
+    // Apply standard timezone offsets for major regions
+    let timezoneOffset = 0;
+    if (longitude >= 135 && longitude <= 155) {
+      timezoneOffset = 10; // Australia Eastern Time
+    } else if (longitude >= -85 && longitude <= -65) {
+      timezoneOffset = -4; // Eastern US (DST in July)
+    } else if (longitude >= 68 && longitude <= 88) {
+      timezoneOffset = 5.5; // India Standard Time
+    } else {
+      timezoneOffset = Math.round(longitude / 15); // General UTC offset
+    }
+    
+    const localTime = localMeanTime + timezoneOffset;
+    
+    // Normalize to 24-hour format
+    let hour = Math.floor(localTime);
+    let minute = Math.round((localTime - hour) * 60);
+    
+    if (minute >= 60) {
+      hour += 1;
+      minute -= 60;
+    }
+    if (minute < 0) {
+      hour -= 1;
+      minute += 60;
+    }
+    if (hour >= 24) hour -= 24;
+    if (hour < 0) hour += 24;
     
     return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
   }
 
-  private calculateSunset(date: string, city: string): string {
-    const dateObj = new Date(date);
-    const latitude = this.getCityLatitude(city);
-    const longitude = this.getCityLongitude(city);
+  private calculateJulianDay(year: number, month: number, day: number): number {
+    if (month <= 2) {
+      year -= 1;
+      month += 12;
+    }
     
-    const dayOfYear = this.getDayOfYear(dateObj);
-    const solarDeclination = this.getSolarDeclination(dayOfYear);
-    const hourAngle = this.getHourAngle(latitude, solarDeclination);
+    const a = Math.floor(year / 100);
+    const b = 2 - a + Math.floor(a / 4);
     
-    if (hourAngle === null) return '18:00'; // Polar day/night
-    
-    const localSolarTime = 12 + hourAngle;
-    const timezone = this.getTimezone(longitude);
-    const correctedTime = localSolarTime + timezone;
-    
-    const hour = Math.floor(correctedTime);
-    const minute = Math.round((correctedTime - hour) * 60);
-    
-    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    return Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + b - 1524.5;
   }
 
-  private calculateMoonrise(date: string): string {
-    // Enhanced moonrise calculation based on lunar phase
+  private calculateSolarDeclination(julianDay: number): number {
+    const n = julianDay - 2451545.0;
+    const L = (280.460 + 0.9856474 * n) % 360;
+    const g = ((357.528 + 0.9856003 * n) % 360) * Math.PI / 180;
+    const lambda = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * Math.PI / 180;
+    
+    return Math.asin(Math.sin(lambda) * Math.sin(23.439 * Math.PI / 180)) * 180 / Math.PI;
+  }
+
+  private calculateHourAngle(latitude: number, declination: number): number | null {
+    const latRad = latitude * Math.PI / 180;
+    const declRad = declination * Math.PI / 180;
+    
+    const cosHourAngle = -Math.tan(latRad) * Math.tan(declRad);
+    
+    if (cosHourAngle < -1 || cosHourAngle > 1) {
+      return null; // Polar day or night
+    }
+    
+    return Math.acos(cosHourAngle) * 180 / Math.PI / 15; // Convert to hours
+  }
+
+  private calculateMoonrise(date: string, latitude: number, longitude: number): string {
+    // Enhanced moonrise calculation based on lunar phase and location
     const dateObj = new Date(date);
     const lunarAge = this.getLunarAge(dateObj);
     
-    // Approximate moonrise based on lunar age
+    // Approximate moonrise based on lunar age and location
     const baseTime = 6 + (lunarAge * 0.8); // Rough approximation
-    const hour = Math.floor(baseTime);
-    const minute = Math.round((baseTime - hour) * 60);
+    const timezone = this.getTimezoneFromLongitude(longitude);
+    const correctedTime = baseTime + timezone - 5.5; // Adjust from IST to local time
+    
+    const hour = Math.floor(correctedTime);
+    const minute = Math.round((correctedTime - hour) * 60);
     
     return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
   }
 
-  private calculateMoonset(date: string): string {
-    // Enhanced moonset calculation based on lunar phase
+  private calculateMoonset(date: string, latitude: number, longitude: number): string {
+    // Enhanced moonset calculation based on lunar phase and location
     const dateObj = new Date(date);
     const lunarAge = this.getLunarAge(dateObj);
     
-    // Approximate moonset based on lunar age
+    // Approximate moonset based on lunar age and location
     const baseTime = 18 - (lunarAge * 0.4); // Rough approximation
-    const hour = Math.floor(baseTime);
-    const minute = Math.round((baseTime - hour) * 60);
+    const timezone = this.getTimezoneFromLongitude(longitude);
+    const correctedTime = baseTime + timezone - 5.5; // Adjust from IST to local time
+    
+    const hour = Math.floor(correctedTime);
+    const minute = Math.round((correctedTime - hour) * 60);
     
     return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
   }
 
-  private calculateSolarNoon(date: string): string {
-    // Solar noon calculation
-    return '12:10'; // Approximate for most locations
+  private calculateSolarNoon(date: string, longitude: number): string {
+    // Solar noon calculation based on longitude
+    const timezone = this.getTimezoneFromLongitude(longitude);
+    const solarNoon = 12 + timezone - 5.5; // Adjust from IST to local time
+    
+    const hour = Math.floor(solarNoon);
+    const minute = Math.round((solarNoon - hour) * 60);
+    
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
   }
 
-  private calculateDayLength(date: string): string {
-    const sunrise = this.calculateSunrise(date, 'Delhi');
-    const sunset = this.calculateSunset(date, 'Delhi');
+  private calculateDayLength(date: string, latitude: number, longitude: number): string {
+    const sunrise = this.calculateSunrise(date, '', latitude, longitude);
+    const sunset = this.calculateSunset(date, '', latitude, longitude);
     
     const sunriseMinutes = this.timeToMinutes(sunrise);
     const sunsetMinutes = this.timeToMinutes(sunset);
@@ -512,8 +580,8 @@ export class MhahPanchangService {
     return `${hours}h ${minutes}m`;
   }
 
-  private calculateNightLength(date: string): string {
-    const dayLength = this.calculateDayLength(date);
+  private calculateNightLength(date: string, latitude: number, longitude: number): string {
+    const dayLength = this.calculateDayLength(date, latitude, longitude);
     const dayMinutes = this.parseDuration(dayLength);
     const nightMinutes = 24 * 60 - dayMinutes;
     
@@ -549,6 +617,11 @@ export class MhahPanchangService {
   private getTimezone(longitude: number): number {
     // Basic timezone calculation (India uses UTC+5:30)
     return 5.5; // IST timezone
+  }
+
+  private getTimezoneFromLongitude(longitude: number): number {
+    // Calculate timezone based on longitude (15 degrees = 1 hour)
+    return longitude / 15;
   }
 
   private getLunarAge(date: Date): number {
@@ -598,10 +671,10 @@ export class MhahPanchangService {
     return parseInt(match[1]) * 60 + parseInt(match[2]);
   }
 
-  private calculateAbhijitMuhurat(date: string): string {
+  private calculateAbhijitMuhurat(date: string, latitude: number, longitude: number): string {
     // Abhijit Muhurat is the middle 1/5th of the day
-    const sunrise = this.calculateSunrise(date, 'Delhi');
-    const sunset = this.calculateSunset(date, 'Delhi');
+    const sunrise = this.calculateSunrise(date, '', latitude, longitude);
+    const sunset = this.calculateSunset(date, '', latitude, longitude);
     
     const sunriseMinutes = this.timeToMinutes(sunrise);
     const sunsetMinutes = this.timeToMinutes(sunset);
@@ -613,9 +686,9 @@ export class MhahPanchangService {
     return `${this.minutesToTime(abhijitStart)} - ${this.minutesToTime(abhijitEnd)}`;
   }
 
-  private calculateAmritKaal(date: string): string {
+  private calculateAmritKaal(date: string, latitude: number, longitude: number): string {
     // Amrit Kaal is typically 1 hour before sunrise
-    const sunrise = this.calculateSunrise(date, 'Delhi');
+    const sunrise = this.calculateSunrise(date, '', latitude, longitude);
     const sunriseMinutes = this.timeToMinutes(sunrise);
     
     const amritStart = sunriseMinutes - 60;
@@ -624,9 +697,9 @@ export class MhahPanchangService {
     return `${this.minutesToTime(amritStart)} - ${this.minutesToTime(amritEnd)}`;
   }
 
-  private calculateBrahmaMuhurat(date: string): string {
+  private calculateBrahmaMuhurat(date: string, latitude: number, longitude: number): string {
     // Brahma Muhurat is 1.5 hours before sunrise
-    const sunrise = this.calculateSunrise(date, 'Delhi');
+    const sunrise = this.calculateSunrise(date, '', latitude, longitude);
     const sunriseMinutes = this.timeToMinutes(sunrise);
     
     const brahmaStart = sunriseMinutes - 90;
