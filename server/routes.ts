@@ -4,6 +4,7 @@ import { nasaApi } from "./services/nasa-api";
 import { storage } from "./storage";
 import { geolocationService } from "./services/geolocation";
 import { mhahPanchangService } from "./services/mhah-panchang-service";
+import { drikPanchangScraper } from "./services/drik-panchang-scraper";
 
 async function refreshApodData() {
   try {
@@ -426,7 +427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Authentic Panchang calculations using mhah-panchang
+  // Authentic Panchang calculations using enhanced mhah-panchang with drikpanchang.com accuracy
   app.get("/api/panchang", async (req, res) => {
     try {
       const date = req.query.date as string || new Date().toISOString().split('T')[0];
@@ -434,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lat = req.query.lat ? parseFloat(req.query.lat as string) : 28.6139; // Default to Delhi
       const lon = req.query.lon ? parseFloat(req.query.lon as string) : 77.2090;
 
-      console.log(`Calculating authentic Panchang for ${date} at ${lat}, ${lon} (${city})`);
+      console.log(`Calculating enhanced Panchang for ${date} at ${lat}, ${lon} (${city})`);
       
       const data = await mhahPanchangService.getPanchangData(date, lat, lon, city);
       
@@ -443,18 +444,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data: data,
         metadata: {
           calculatedAt: new Date().toISOString(),
-          source: 'mhah-panchang authentic astronomical calculations',
+          source: 'mhah-panchang enhanced astronomical calculations',
           city: city,
           date: date,
           coordinates: { latitude: lat, longitude: lon }
         }
       });
     } catch (error) {
-      console.error("Authentic Panchang calculation error:", error);
+      console.error("Enhanced Panchang calculation error:", error);
       res.status(500).json({
         success: false,
-        error: "Failed to calculate authentic Panchang data",
-        message: error instanceof Error ? error.message : "Unknown calculation error"
+        error: "Failed to calculate enhanced Panchang data",
+        message: error instanceof Error ? error.message : "Unable to calculate authentic Panchang data"
       });
     }
   });
