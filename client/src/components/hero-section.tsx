@@ -12,6 +12,15 @@ export function HeroSection() {
           Real-time Space Data Platform
         </Badge>
         
+        {/* 3D Earth Scene Space */}
+        <div className="relative w-full h-[500px] mb-8 rounded-xl overflow-hidden bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-indigo-900/20 border border-blue-500/20 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 animate-pulse opacity-60"></div>
+            <p className="text-blue-300 text-lg font-medium">3D Earth Scene</p>
+            <p className="text-blue-400/60 text-sm mt-2">Interactive view space</p>
+          </div>
+        </div>
+        
         {/* Main Heading */}
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight tracking-tight">
           THE
