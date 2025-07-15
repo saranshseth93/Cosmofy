@@ -18,11 +18,11 @@ export function Navigation() {
     { href: '/asteroids', label: 'Asteroids', icon: Circle },
     { href: '/missions', label: 'Missions', icon: Rocket },
     { href: '/news', label: 'Space News', icon: Newspaper },
-    { href: '/sounds', label: 'Space Sounds', icon: Volume2 },
+
     { href: '/space-weather', label: 'Space Weather', icon: CloudRain },
     { href: '/telescope', label: 'Virtual Telescope', icon: Telescope },
     { href: '/events', label: 'Cosmic Events', icon: Calendar },
-    { href: '/mars-rover', label: 'Mars Rovers', icon: MapPin },
+
     { href: '/constellations', label: 'Constellations', icon: Star },
     { href: '/satellites', label: 'Satellite Tracker', icon: Satellite },
 

@@ -73,40 +73,80 @@ interface SpaceWeatherData {
 }
 
 export default function SpaceWeatherPage() {
-  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number; city?: string } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number; display: string } | null>(null);
 
-  const { data: spaceWeather, isLoading } = useQuery<SpaceWeatherData>({
+  const { data: spaceWeather, isLoading: weatherLoading, error: weatherError } = useQuery<SpaceWeatherData>({
     queryKey: ['/api/space-weather'],
     refetchInterval: 300000, // 5 minutes
   });
 
+  const { data: locationData, isLoading: locationLoading } = useQuery({
+    queryKey: ['/api/location'],
+    refetchInterval: 3600000, // 1 hour
+  });
+
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          
-          // Get suburb-level location from coordinates
-          try {
-            const response = await fetch(`/api/location?lat=${lat}&lon=${lon}`);
-            const locationData = await response.json();
-            setUserLocation({
-              lat,
-              lon,
-              city: locationData.display || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`
-            });
-          } catch (error) {
-            setUserLocation({
-              lat,
-              lon,
-              city: `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`
-            });
-          }
-        }
-      );
+    if (locationData && !locationLoading) {
+      setUserLocation({
+        lat: locationData.latitude,
+        lon: locationData.longitude,
+        display: locationData.display
+      });
     }
-  }, []);
+  }, [locationData, locationLoading]);
+
+  // Handle API errors gracefully
+  const showErrorState = (!weatherLoading && !spaceWeather) || weatherError;
+
+  if (weatherLoading || locationLoading) {
+    return (
+      <>
+        <Navigation />
+        <CosmicCursor />
+        <div className="min-h-screen bg-gradient-to-b from-black via-blue-950/20 to-black pt-24">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Loading space weather data...</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (showErrorState) {
+    return (
+      <>
+        <Navigation />
+        <CosmicCursor />
+        <div className="min-h-screen bg-gradient-to-b from-black via-blue-950/20 to-black pt-24">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center space-y-6">
+              <div className="max-w-md mx-auto">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <AlertTriangle className="h-10 w-10 text-red-500" />
+                </div>
+                <h1 className="text-2xl font-bold text-white mb-2">
+                  Space Weather Data Unavailable
+                </h1>
+                <p className="text-muted-foreground mb-6">
+                  NOAA Space Weather data requires specialized API credentials. Please configure NOAA access to monitor solar activity, geomagnetic storms, and space radiation.
+                </p>
+                <div className="text-sm text-muted-foreground">
+                  <p>• Real-time solar wind data</p>
+                  <p>• Geomagnetic activity monitoring</p>
+                  <p>• Aurora visibility forecasts</p>
+                  <p>• Space radiation levels</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {
@@ -142,22 +182,7 @@ export default function SpaceWeatherPage() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <>
-        <Navigation />
-        <CosmicCursor />
-        <div className="min-h-screen bg-gradient-to-b from-black via-blue-950/20 to-black pt-24">
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Loading space weather data...</p>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
+
 
   return (
     <>
@@ -166,10 +191,10 @@ export default function SpaceWeatherPage() {
       <div className="min-h-screen bg-gradient-to-b from-black via-blue-950/20 to-black pt-24">
         <div className="container mx-auto px-4 py-8 space-y-8">
           {/* Location Chip */}
-          {userLocation?.city && (
+          {userLocation?.display && (
             <div className="flex justify-center">
               <Badge variant="outline" className="px-4 py-2 text-sm bg-blue-500/10 border-blue-500/30 text-blue-400">
-                📍 {userLocation.city}
+                📍 {userLocation.display}
               </Badge>
             </div>
           )}

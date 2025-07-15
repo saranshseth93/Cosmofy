@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Telescope, Eye, Calendar, MapPin, Clock, Star } from 'lucide-react';
+import { Telescope, Eye, Calendar, MapPin, Clock, Star, AlertTriangle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Navigation } from '@/components/navigation';
 import { CosmicCursor } from '@/components/cosmic-cursor';
@@ -71,6 +71,9 @@ export default function VirtualTelescopePage() {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
+  // Handle API errors gracefully
+  const showErrorState = (!observationsLoading && !observations) || (!telescopesLoading && !telescopes);
+
   if (observationsLoading || telescopesLoading) {
     return (
       <>
@@ -84,6 +87,38 @@ export default function VirtualTelescopePage() {
             </div>
           </div>
         </div>
+      </>
+    );
+  }
+
+  if (showErrorState) {
+    return (
+      <>
+        <Navigation />
+        <CosmicCursor />
+        <div className="min-h-screen bg-gradient-to-b from-black via-blue-950/20 to-black pt-24">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center space-y-6">
+              <div className="max-w-md mx-auto">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <AlertTriangle className="h-10 w-10 text-red-500" />
+                </div>
+                <h1 className="text-2xl font-bold text-white mb-2">
+                  Virtual Telescope Network Unavailable
+                </h1>
+                <p className="text-muted-foreground mb-6">
+                  Telescope observation data requires specialized API credentials. Please configure telescope network access to view live feeds from Hubble, James Webb, and ground observatories.
+                </p>
+                <div className="text-sm text-muted-foreground">
+                  <p>• Hubble Space Telescope feeds</p>
+                  <p>• James Webb Space Telescope data</p>
+                  <p>• Ground-based observatory access</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
       </>
     );
   }

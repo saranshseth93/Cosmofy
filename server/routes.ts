@@ -391,6 +391,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Virtual Telescope API Routes
+  app.get("/api/telescope/observations", async (req, res) => {
+    try {
+      res.status(503).json({ 
+        error: "Virtual Telescope API unavailable", 
+        message: "Telescope observation data requires specialized API credentials. Please configure telescope network access." 
+      });
+    } catch (error) {
+      console.error("Telescope observations error:", error);
+      res.status(503).json({ 
+        error: "Virtual Telescope API unavailable", 
+        message: "Unable to fetch authentic telescope observation data" 
+      });
+    }
+  });
+
+  app.get("/api/telescope/status", async (req, res) => {
+    try {
+      res.status(503).json({ 
+        error: "Virtual Telescope API unavailable", 
+        message: "Telescope status data requires specialized API credentials. Please configure telescope network access." 
+      });
+    } catch (error) {
+      console.error("Telescope status error:", error);
+      res.status(503).json({ 
+        error: "Virtual Telescope API unavailable", 
+        message: "Unable to fetch authentic telescope status data" 
+      });
+    }
+  });
+
+  // Space Weather API Route
+  app.get("/api/space-weather", async (req, res) => {
+    try {
+      res.status(503).json({ 
+        error: "Space Weather API unavailable", 
+        message: "NOAA Space Weather data requires specialized API credentials. Please configure NOAA access." 
+      });
+    } catch (error) {
+      console.error("Space weather error:", error);
+      res.status(503).json({ 
+        error: "Space Weather API unavailable", 
+        message: "Unable to fetch authentic space weather data from NOAA" 
+      });
+    }
+  });
+
+  // Solar System API Routes using le-systeme-solaire.net
+  app.get("/api/solar-system/bodies", async (req, res) => {
+    try {
+      const timeout = setTimeout(() => {
+        if (!res.headersSent) {
+          res.status(503).json({ 
+            error: "Solar System API unavailable", 
+            message: "Unable to fetch authentic solar system data from le-systeme-solaire.net" 
+          });
+        }
+      }, 8000); // 8 second timeout
+
+      const response = await fetch("https://api.le-systeme-solaire.net/rest/bodies/", {
+        headers: {
+          'User-Agent': 'Cosmofy Space Explorer v1.0'
+        }
+      });
+
+      if (!response.ok) {
+        clearTimeout(timeout);
+        throw new Error(`Solar System API returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      clearTimeout(timeout);
+      res.json(data);
+    } catch (error) {
+      console.error("Solar system API error:", error);
+      res.status(503).json({ 
+        error: "Solar System API unavailable", 
+        message: "Unable to fetch authentic solar system data from le-systeme-solaire.net" 
+      });
+    }
+  });
+
+  app.get("/api/solar-system/bodies/:id", async (req, res) => {
+    try {
+      const timeout = setTimeout(() => {
+        if (!res.headersSent) {
+          res.status(503).json({ 
+            error: "Solar System API unavailable", 
+            message: "Unable to fetch authentic solar system data from le-systeme-solaire.net" 
+          });
+        }
+      }, 8000); // 8 second timeout
+
+      const response = await fetch(`https://api.le-systeme-solaire.net/rest/bodies/${req.params.id}`, {
+        headers: {
+          'User-Agent': 'Cosmofy Space Explorer v1.0'
+        }
+      });
+
+      if (!response.ok) {
+        clearTimeout(timeout);
+        throw new Error(`Solar System API returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      clearTimeout(timeout);
+      res.json(data);
+    } catch (error) {
+      console.error("Solar system body API error:", error);
+      res.status(503).json({ 
+        error: "Solar System API unavailable", 
+        message: "Unable to fetch authentic solar system data from le-systeme-solaire.net" 
+      });
+    }
+  });
+
   // Location Route
   app.get("/api/location", async (req, res) => {
     try {

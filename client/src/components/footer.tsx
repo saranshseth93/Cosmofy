@@ -22,13 +22,13 @@ export function Footer() {
       { label: 'Asteroid Watch', href: '/asteroids' },
       { label: 'Space Missions', href: '/missions' },
       { label: 'Space News', href: '/news' },
-      { label: 'Space Sounds', href: '/sounds' }
+
     ],
     discover: [
       { label: 'Space Weather', href: '/space-weather' },
       { label: 'Virtual Telescope', href: '/telescope' },
       { label: 'Cosmic Events', href: '/events' },
-      { label: 'Mars Rover Live', href: '/mars-rover' },
+
       { label: 'Constellation Guide', href: '/constellations' },
       { label: 'Satellite Tracker', href: '/satellite-tracker' },
 

@@ -80,14 +80,7 @@ export default function Home() {
       href: '/news',
       stats: 'Real-time'
     },
-    {
-      id: 'sounds',
-      title: 'Space Sounds',
-      description: 'Experience authentic cosmic audio from space missions - radio emissions, plasma waves, and more.',
-      icon: Volume2,
-      href: '/sounds',
-      stats: 'Authentic Audio'
-    },
+
     {
       id: 'space-weather',
       title: 'Space Weather',
@@ -112,14 +105,7 @@ export default function Home() {
       href: '/events',
       stats: 'Upcoming Events'
     },
-    {
-      id: 'mars-rover',
-      title: 'Mars Rover Live',
-      description: 'Real photos and mission updates from Perseverance and Curiosity rovers with interactive data.',
-      icon: MapPin,
-      href: '/mars-rover',
-      stats: 'Latest Photos'
-    },
+
     {
       id: 'constellations',
       title: 'Constellation Guide',
