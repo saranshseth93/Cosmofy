@@ -80,25 +80,56 @@ export default function SpaceWeatherPage() {
     refetchInterval: 300000, // 5 minutes
   });
 
-  const { data: locationData, isLoading: locationLoading } = useQuery({
-    queryKey: ['/api/location'],
-    refetchInterval: 3600000, // 1 hour
-  });
-
+  // Get user's actual location
   useEffect(() => {
-    if (locationData && !locationLoading) {
-      setUserLocation({
-        lat: locationData.latitude,
-        lon: locationData.longitude,
-        display: locationData.display
-      });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          
+          try {
+            const response = await fetch(`/api/location?lat=${lat}&lon=${lon}`);
+            if (response.ok) {
+              const locationData = await response.json();
+              setUserLocation({
+                lat,
+                lon,
+                display: locationData.display || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`
+              });
+            } else {
+              setUserLocation({
+                lat,
+                lon,
+                display: `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`
+              });
+            }
+          } catch (error) {
+            console.error('Location lookup failed:', error);
+            setUserLocation({
+              lat,
+              lon,
+              display: `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`
+            });
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          // Fallback to default location
+          setUserLocation({
+            lat: -37.8136,
+            lon: 144.9631,
+            display: 'Melbourne, Australia'
+          });
+        }
+      );
     }
-  }, [locationData, locationLoading]);
+  }, []);
 
   // Handle API errors gracefully
   const showErrorState = (!weatherLoading && !spaceWeather) || weatherError;
 
-  if (weatherLoading || locationLoading) {
+  if (weatherLoading) {
     return (
       <>
         <Navigation />

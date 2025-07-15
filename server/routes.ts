@@ -77,12 +77,13 @@ function generateSpaceWeatherAlerts(kp: number, solarWind: any): any[] {
   return alerts;
 }
 
-function calculateDataConfidence(solarWind: any, magnetometer: any, plasma: any, kp: any): number {
+function calculateDataConfidence(solarWind: any, magnetometer: any, plasma: any, kp: any, solarFlux?: any): number {
   let confidence = 0;
   if (solarWind) confidence += 25;
   if (magnetometer) confidence += 25;
   if (plasma) confidence += 25;
   if (kp) confidence += 25;
+  if (solarFlux) confidence += 10;
   return confidence;
 }
 
@@ -521,18 +522,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         solarWindResponse,
         magnetometerResponse,
         solarFlareResponse,
-        kpIndexResponse
+        kpIndexResponse,
+        solarFluxResponse
       ] = await Promise.all([
         fetch('https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json').catch(() => null),
         fetch('https://services.swpc.noaa.gov/products/kyoto-dst.json').catch(() => null),
         fetch('https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json').catch(() => null),
-        fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json').catch(() => null)
+        fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json').catch(() => null),
+        fetch('https://services.swpc.noaa.gov/products/summary/10cm-flux.json').catch(() => null)
       ]);
 
       let solarWindData = null;
       let magnetometerData = null;
       let plasmaData = null;
       let kpData = null;
+      let solarFluxData = null;
 
       if (solarWindResponse?.ok) {
         solarWindData = await solarWindResponse.json();
@@ -545,6 +549,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (kpIndexResponse?.ok) {
         kpData = await kpIndexResponse.json();
+      }
+      if (solarFluxResponse?.ok) {
+        solarFluxData = await solarFluxResponse.json();
       }
 
       // Process authentic NOAA data
@@ -576,8 +583,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dstIndex: latestMagnetometer ? parseFloat(latestMagnetometer[1]) || 0 : 0,
         },
         solarActivity: {
-          solarFluxF107: 150, // Will be updated when F10.7 API is available
-          sunspotNumber: 100, // Will be updated when sunspot API is available
+          solarFluxF107: solarFluxData ? parseFloat(solarFluxData.Flux) || 0 : 0,
+          sunspotNumber: 0, // NOAA sunspot endpoint not available
           solarFlares: [], // Will be populated when flare API is available
           coronalMassEjections: [], // Will be populated when CME API is available
         },
@@ -597,7 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         alerts: generateSpaceWeatherAlerts(latestKp ? parseFloat(latestKp[1]) || 0 : 0, latestSolarWind),
         lastUpdated: currentTime,
         dataSource: "NOAA Space Weather Prediction Center",
-        confidence: calculateDataConfidence(solarWindData, magnetometerData, plasmaData, kpData),
+        confidence: calculateDataConfidence(solarWindData, magnetometerData, plasmaData, kpData, solarFluxData),
       };
 
       clearTimeout(timeout);
