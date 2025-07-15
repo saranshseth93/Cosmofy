@@ -53,47 +53,11 @@ export default function SatelliteTracker() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Helper function to calculate satellite position based on time and user location
-  const calculateSatellitePosition = (baseOrbit: any, timeOffset: number, userLat: number, userLon: number) => {
-    const orbitalPeriod = baseOrbit.period * 60 * 1000; // Convert to milliseconds
-    const progress = (timeOffset % orbitalPeriod) / orbitalPeriod;
-    
-    // Simulate orbital motion relative to user location
-    const angle = progress * 2 * Math.PI;
-    const latitude = Math.sin(angle) * baseOrbit.inclination + (userLat * 0.1);
-    const longitude = ((angle * 180 / Math.PI - 180 + (timeOffset / 60000)) % 360) + (userLon * 0.05);
-    
-    return {
-      latitude: Math.max(-90, Math.min(90, latitude)),
-      longitude: longitude > 180 ? longitude - 360 : longitude,
-      altitude: baseOrbit.altitude
-    };
-  };
+  // This function would need authentic orbital mechanics API data
+  // Removing synthetic position calculations to maintain data integrity
 
-  // Helper function to calculate next pass based on user location
-  const calculateNextPass = (userLat: number, userLon: number, satelliteOrbit: any) => {
-    const now = new Date();
-    const nextPassTime = new Date(now.getTime() + Math.random() * 12 * 60 * 60 * 1000); // Next 12 hours
-    const passEndTime = new Date(nextPassTime.getTime() + (3 + Math.random() * 7) * 60 * 1000); // 3-10 minute pass
-    
-    // Calculate visibility based on latitude difference and user location
-    const latDiff = Math.abs(userLat - satelliteOrbit.inclination);
-    const maxElevation = Math.max(10, Math.min(85, 90 - latDiff + Math.random() * 20));
-    
-    // Determine viewing direction based on user's hemisphere and orbital inclination
-    const directions = userLat > 0 
-      ? ['N to S', 'NE to SW', 'NW to SE', 'E to W'] 
-      : ['S to N', 'SE to NW', 'SW to NE', 'W to E'];
-    const direction = directions[Math.floor(Math.random() * directions.length)];
-    
-    return {
-      aos: nextPassTime.toISOString(),
-      los: passEndTime.toISOString(),
-      maxElevation: Math.round(maxElevation),
-      direction,
-      magnitude: -4 + Math.random() * 6 // Range from -4 to +2
-    };
-  };
+  // This function would need authentic satellite tracking API data
+  // Removing synthetic calculations to maintain data integrity
 
   // Get user's actual coordinates using browser geolocation
   const [coordinates, setCoordinates] = useState<{lat: number; lon: number} | null>(null);
@@ -167,85 +131,20 @@ export default function SatelliteTracker() {
   const userLat = userLocation?.latitude || 0;
   const userLon = userLocation?.longitude || 0;
 
-  // Location-based satellite data with real orbital calculations
-  const satellites: SatelliteData[] = [
-    {
-      id: 'iss',
-      name: 'International Space Station (ISS)',
-      noradId: 25544,
-      type: 'space_station',
-      position: calculateSatellitePosition(
-        { period: 92.68, inclination: 51.64, altitude: 408 }, 
-        baseTime, 
-        userLat, 
-        userLon
-      ),
-      velocity: { speed: 27600, direction: 87 },
-      orbit: { period: 92.68, inclination: 51.64, apogee: 421, perigee: 408 },
-      nextPass: calculateNextPass(userLat, userLon, { period: 92.68, inclination: 51.64, altitude: 408 }),
-      status: 'active',
-      launchDate: '1998-11-20',
-      country: 'International',
-      description: 'Low Earth orbit space station serving as a microgravity laboratory'
+  // Fetch satellites from API - replacing hardcoded data
+  const { data: satellites = [], isLoading: satellitesLoading, error: satellitesError } = useQuery<SatelliteData[]>({
+    queryKey: ['/api/satellites', userLat, userLon],
+    queryFn: async () => {
+      const response = await fetch(`/api/satellites?lat=${userLat}&lon=${userLon}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch satellite data');
+      }
+      return response.json();
     },
-    {
-      id: 'starlink-1',
-      name: 'Starlink-30042',
-      noradId: 50000,
-      type: 'communication',
-      position: calculateSatellitePosition(
-        { period: 95.2, inclination: 53.0, altitude: 550 }, 
-        baseTime + 1000000, 
-        userLat, 
-        userLon
-      ),
-      velocity: { speed: 27400, direction: 92 },
-      orbit: { period: 95.2, inclination: 53.0, apogee: 560, perigee: 540 },
-      nextPass: calculateNextPass(userLat, userLon, { period: 95.2, inclination: 53.0, altitude: 550 }),
-      status: 'active',
-      launchDate: '2023-05-15',
-      country: 'USA',
-      description: 'Part of SpaceX Starlink satellite constellation for global internet coverage'
-    },
-    {
-      id: 'tiangong',
-      name: 'Tiangong Space Station',
-      noradId: 48274,
-      type: 'space_station',
-      position: calculateSatellitePosition(
-        { period: 92.4, inclination: 41.5, altitude: 385 }, 
-        baseTime + 2000000, 
-        userLat, 
-        userLon
-      ),
-      velocity: { speed: 27500, direction: 85 },
-      orbit: { period: 92.4, inclination: 41.5, apogee: 390, perigee: 380 },
-      nextPass: calculateNextPass(userLat, userLon, { period: 92.4, inclination: 41.5, altitude: 385 }),
-      status: 'active',
-      launchDate: '2021-04-29',
-      country: 'China',
-      description: 'Chinese space station in low Earth orbit for scientific research'
-    },
-    {
-      id: 'hubble',
-      name: 'Hubble Space Telescope',
-      noradId: 20580,
-      type: 'scientific',
-      position: calculateSatellitePosition(
-        { period: 95.4, inclination: 28.5, altitude: 535 }, 
-        baseTime + 3000000, 
-        userLat, 
-        userLon
-      ),
-      velocity: { speed: 27300, direction: 45 },
-      orbit: { period: 95.4, inclination: 28.5, apogee: 540, perigee: 530 },
-      nextPass: calculateNextPass(userLat, userLon, { period: 95.4, inclination: 28.5, altitude: 535 }),
-      status: 'active',
-      launchDate: '1990-04-24',
-      country: 'USA',
-      description: 'Space telescope providing high-resolution images of the universe'
-    }
-  ];
+    enabled: !!userLocation,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 60 * 1000, // 1 minute
+  });
 
   const categories = [
     { id: 'all', name: 'All Satellites', count: satellites.length },
@@ -274,6 +173,39 @@ export default function SatelliteTracker() {
     return new Date(dateString).toLocaleTimeString();
   };
 
+  // Show error state if satellites API fails
+  if (satellitesError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <CosmicCursor />
+        <Navigation />
+        
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center space-y-6">
+            <div className="max-w-md mx-auto">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Satellite className="h-10 w-10 text-red-500" />
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">
+                Satellite Tracking Data Unavailable
+              </h1>
+              <p className="text-muted-foreground mb-6">
+                Real-time satellite tracking requires specialized orbital mechanics APIs and NORAD data access. 
+                Please configure satellite tracking credentials to monitor live satellite positions.
+              </p>
+              <Button 
+                onClick={() => window.location.href = '/'}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                Explore Other Features
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <CosmicCursor />
@@ -288,6 +220,13 @@ export default function SatelliteTracker() {
             Track real-time satellite positions and predict flyover times for your location
           </p>
         </div>
+
+        {satellitesLoading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading satellite data...</p>
+          </div>
+        )}
 
         {/* Location Display */}
         <div className="flex justify-center items-center gap-4 mb-8">
