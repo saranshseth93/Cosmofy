@@ -2,69 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Play } from 'lucide-react';
 import { Link } from 'wouter';
-import { useEffect, useRef } from 'react';
 
 export function HeroSection() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    const resizeCanvas = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-    };
-    
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
-    // Create animated stars
-    const stars: Array<{x: number, y: number, radius: number, opacity: number, speed: number}> = [];
-    
-    for (let i = 0; i < 100; i++) {
-      stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 0.5,
-        opacity: Math.random() * 0.8 + 0.2,
-        speed: Math.random() * 0.5 + 0.2
-      });
-    }
-    
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw stars
-      stars.forEach(star => {
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-        ctx.fill();
-        
-        // Animate stars
-        star.opacity = Math.sin(Date.now() * 0.001 + star.x) * 0.3 + 0.7;
-        star.y += star.speed;
-        
-        if (star.y > canvas.height) {
-          star.y = -star.radius;
-          star.x = Math.random() * canvas.width;
-        }
-      });
-      
-      requestAnimationFrame(animate);
-    };
-    
-    animate();
-    
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-    };
-  }, []);
-  
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20">
       <div className="max-w-4xl mx-auto text-center">
@@ -73,27 +12,14 @@ export function HeroSection() {
           Real-time Space Data Platform
         </Badge>
         
-        {/* Animated Cosmic Scene */}
-        <div className="relative w-full h-[500px] mb-8 rounded-xl overflow-hidden bg-gradient-to-br from-purple-900/30 via-blue-900/30 to-cyan-900/30 backdrop-blur-sm border border-white/10">
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full"
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_20%,_rgba(0,0,0,0.4)_100%)]"></div>
-          <div className="relative z-10 w-full h-full flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-8xl mb-6 animate-pulse filter drop-shadow-2xl">
-                🌌
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                Interactive Cosmic Experience
-              </h2>
-              <p className="text-neutral-300 text-lg">
-                Journey through the universe with real-time space data
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Main Heading */}
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight tracking-tight">
+          THE
+          <br />
+          <span className="animated-gradient-text">
+            COSMOS
+          </span>
+        </h1>
         
         {/* Description */}
         <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto mb-12 leading-relaxed">
