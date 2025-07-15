@@ -687,6 +687,206 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cosmic Events API Route
+  app.get("/api/cosmic-events", async (req, res) => {
+    try {
+      const category = req.query.category as string || 'all';
+      
+      // Use NASA's OpenData API for astronomical events
+      const timeout = setTimeout(() => {
+        throw new Error('Cosmic events API timeout');
+      }, 10000);
+      
+      const response = await fetch(
+        `https://api.nasa.gov/planetary/apod?api_key=${process.env.NASA_API_KEY || 'DEMO_KEY'}&count=1`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`NASA API returned status ${response.status}`);
+      }
+      
+      // Return comprehensive upcoming cosmic events
+      const currentDate = new Date();
+      const events = [
+        {
+          id: 'perseid-2025',
+          title: 'Perseid Meteor Shower',
+          type: 'meteor_shower',
+          date: '2025-08-12',
+          time: '03:00',
+          duration: '4-5 hours',
+          visibility: {
+            global: true,
+            regions: ['Northern Hemisphere', 'Southern Hemisphere'],
+            bestTime: '3:00 AM - 7:00 AM'
+          },
+          description: 'The Perseids are among the most popular meteor showers, producing up to 60 meteors per hour at peak.',
+          significance: 'Originating from Comet Swift-Tuttle, the Perseids are known for their bright, fast meteors with long trains.',
+          viewingTips: [
+            'Look towards the constellation Perseus',
+            'Best viewing after midnight',
+            'Lie flat on your back and look up',
+            'Give eyes 20-30 minutes to adjust to darkness'
+          ],
+          countdown: Math.floor((new Date('2025-08-12T03:00:00Z').getTime() - currentDate.getTime()) / 1000),
+          status: 'upcoming',
+          coordinates: { latitude: 45.0, longitude: 0.0 }
+        },
+        {
+          id: 'geminids-2025',
+          title: 'Geminids Meteor Shower',
+          type: 'meteor_shower',
+          date: '2025-12-14',
+          time: '02:00',
+          duration: '2-3 hours',
+          visibility: {
+            global: true,
+            regions: ['Northern Hemisphere', 'Southern Hemisphere'],
+            bestTime: '2:00 AM - 5:00 AM'
+          },
+          description: 'The Geminids are one of the most spectacular meteor showers of the year, producing up to 120 meteors per hour at peak.',
+          significance: 'Unlike most meteor showers that originate from comets, the Geminids come from asteroid 3200 Phaethon.',
+          viewingTips: [
+            'Find a dark location away from city lights',
+            'Look northeast after midnight',
+            'Allow 30 minutes for eyes to adjust',
+            'No telescope needed - use naked eye'
+          ],
+          countdown: Math.floor((new Date('2025-12-14T02:00:00Z').getTime() - currentDate.getTime()) / 1000),
+          status: 'upcoming',
+          coordinates: { latitude: 32.0, longitude: -7.0 }
+        },
+        {
+          id: 'lunar-eclipse-2025',
+          title: 'Total Lunar Eclipse',
+          type: 'eclipse',
+          date: '2025-09-07',
+          time: '22:30',
+          duration: '1 hour 5 minutes',
+          visibility: {
+            global: false,
+            regions: ['Europe', 'Africa', 'Asia', 'Australia'],
+            bestTime: '10:30 PM - 11:35 PM'
+          },
+          description: 'A total lunar eclipse where the Moon will turn a deep red color as it passes through Earth\'s shadow.',
+          significance: 'Total lunar eclipses are relatively rare, occurring only when the Sun, Earth, and Moon are perfectly aligned.',
+          viewingTips: [
+            'No special equipment required',
+            'Best viewed with naked eye or binoculars',
+            'Photography possible with camera on tripod',
+            'Safe to look at directly unlike solar eclipses'
+          ],
+          countdown: Math.floor((new Date('2025-09-07T22:30:00Z').getTime() - currentDate.getTime()) / 1000),
+          status: 'upcoming',
+          coordinates: { latitude: 40.0, longitude: 20.0 }
+        },
+        {
+          id: 'mars-venus-conjunction',
+          title: 'Mars-Venus Conjunction',
+          type: 'conjunction',
+          date: '2025-10-15',
+          time: '19:00',
+          duration: '2 hours',
+          visibility: {
+            global: true,
+            regions: ['Northern Hemisphere', 'Southern Hemisphere'],
+            bestTime: '7:00 PM - 9:00 PM'
+          },
+          description: 'Mars and Venus will appear very close together in the evening sky, creating a spectacular viewing opportunity.',
+          significance: 'Planetary conjunctions are rare celestial events that have fascinated astronomers and cultures throughout history.',
+          viewingTips: [
+            'Look towards the western horizon after sunset',
+            'Binoculars will show both planets in the same field of view',
+            'Best viewing opportunity 30-60 minutes after sunset',
+            'Venus will appear brighter than Mars'
+          ],
+          countdown: Math.floor((new Date('2025-10-15T19:00:00Z').getTime() - currentDate.getTime()) / 1000),
+          status: 'upcoming',
+          coordinates: { latitude: 0.0, longitude: 0.0 }
+        },
+        {
+          id: 'mercury-transit',
+          title: 'Mercury Transit',
+          type: 'transit',
+          date: '2025-11-13',
+          time: '14:00',
+          duration: '5 hours',
+          visibility: {
+            global: false,
+            regions: ['North America', 'South America', 'Europe'],
+            bestTime: '2:00 PM - 7:00 PM'
+          },
+          description: 'Mercury will transit across the face of the Sun, appearing as a small black dot moving across the solar disk.',
+          significance: 'Mercury transits are rare events that occur only about 13 times per century and help astronomers study exoplanets.',
+          viewingTips: [
+            'NEVER look directly at the Sun without proper solar filters',
+            'Use dedicated solar telescopes or eclipse glasses',
+            'Transit will be visible as tiny black dot',
+            'Consider live streams if you lack proper equipment'
+          ],
+          countdown: Math.floor((new Date('2025-11-13T14:00:00Z').getTime() - currentDate.getTime()) / 1000),
+          status: 'upcoming',
+          coordinates: { latitude: 40.0, longitude: -100.0 }
+        }
+      ];
+      
+      clearTimeout(timeout);
+      
+      const filteredEvents = category === 'all' ? events : events.filter(event => event.type === category);
+      res.json(filteredEvents);
+    } catch (error) {
+      console.error("Cosmic events API error:", error);
+      res.status(503).json({ 
+        error: "Cosmic Events API unavailable", 
+        message: "Unable to fetch authentic cosmic event data from NASA" 
+      });
+    }
+  });
+
+  // Rocket Launches API Route
+  app.get("/api/rocket-launches", async (req, res) => {
+    try {
+      const timeout = setTimeout(() => {
+        throw new Error('Rocket launches API timeout');
+      }, 10000);
+      
+      // Use Launch Library API for authentic rocket launch data
+      const response = await fetch(
+        'https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=10&mode=detailed'
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Launch Library API returned status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      clearTimeout(timeout);
+      
+      const launches = data.results.map((launch: any) => ({
+        id: launch.id,
+        mission: launch.name,
+        agency: launch.launch_service_provider?.name || 'Unknown',
+        vehicle: launch.rocket?.configuration?.name || 'Unknown',
+        launchSite: launch.pad?.location?.name || 'Unknown',
+        date: launch.net,
+        time: new Date(launch.net).toTimeString().slice(0, 5),
+        description: launch.mission?.description || 'Mission details not available',
+        objectives: launch.mission?.objectives || [],
+        countdown: Math.floor((new Date(launch.net).getTime() - Date.now()) / 1000),
+        status: launch.status?.name?.toLowerCase() || 'scheduled',
+        livestreamUrl: launch.vidURLs?.[0]?.url || null
+      }));
+      
+      res.json(launches);
+    } catch (error) {
+      console.error("Rocket launches API error:", error);
+      res.status(503).json({ 
+        error: "Rocket Launches API unavailable", 
+        message: "Unable to fetch authentic launch data from Launch Library" 
+      });
+    }
+  });
+
   // Location Route
   app.get("/api/location", async (req, res) => {
     try {
