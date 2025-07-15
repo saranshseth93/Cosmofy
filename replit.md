@@ -166,31 +166,14 @@ Changelog:
   * Fixed search functionality to show all constellations when empty and sort by visibility status
   * Removed all duplicate constellation entries and eliminated React key warnings
   * Added observation location display above search bar as requested
-  * Added comprehensive Hindu Panchang page with authentic Vedic calendar data including:
-    - Daily Tithi, Nakshatra, Yoga, and Karana with proper deities and significance
-    - Sunrise, sunset, moonrise, and moonset calculations based on user location
-    - Shubh Muhurat and inauspicious timings (Rahu Kaal, Gulika Kaal, Yama Ganda)
-    - Moon Rashi information with elements and planetary lords
-    - Weekly vrats and festivals based on current date
-    - Comprehensive backend API service with astronomical calculations
-    - Enhanced with user geolocation detection for location-specific calculations
-    - All comprehensive API data display including meanings, next elements, timing details
-    - Advanced Panchang details with calendar, astronomical, and directional information
-    - Detailed auspicious/inauspicious times with descriptions from authentic calculations
-    - Removed Hindi text and applied darker color palette for better dark theme compatibility
-    - Added comprehensive educational description about Hindu Panchang for non-Hindu users
-    - Enhanced mhah-panchang service for drikpanchang.com accuracy (July 9, 2025):
-      * Replaced scraping approach with enhanced astronomical calculations for optimal performance
-      * Implemented precise sunrise/sunset calculations using solar declination and hour angle formulas
-      * Added authentic Muhurat calculations: Abhijit (middle 1/5 of day), Amrit Kaal (1 hour before sunrise), Brahma Muhurat (1.5 hours before sunrise)
-      * Enhanced Rahu Kaal, Yama Ganda Kaal, and Gulika Kaal calculations based on weekday and daylight periods
-      * Improved moon phase calculations with lunar age approximations for accurate rise/set times
-      * Added location-specific coordinate mapping for major Indian cities with timezone corrections
-      * Maintained complete data authenticity while eliminating scraping delays and performance issues
-      * Service now provides authentic Panchang data comparable to drikpanchang.com with sub-second response times
-      * **FIXED Melbourne sun/moon timings**: Implemented precise astronomical calculations for Melbourne location
-      * Melbourne July 9, 2025 times now match official astronomical data: Sunrise 7:34 AM, Sunset 5:16 PM
-      * Enhanced location-specific timing accuracy while maintaining authentic Vedic calendar data integrity
+  * **REMOVED Hindu Panchang functionality completely** (July 15, 2025):
+    - Removed all Hindu Panchang/Vedic calendar related pages, components, and API routes
+    - Deleted mhah-panchang service and all related astronomical calculation code
+    - Removed Panchang navigation links from all menus and home page
+    - Uninstalled mhah-panchang package dependency
+    - Cleaned up all drik-panchang scraping services and related files
+    - Application now focuses exclusively on space exploration features
+    - No cultural/religious content - purely space-themed platform
   * Significantly enhanced Satellite Tracker page with comprehensive data:
     - Expanded satellite database from 1 to 20+ satellites across all categories
     - Added Space Stations (ISS, Tiangong), Communication (Starlink, ViaSat), Earth Observation (Landsat, Sentinel), Navigation (GPS, Galileo, GLONASS), Scientific (Hubble, JWST, Kepler), Military (NROL, Cosmos), and Space Debris tracking

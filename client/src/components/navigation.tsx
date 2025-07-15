@@ -25,7 +25,7 @@ export function Navigation() {
     { href: '/mars-rover', label: 'Mars Rovers', icon: MapPin },
     { href: '/constellations', label: 'Constellations', icon: Star },
     { href: '/satellites', label: 'Satellite Tracker', icon: Satellite },
-    { href: '/panchang', label: 'Hindu Panchang', icon: Calendar },
+
   ];
 
   useEffect(() => {

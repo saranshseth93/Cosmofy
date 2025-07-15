@@ -31,7 +31,7 @@ export function Footer() {
       { label: 'Mars Rover Live', href: '/mars-rover' },
       { label: 'Constellation Guide', href: '/constellations' },
       { label: 'Satellite Tracker', href: '/satellite-tracker' },
-      { label: 'Hindu Panchang', href: '/panchang' }
+
     ],
     resources: [
       { label: 'NASA APIs', href: 'https://api.nasa.gov/', external: true },

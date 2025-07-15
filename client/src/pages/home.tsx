@@ -136,14 +136,7 @@ export default function Home() {
       href: '/satellite-tracker',
       stats: '20+ Satellites'
     },
-    {
-      id: 'panchang',
-      title: 'Hindu Panchang',
-      description: 'Traditional Vedic calendar with daily Tithi, Nakshatra, Yoga, and auspicious timings.',
-      icon: Sun,
-      href: '/panchang',
-      stats: 'Daily Updates'
-    }
+
   ];
 
   return (
