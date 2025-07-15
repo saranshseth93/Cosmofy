@@ -12,14 +12,15 @@ export function HeroSection() {
           Real-time Space Data Platform
         </Badge>
         
-        {/* Main Heading */}
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight tracking-tight">
-          THE
-          <br />
-          <span className="animated-gradient-text">
-            COSMOS
-          </span>
-        </h1>
+        {/* Spline 3D Scene */}
+        <div className="relative w-full h-[500px] mb-8 rounded-xl overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10">
+          <iframe
+            src="https://my.spline.design/bb6658c5-dafd-4ba9-8a6b-1d7c5d6a6f6d"
+            className="w-full h-full border-0"
+            allowFullScreen
+            title="3D Cosmic Scene"
+          />
+        </div>
         
         {/* Description */}
         <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto mb-12 leading-relaxed">
