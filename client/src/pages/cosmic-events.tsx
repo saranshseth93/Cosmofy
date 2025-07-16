@@ -254,7 +254,7 @@ export default function CosmicEventsPage() {
           </div>
 
           {/* Upcoming Rocket Launches */}
-          {upcomingLaunches && upcomingLaunches.length > 0 && (
+          {upcomingLaunches && upcomingLaunches.length > 0 && (selectedCategory === 'all' || selectedCategory === 'rocket_launch') && (
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold flex items-center gap-2">
                 <Rocket className="h-6 w-6 text-red-500" />
@@ -317,13 +317,14 @@ export default function CosmicEventsPage() {
           )}
 
           {/* Cosmic Events */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold flex items-center gap-2">
-              <Star className="h-6 w-6 text-purple-500" />
-              Cosmic Events
-            </h2>
-            <div className="grid gap-6">
-              {filteredEvents?.map((event) => (
+          {(selectedCategory !== 'rocket_launch') && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold flex items-center gap-2">
+                <Star className="h-6 w-6 text-purple-500" />
+                Cosmic Events
+              </h2>
+              <div className="grid gap-6">
+                {filteredEvents?.map((event) => (
                 <Card key={event.id} className={`${isEventVisibleFromLocation(event) ? 'border-l-4 border-l-blue-500' : 'opacity-60'}`}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -417,6 +418,7 @@ export default function CosmicEventsPage() {
               ))}
             </div>
           </div>
+          )}
 
           {/* Event Statistics */}
           <Card>
