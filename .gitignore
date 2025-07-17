@@ -131,3 +131,5 @@ replit.nix
 # Local development
 .local/
 .cache/
+
+package-lock.json
