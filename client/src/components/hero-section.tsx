@@ -1,7 +1,8 @@
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Play } from 'lucide-react';
-import { Link } from 'wouter';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Play } from "lucide-react";
+import Spline from "@splinetool/react-spline";
+import { Link } from "wouter";
 
 export function HeroSection() {
   return (
@@ -11,29 +12,24 @@ export function HeroSection() {
         <Badge className="mb-8 bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all duration-300 px-4 py-2 mt-8">
           Real-time Space Data Platform
         </Badge>
-        
+
         {/* 3D Earth Scene Space */}
-        <div className="relative w-full h-[500px] mb-8 rounded-xl overflow-hidden bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-indigo-900/20 border border-blue-500/20 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 animate-pulse opacity-60"></div>
-            <p className="text-blue-300 text-lg font-medium">3D Earth Scene</p>
-            <p className="text-blue-400/60 text-sm mt-2">Interactive view space</p>
-          </div>
+        <div className="relative w-max h-[700px] md:w-full mb-8 rounded-xl overflow-hidden flex items-center justify-center">
+          <Spline scene="https://prod.spline.design/ISBWxvDuQ9dngfh1/scene.splinecode" />
         </div>
-        
+
         {/* Main Heading */}
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight tracking-tight">
           THE
           <br />
-          <span className="animated-gradient-text">
-            COSMOS
-          </span>
+          <span className="animated-gradient-text">COSMOS</span>
         </h1>
-        
+
         {/* Description */}
         <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-          Journey through space with real-time NASA data, track the ISS, discover 
-          celestial wonders, and witness the universe unfold before your eyes.
+          Journey through space with real-time NASA data, track the ISS,
+          discover celestial wonders, and witness the universe unfold before
+          your eyes.
         </p>
 
         {/* Action Buttons */}
@@ -60,17 +56,23 @@ export function HeroSection() {
             <div className="text-neutral-400 text-sm mb-1">ISS Tracking</div>
             <div className="text-xl font-semibold text-white">Real-time</div>
           </div>
-          
+
           <div className="glass-morphism rounded-lg p-6 hover:bg-white/[0.04] transition-all duration-300">
             <div className="text-neutral-400 text-sm mb-1">Cosmic Images</div>
             <div className="text-xl font-semibold text-white">10k+</div>
-            <div className="text-xs text-neutral-500 mt-1">NASA APOD Gallery</div>
+            <div className="text-xs text-neutral-500 mt-1">
+              NASA APOD Gallery
+            </div>
           </div>
-          
+
           <div className="glass-morphism rounded-lg p-6 hover:bg-white/[0.04] transition-all duration-300">
-            <div className="text-neutral-400 text-sm mb-1">Asteroids Tracked</div>
+            <div className="text-neutral-400 text-sm mb-1">
+              Asteroids Tracked
+            </div>
             <div className="text-xl font-semibold text-white">500+</div>
-            <div className="text-xs text-neutral-500 mt-1">Near-Earth Objects</div>
+            <div className="text-xs text-neutral-500 mt-1">
+              Near-Earth Objects
+            </div>
           </div>
         </div>
       </div>
